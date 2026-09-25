@@ -1,7 +1,7 @@
-# トップページの Content Model（案）
+# トップページの Content Model
 
-状態: **案**。CMS 側（`packages/content-schema/src/projects/ami.ts` と
-`docs/projects/ami/CONTENT_CONTRACT.md`）に定義したら「確定」にする。
+状態: **確定（2026-09-25）**。正本は CMS リポジトリの `docs/projects/ami/CONTENT_CONTRACT.md` と
+`packages/content-schema/src/projects/ami.ts`。本書はサイト側から見た要約。食い違ったら CMS 側が正しい。
 
 サイト側の実装はこの案に合わせてある（`src/lib/cms/schemas.ts`）。key や型を変えるときは、
 CMS 側 → `schemas.ts` → `mapper.ts` → UI の順に直す。
@@ -69,7 +69,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | profile | long_text | | | 詳細ページ用 |
 | sort_order | number | | ✔ | 昇順。トップでは先頭 6 件 |
 
-## 未決
+## 未決（下層ページの制作時に決める）
 
 - `site_info`（SEO の既定値・ロゴ・SNS の URL）の使い方。現在トップの title / description はコードの仮の値（`src/pages/index.astro` の TODO）。
 - Topics・Member・Service・About・Contact の下層ページの構成（リンク先はまだ存在しない）。

@@ -10,9 +10,12 @@ import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 
 const AT = "2026-09-25T00:00:00.000Z";
 
+// scripts/seed-local-cms.mjs（Node で直接読む）からも使うため、import.meta.env が無い場合は "/" とする。
+const BASE = (import.meta.env?.BASE_URL ?? "/").replace(/\/+$/, "");
+
 function media(id: string, file: string, width: number, height: number, alt: string | null): DeliveryMedia {
   const mimeType = file.endsWith(".png") ? "image/png" : "image/jpeg";
-  return { id, url: `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/fixtures/${file}`, alt, width, height, mimeType };
+  return { id, url: `${BASE}/fixtures/${file}`, alt, width, height, mimeType };
 }
 
 function entry(id: string, slug: string | null, content: Record<string, unknown>): DeliveryEntry {

@@ -17,7 +17,8 @@
     "generate-types": "wrangler types",
     "deploy": "astro build && wrangler deploy",
     "assets:webp": "node scripts/assets-webp.mjs",
-    "build:pages": "node scripts/build-pages.mjs"
+    "build:pages": "node scripts/build-pages.mjs",
+    "seed:cms": "node scripts/seed-local-cms.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",

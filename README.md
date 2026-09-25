@@ -22,6 +22,32 @@ pnpm dev                         # http://localhost:4321
 | `pnpm deploy` | ビルドして Cloudflare にデプロイ |
 | `pnpm assets:webp` | `src/assets/` の PNG を WebP に変換 |
 | `pnpm build:pages` | GitHub Pages 用のプレビューをビルド（仮データ・静的書き出し） |
+| `pnpm seed:cms -- --token …` | ローカルの CMS に仮データを登録・公開（下の「ローカルの CMS につなぐ」） |
+
+## ローカルの CMS につなぐ
+
+CMS リポジトリ（ss-hp-public-system）で:
+
+```bash
+pnpm dev
+pnpm -F @ss/backend run dev:bootstrap -- --site ami --name "合同会社ami" --preset ami
+# → 「Delivery API 公開キー」と「管理画面へのログインURL」が表示される
+```
+
+このリポジトリで:
+
+```bash
+pnpm seed:cms -- --token <ログインURLの token=... の部分>   # 仮データと同じ内容を CMS に登録・公開（新しいサイトに1回だけ）
+```
+
+`.dev.vars` を次のようにして `pnpm dev` を起動し直す。
+
+```text
+CMS_MODE=live
+CMS_BASE_URL=http://localhost:8787
+CMS_SITE_KEY=ami
+CMS_DELIVERY_KEY=<表示された公開キー>
+```
 
 ## 環境変数
 
