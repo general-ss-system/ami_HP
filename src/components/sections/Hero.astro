@@ -1,0 +1,239 @@
+---
+/**
+ * ヒーロー（ファーストビュー）。
+ * 見出し（Where "Tokimeki" Originates.）は画像、写真は CMS（ami_home.hero_images）。
+ * 写真は一定間隔で前後が入れ替わる。
+ */
+import LocalImage from "../ui/LocalImage.astro";
+import type { Media } from "../../lib/cms/types";
+import CmsImage from "../ui/CmsImage.astro";
+import Decor from "../ui/Decor.astro";
+import heroSky from "../../assets/backgrounds/hero.webp";
+import heroMessage from "../../assets/headings/hero-message.webp";
+import rocket from "../../assets/decor/rocket.webp";
+import planetoid from "../../assets/decor/planetoid.webp";
+import galaxy from "../../assets/decor/galaxy.webp";
+import planetBunnyBlue from "../../assets/decor/planet-bunny-blue.webp";
+import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
+import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
+import sparkleGold from "../../assets/decor/sparkle-gold.webp";
+import sparkleViolet from "../../assets/decor/sparkle-violet.webp";
+
+interface Props {
+  images: Media[];
+}
+
+// 重ねて見せるのは 3 枚まで
+const images = Astro.props.images.slice(0, 3);
+---
+
+<section class="hero" aria-label="ファーストビュー">
+  <LocalImage src={heroSky} alt="" class="hero__sky" loading="eager" fetchpriority="high" aria-hidden="true" />
+
+  <div class="stage hero__stage">
+    <h1 class="hero__heading">
+      <LocalImage src={heroMessage} alt={'Where "Tokimeki" Originates.'} loading="eager" />
+    </h1>
+
+    {
+      images.length > 0 && (
+        <div class="hero__photos" data-hero-photos>
+          {/* 軌道の線（写真の後ろを回る） */}
+          <svg class="hero__orbit" viewBox="0 0 691 539" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="hero-orbit" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#b9e9ff" stop-opacity="0.2" />
+                <stop offset="0.4" stop-color="#8adcf7" />
+                <stop offset="1" stop-color="#78b2ff" />
+              </linearGradient>
+            </defs>
+            <path d="M-51 527 C 10 668, 414 638, 646 398 C 668 372, 676 350, 672 330" fill="none" stroke="url(#hero-orbit)" stroke-width="2.5" />
+          </svg>
+          {images.map((image, i) => (
+            <figure class="hero__photo" data-pos={i}>
+              <CmsImage media={image} photo loading="eager" fetchpriority={i === 0 ? "high" : undefined} />
+            </figure>
+          ))}
+        </div>
+      )
+    }
+
+    <Decor src={rocket} pc={[-17, 93, 233]} sp={[-14, 60, 96]} float eager />
+    <Decor src={planetoid} pc={[48, 535, 190]} sp={false} float delay={1.5} eager />
+    <Decor src={galaxy} pc={[1027, 66, 233]} sp={[300, 118, 62]} front float delay={0.8} eager />
+    <Decor src={planetBunnyBlue} pc={[382, 626, 209]} sp={[8, 560, 110]} front float delay={2.2} eager />
+    <Decor src={sparkleCluster} pc={[179, 690, 200]} sp={false} twinkle delay={0.4} eager />
+    <Decor src={sparkleBlue} pc={[1174, 776, 118]} sp={[318, 610, 44]} twinkle delay={1.1} eager />
+    <Decor src={sparkleBlue} pc={[381, 118, 99]} sp={[300, 70, 40]} twinkle delay={0.2} eager />
+    <Decor src={sparkleGold} pc={[26, 590, 60]} sp={false} twinkle delay={1.7} eager />
+    <Decor src={sparkleGold} pc={[632, 121, 28]} sp={false} twinkle delay={0.9} eager />
+    <Decor src={sparkleGold} pc={[175, 259, 28]} sp={[40, 250, 20]} twinkle delay={2.4} eager />
+    <Decor src={sparkleGold} pc={[1129, 617, 61]} sp={false} twinkle delay={0.6} eager />
+    <Decor src={sparkleViolet} pc={[564, 131, 56]} sp={false} twinkle delay={1.3} eager />
+    <Decor src={sparkleViolet} pc={[73, 717, 56]} sp={false} twinkle delay={2} eager />
+    <Decor src={sparkleViolet} pc={[387, 805, 56]} sp={[150, 620, 30]} twinkle delay={0.5} eager />
+  </div>
+</section>
+
+<script>
+  // 写真の前後を一定間隔で入れ替える（動きを減らす設定では止める）
+  const INTERVAL_MS = 4500;
+  const root = document.querySelector<HTMLElement>("[data-hero-photos]");
+  const photos = root ? [...root.querySelectorAll<HTMLElement>("[data-pos]")] : [];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+
+  if (photos.length > 1) {
+    let timer: number | undefined;
+    const rotate = () => {
+      for (const p of photos) {
+        p.dataset.pos = String((Number(p.dataset.pos) + photos.length - 1) % photos.length);
+      }
+    };
+    const start = () => {
+      if (reduce.matches || timer !== undefined) return;
+      timer = window.setInterval(rotate, INTERVAL_MS);
+    };
+    const stop = () => {
+      window.clearInterval(timer);
+      timer = undefined;
+    };
+    start();
+    reduce.addEventListener("change", () => (reduce.matches ? stop() : start()));
+    // 画面外・タブ非表示の間は止める
+    document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  }
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-hero);
+  }
+
+  /* ページ全体と同じ星のドットをヒーローにも重ねる */
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/images/star-field.svg") center top / 1280px auto repeat;
+    pointer-events: none;
+  }
+
+  .hero__sky {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center bottom;
+  }
+
+  .hero__stage {
+    /* PC デザインの高さ（933px / 幅 1280px）を保つ */
+    aspect-ratio: 1280 / 933;
+  }
+
+  .hero__heading {
+    position: absolute;
+    /* デザインでは「Originates.」が写真の左端に重なって手前に出る */
+    z-index: calc(var(--z-content) + 1);
+    left: calc(62 / 12.8 * 1cqw);
+    top: calc(275 / 12.8 * 1cqw);
+    width: calc(548 / 12.8 * 1cqw);
+  }
+
+  /* ---- 写真の重なり（PC デザインの 691 x 539 の枠内での位置） ---- */
+  .hero__photos {
+    position: absolute;
+    z-index: var(--z-content);
+    left: calc(586.5 / 12.8 * 1cqw);
+    top: calc(122.7 / 12.8 * 1cqw);
+    width: calc(691 / 12.8 * 1cqw);
+    aspect-ratio: 691 / 539;
+  }
+
+  .hero__orbit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 0 4px rgb(138 220 247 / 0.8));
+  }
+
+  .hero__photo {
+    position: absolute;
+    aspect-ratio: 419 / 539;
+    overflow: hidden;
+    border: 3px solid #78b2ff;
+    border-radius: 14px;
+    background: var(--color-bg-1);
+    transition:
+      left 0.9s var(--ease-out),
+      top 0.9s var(--ease-out),
+      width 0.9s var(--ease-out),
+      rotate 0.9s var(--ease-out),
+      filter 0.9s var(--ease-out);
+  }
+
+  .hero__photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__photo[data-pos="0"] {
+    z-index: 3;
+    left: 0;
+    top: 0;
+    width: 60.6%;
+    border-color: #e5c8f6;
+  }
+
+  .hero__photo[data-pos="1"] {
+    z-index: 2;
+    left: 23%;
+    top: 7.1%;
+    width: 51.1%;
+    filter: brightness(0.85);
+  }
+
+  .hero__photo[data-pos="2"] {
+    z-index: 1;
+    left: 47%;
+    top: 9.5%;
+    width: 47%;
+    rotate: 4deg;
+    filter: brightness(0.7);
+  }
+
+  /* ---- スマホ: 見出し → 写真の縦並び ---- */
+  @media (max-width: 767px) {
+    .hero__stage {
+      aspect-ratio: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: calc(var(--header-height) + 72px) var(--gutter) 120px;
+    }
+
+    .hero__heading,
+    .hero__photos {
+      position: relative;
+      left: auto;
+      top: auto;
+    }
+
+    .hero__heading {
+      width: min(88%, 380px);
+    }
+
+    .hero__photos {
+      width: min(100%, 420px);
+      margin-left: 8%;
+    }
+  }
+</style>

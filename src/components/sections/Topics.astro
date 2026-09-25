@@ -1,0 +1,96 @@
+---
+/**
+ * Topics。最新の記事を CMS（ami_topics）から件数（ami_home.topics_limit）分並べる。
+ * カードは少しずつ傾けて並べ、画面からはみ出す分は横にスクロールできる。
+ */
+import type { Topic } from "../../lib/cms/types";
+import Decor from "../ui/Decor.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+import TopicCard from "./TopicCard.astro";
+import heading from "../../assets/headings/topics.webp";
+import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
+
+interface Props {
+  topics: Topic[];
+}
+
+const { topics } = Astro.props;
+---
+
+{
+  topics.length > 0 && (
+    <section class="topics" id="topics" aria-labelledby="topics-title">
+      <div class="stage topics__stage">
+        <SectionHeading src={heading} text="Topics" width={212} id="topics-title" />
+
+        <div class="topics__scroller" tabindex="0" aria-label="Topics の一覧（横にスクロールできます）">
+          <ul class="topics__list">
+            {topics.map((topic) => (
+              <li class="topics__item">
+                <TopicCard topic={topic} href={topic.slug ? `/topics/${topic.slug}` : "/topics"} />
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <Decor src={sparkleCluster} pc={[67, 16, 200]} sp={[10, 10, 70]} twinkle delay={0.3} />
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .topics__stage {
+    padding-block: clamp(40px, 5vw, 70px) clamp(48px, 4.5vw, 57px);
+  }
+
+  .topics__scroller {
+    position: relative;
+    z-index: var(--z-content);
+    margin-top: clamp(48px, 6vw, 80px);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .topics__scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topics__list {
+    display: flex;
+    gap: clamp(28px, 4.6cqw, 60px);
+    width: max-content;
+    /* 傾けたカードの角が切れないように上下に余白を取る */
+    padding: 40px calc(62 / 12.8 * 1cqw) 48px;
+  }
+
+  .topics__item {
+    display: flex;
+    scroll-snap-align: center;
+  }
+
+  /* デザインの傾きを 4 枚周期で繰り返す */
+  .topics__item:nth-child(4n + 1) {
+    rotate: -5deg;
+  }
+
+  .topics__item:nth-child(4n + 3) {
+    rotate: 4deg;
+  }
+
+  .topics__item:nth-child(4n + 4) {
+    rotate: -3deg;
+  }
+
+  @media (max-width: 767px) {
+    .topics__list {
+      padding-inline: var(--gutter);
+    }
+
+    .topics__item {
+      rotate: 0deg !important;
+    }
+  }
+</style>

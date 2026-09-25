@@ -1,0 +1,49 @@
+---
+/**
+ * トップページ。データはページでまとめて取得し、各セクションへ props で渡す（CMS docs/04 §11）。
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/layout/SiteHeader.astro";
+import SiteFooter from "../components/layout/SiteFooter.astro";
+import Hero from "../components/sections/Hero.astro";
+import Marquee from "../components/sections/Marquee.astro";
+import Statement from "../components/sections/Statement.astro";
+import Business from "../components/sections/Business.astro";
+import Topics from "../components/sections/Topics.astro";
+import Members from "../components/sections/Members.astro";
+import ContactCta from "../components/sections/ContactCta.astro";
+import { CONTACT_HREF } from "../config/site";
+import { getCmsClient } from "../lib/cms/env";
+import { getTopPageData } from "../lib/cms/queries";
+
+const { home, services, topics, members } = await getTopPageData(getCmsClient());
+
+// TODO: SEO の値は site_info（CMS）から解決する。モデルが決まるまでの仮の値。
+const title = "株式会社ami";
+const description = "「トキメキの発生点」を生み出す Z世代インフルエンサー・クリエイター集団。";
+---
+
+<BaseLayout title={title} description={description}>
+  <SiteHeader />
+  <div class="page">
+    <main>
+      {home && <Hero images={home.heroImages} />}
+      <Marquee text={'Where "Tokimeki" Originates.'} />
+      {home && <Statement statement={home.statement} />}
+      <Business services={services} />
+      <Topics topics={topics} />
+      <Members members={members} moreHref="/member" />
+      <ContactCta body={home?.contactBody ?? null} href={CONTACT_HREF} />
+    </main>
+    <SiteFooter />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    overflow-x: clip;
+    background:
+      url("/images/star-field.svg") center top / 1280px auto repeat,
+      var(--gradient-page);
+  }
+</style>

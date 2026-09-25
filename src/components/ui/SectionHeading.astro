@@ -1,0 +1,37 @@
+---
+/**
+ * 英字の見出し（Our Business / Topics / Member）。デザインの文字組みを画像で持つ。
+ * 画像の差し替えは src/assets/headings/ のファイルを同じ名前で上書きする。
+ */
+import type { ImageMetadata } from "astro";
+import LocalImage from "./LocalImage.astro";
+
+interface Props {
+  src: ImageMetadata;
+  /** 見出しの文字（読み上げ・検索用） */
+  text: string;
+  /** PC での表示幅（px） */
+  width: number;
+  id?: string;
+}
+
+const { src, text, width, id } = Astro.props;
+---
+
+<h2 class="section-heading" id={id} style={{ "--w": width }}>
+  <LocalImage src={src} alt={text} class="section-heading__img" />
+</h2>
+
+<style>
+  .section-heading {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: var(--z-content);
+  }
+
+  .section-heading__img {
+    /* スマホでは PC の約 6 割まで縮める */
+    width: clamp(calc(var(--w) * 0.6px), calc(var(--w) / 12.8 * 1vw), calc(var(--w) * 1px));
+  }
+</style>

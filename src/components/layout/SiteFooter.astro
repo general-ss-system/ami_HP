@@ -1,0 +1,112 @@
+---
+/**
+ * フッター。地球のドット絵の上にロゴとナビを重ねる。
+ */
+import LocalImage from "../ui/LocalImage.astro";
+import { NAV_ITEMS } from "../../config/site";
+import earth from "../../assets/illustrations/earth.webp";
+import Logo from "./Logo.astro";
+import NavMark from "../ui/NavMark.astro";
+---
+
+<footer class="site-footer">
+  <LocalImage src={earth} alt="" class="site-footer__earth" aria-hidden="true" loading="lazy" />
+  <div class="site-footer__inner">
+    <a class="site-footer__logo" href="/" aria-label="株式会社ami トップページ">
+      <Logo variant="white" height={36} />
+    </a>
+    <nav aria-label="フッターメニュー">
+      <ul class="site-footer__list">
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <a class="site-footer__link" href={item.href}>
+                <NavMark />
+                <span>{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    overflow: hidden;
+    /* デザインのフッター部分（幅 1280 / 高さ 633）の比率を保つ */
+    aspect-ratio: 1280 / 633;
+    min-height: 280px;
+  }
+
+  /* デザインの地球の大きさ（幅 1566 / 1280）と位置（上端がフッター上端から約 11px）に合わせる */
+  .site-footer__earth {
+    position: absolute;
+    left: 50%;
+    top: 1.7%;
+    width: max(122.3%, 760px);
+    max-width: none;
+    translate: -50% 0;
+  }
+
+  .site-footer__inner {
+    position: absolute;
+    inset: auto 0 24%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px 40px;
+    padding-inline: var(--gutter);
+    color: #fff;
+    filter: drop-shadow(0 2px 3px rgb(0 20 80 / 0.55));
+  }
+
+  .site-footer__logo {
+    display: flex;
+    text-decoration: none;
+  }
+
+  .site-footer__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 40px;
+  }
+
+  .site-footer__link {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .site-footer__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 767px) {
+    .site-footer {
+      aspect-ratio: auto;
+      height: 380px;
+    }
+
+    .site-footer__earth {
+      top: 60px;
+    }
+
+    .site-footer__inner {
+      flex-direction: column;
+      bottom: 64px;
+    }
+
+    .site-footer__list {
+      gap: 8px 24px;
+    }
+  }
+</style>

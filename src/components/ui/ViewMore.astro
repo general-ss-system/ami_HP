@@ -1,0 +1,45 @@
+---
+/** 「View more >>」の文字リンク。 */
+import type { Link } from "../../lib/cms/types";
+
+interface Props {
+  link: Link;
+  /** 読み上げ用に何の続きかを補う（例: 「SNSマーケティング事業」） */
+  context?: string;
+  align?: "start" | "end";
+}
+
+const { link, context, align = "end" } = Astro.props;
+---
+
+<p class:list={["view-more", `is-${align}`]}>
+  <a
+    href={link.href}
+    target={link.external ? "_blank" : undefined}
+    rel={link.external ? "noopener noreferrer" : undefined}
+  >
+    {link.label}<span aria-hidden="true"> &gt;&gt;</span>
+    {context && <span class="visually-hidden">（{context}）</span>}
+  </a>
+</p>
+
+<style>
+  .view-more {
+    display: flex;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.04em;
+  }
+
+  .view-more.is-end {
+    justify-content: flex-end;
+  }
+
+  .view-more a {
+    text-underline-offset: 4px;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .view-more a:hover {
+    color: var(--color-accent-bright);
+  }
+</style>

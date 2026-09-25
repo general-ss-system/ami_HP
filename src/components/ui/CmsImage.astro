@@ -1,0 +1,29 @@
+---
+/**
+ * CMS から届いた画像を表示する。
+ *
+ * URL は CMS が返したものをそのまま使う（CMS のドメインをハードコードしない / CMS docs/04 §16）。
+ * width / height を必ず出してレイアウトのずれを防ぐ。alt が null の画像は装飾として扱う。
+ */
+import type { HTMLAttributes } from "astro/types";
+import type { Media } from "../../lib/cms/types";
+
+interface Props extends Omit<HTMLAttributes<"img">, "src" | "alt" | "width" | "height"> {
+  media: Media;
+  /** 写真はなめらかに縮小する（ドット絵用の pixelated を外す） */
+  photo?: boolean;
+}
+
+const { media, photo = false, class: className, loading = "lazy", ...rest } = Astro.props;
+---
+
+<img
+  src={media.url}
+  alt={media.alt ?? ""}
+  width={media.width ?? undefined}
+  height={media.height ?? undefined}
+  loading={loading}
+  decoding="async"
+  class:list={[className, photo && "is-photo"]}
+  {...rest}
+/>

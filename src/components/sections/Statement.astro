@@ -1,0 +1,172 @@
+---
+/**
+ * ステートメント（ABOUT）。文言は CMS（ami_home.statement_*）。
+ * 任意項目が空なら、その行ごと出さない。
+ */
+import type { HomeContent } from "../../lib/cms/types";
+import Decor from "../ui/Decor.astro";
+import ViewMore from "../ui/ViewMore.astro";
+import moonBunny from "../../assets/decor/moon-bunny.webp";
+import rocketBunny from "../../assets/decor/rocket-bunny.webp";
+import asteroid from "../../assets/decor/asteroid.webp";
+import planetBunnyPurple from "../../assets/decor/planet-bunny-purple.webp";
+import planetRinged from "../../assets/decor/planet-ringed.webp";
+import nebula from "../../assets/decor/nebula.webp";
+import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
+import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
+import sparkleGold from "../../assets/decor/sparkle-gold.webp";
+import sparkleViolet from "../../assets/decor/sparkle-violet.webp";
+
+interface Props {
+  statement: HomeContent["statement"];
+}
+
+const { statement } = Astro.props;
+---
+
+<section class="statement" id="about" aria-labelledby="statement-title">
+  <div class="stage statement__stage">
+    <div class="statement__body">
+      {statement.lead && <p class="statement__lead">{statement.lead}</p>}
+      {
+        statement.keywords && (
+          <p class="statement__keywords">
+            <span>{statement.keywords}</span>
+          </p>
+        )
+      }
+      <h2 class="statement__title" id="statement-title">
+        {statement.title ? <span>{statement.title}</span> : <span class="visually-hidden">ABOUT</span>}
+      </h2>
+      <div class="statement__text">
+        {
+          statement.lines.map((line) =>
+            line.before === "" && !line.highlight ? (
+              <br />
+            ) : (
+              <p>
+                {line.before}
+                {line.highlight && <mark class="statement__highlight">{line.highlight}</mark>}
+                {line.after}
+              </p>
+            ),
+          )
+        }
+      </div>
+      {statement.link && <ViewMore link={statement.link} context="ABOUT" />}
+    </div>
+
+    <Decor src={sparkleBlue} pc={[1175, 106, 99]} sp={[320, 40, 36]} twinkle delay={0.7} />
+    <Decor src={moonBunny} pc={[69, 129, 176]} sp={[12, 40, 70]} float />
+    <Decor src={rocketBunny} pc={[321, 260, 246]} sp={false} float delay={1.2} />
+    <Decor src={sparkleGold} pc={[145, 367, 60]} sp={false} twinkle delay={1.9} />
+    <Decor src={asteroid} pc={[85, 765, 126]} sp={false} float delay={2.5} />
+    <Decor src={planetBunnyPurple} pc={[335, 768, 214]} sp={false} float delay={0.4} />
+    <Decor src={sparkleViolet} pc={[553, 755, 56]} sp={false} twinkle delay={1.4} />
+    <Decor src={sparkleViolet} pc={[1182, 840, 56]} sp={false} twinkle delay={2.1} />
+    <Decor src={planetRinged} pc={[35, 998, 120]} sp={[10, 700, 56]} float delay={1.8} />
+    <Decor src={sparkleCluster} pc={[358, 1066, 200]} sp={false} twinkle delay={0.9} />
+    <Decor src={nebula} pc={[1095, 1069, 245]} sp={[290, 760, 90]} float delay={2.8} />
+  </div>
+</section>
+
+<style>
+  .statement {
+    position: relative;
+  }
+
+  .statement__stage {
+    padding-block: clamp(140px, 19vw, 244px) clamp(80px, 9vw, 116px);
+  }
+
+  .statement__body {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: calc(583 / 12.8 * 1cqw);
+    margin-left: calc(604 / 12.8 * 1cqw);
+    text-align: center;
+  }
+
+  .statement__lead {
+    font-size: var(--fs-sm);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .statement__keywords span,
+  .statement__title span,
+  .statement__highlight {
+    color: var(--color-accent);
+    background: #fff;
+  }
+
+  /* 値はデザイン（PC）の箱の大きさ・間隔に合わせている */
+  .statement__keywords {
+    margin-top: clamp(28px, 3.5vw, 45px);
+  }
+
+  .statement__keywords span {
+    display: inline-block;
+    padding: 0 0.6em 0 0.9em;
+    font-size: clamp(19px, 2.2vw, 28px);
+    line-height: 45px;
+    letter-spacing: 0.3em;
+  }
+
+  .statement__title {
+    margin-top: 20px;
+    font-weight: 400;
+  }
+
+  .statement__title span {
+    display: inline-block;
+    padding: 0 0.42em 0 0.6em;
+    font-size: clamp(30px, 3.1vw, 40px);
+    line-height: 66px;
+    letter-spacing: 0.17em;
+  }
+
+  .statement__text {
+    width: min(100%, 470px);
+    margin-top: clamp(48px, 5.2vw, 67px);
+    font-size: clamp(14px, 1.25vw, 16px);
+    line-height: 38px;
+    letter-spacing: 0.24em;
+  }
+
+  .statement__highlight {
+    padding: 0.4em 0.25em;
+  }
+
+  .statement__body :global(.view-more) {
+    align-self: stretch;
+    width: min(100%, 470px);
+    margin: 37px auto 0;
+  }
+
+  @media (max-width: 1023px) {
+    .statement__body {
+      width: 60%;
+      margin-left: 40%;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .statement__stage {
+      padding-inline: var(--gutter);
+    }
+
+    .statement__body {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .statement__text {
+      font-size: 13.5px;
+      letter-spacing: 0.06em;
+      line-height: 30px;
+    }
+  }
+</style>

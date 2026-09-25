@@ -1,0 +1,80 @@
+/*
+ * デザイントークン。値は Figma「top」フレーム（PC 1280px）から取り出した。
+ * 色・余白・フォント・ブレークポイントはコードで管理する（CMS にしない / CMS docs/04 §5）。
+ */
+
+:root {
+  /* ---- 色: ページ全体の背景（紺 → 紫 → 水色）---- */
+  --color-bg-0: #041049;
+  --color-bg-1: #041b61;
+  --color-bg-2: #19118f;
+  --color-bg-3: #4934bf;
+  --color-bg-4: #967adf;
+  --color-bg-5: #8adcf7;
+  --color-bg-6: #dff2f8;
+  --gradient-page: linear-gradient(
+    180deg,
+    var(--color-bg-0) 0%,
+    var(--color-bg-1) 16.8%,
+    var(--color-bg-2) 33.2%,
+    var(--color-bg-3) 51%,
+    var(--color-bg-4) 68.3%,
+    var(--color-bg-5) 84.1%,
+    var(--color-bg-6) 100%
+  );
+  --gradient-hero: linear-gradient(180deg, #00124b 0%, #002175 100%);
+
+  /* ---- 色: 文字・面 ---- */
+  --color-text-on-dark: #ffffff;
+  --color-text: #1b1c22;
+  --color-surface: #f6f6f6;
+  --color-border: #1b1c22;
+  --color-accent: #00addc;
+  --color-accent-bright: #00c0e8;
+  --color-heart: #d63636;
+
+  /* ---- 色: Topics の分類 ---- */
+  --color-topic-news-from: #1fc8f5;
+  --color-topic-news-to: #52a3ef;
+  --color-topic-sns-from: #a26ae7;
+  --color-topic-sns-to: #be8df9;
+  --color-topic-column-from: #4fd67a;
+  --color-topic-column-to: #7ee6a0;
+
+  /* ---- フォント ---- */
+  --font-base: "Madou Futo Maru Gothic", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Yu Gothic", sans-serif;
+
+  /* 画面幅に合わせて 375px〜1280px の間で連続的に変わる文字サイズ */
+  --fs-xs: clamp(0.6875rem, 0.64rem + 0.2vw, 0.8125rem);
+  --fs-sm: clamp(0.8125rem, 0.76rem + 0.25vw, 0.9375rem);
+  --fs-md: clamp(0.875rem, 0.8rem + 0.35vw, 1.0625rem);
+  --fs-lg: clamp(1.125rem, 0.98rem + 0.6vw, 1.5rem);
+  --fs-xl: clamp(1.5rem, 1.2rem + 1.3vw, 2.5rem);
+
+  --letter-spacing-wide: 0.2em;
+  --line-height-body: 1.9;
+
+  /* ---- レイアウト ---- */
+  --content-max: 1280px;
+  --content-narrow: 800px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --header-height: 56px;
+  --section-gap: clamp(80px, 10vw, 160px);
+
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* ---- 動き ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-base: 0.4s;
+
+  /* ---- 重なり順 ---- */
+  --z-decor: 0;
+  --z-content: 1;
+  --z-header: 100;
+}
+
+/*
+ * ブレークポイント（メディアクエリでは変数を使えないため、値をここに記録する）
+ *   sp: 〜767px / tablet: 768〜1023px / pc: 1024px〜
+ */

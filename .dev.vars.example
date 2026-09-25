@@ -1,0 +1,8 @@
+# ローカル開発用。.dev.vars にコピーして使う（.dev.vars はコミットしない）。
+# CMS 無しで制作するときは fixture のままでよい。
+CMS_MODE=fixture
+# live にする場合（CMS リポジトリで pnpm dev → pnpm -F @ss/backend dev:bootstrap の出力を使う）
+# CMS_MODE=live
+# CMS_BASE_URL=http://localhost:8787
+# CMS_SITE_KEY=
+# CMS_DELIVERY_KEY=

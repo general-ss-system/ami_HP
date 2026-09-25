@@ -1,0 +1,107 @@
+---
+/**
+ * 装飾画像（ドット絵の惑星・星など）を、デザイン上の座標で配置する。
+ *
+ * 親に `.stage`（container-type: inline-size）を置き、その幅に比例して位置・大きさを決める。
+ *   pc: [x, y, 幅]  … PC デザイン（幅 1280）上のセクション左上からの px
+ *   sp: [x, y, 幅]  … スマホ（幅 375 想定）での px。false ならスマホでは出さない。省略時は pc を縮小して使う。
+ * 装飾なので alt は空にし、読み上げ対象から外す。
+ */
+import type { ImageMetadata } from "astro";
+import LocalImage from "./LocalImage.astro";
+
+type Box = readonly [x: number, y: number, w: number];
+
+interface Props {
+  src: ImageMetadata;
+  pc: Box;
+  sp?: Box | false;
+  /** ふわふわ浮かせる */
+  float?: boolean;
+  /** 星のまたたき */
+  twinkle?: boolean;
+  /** アニメーションの開始をずらす（秒） */
+  delay?: number;
+  /** 回転（度） */
+  rotate?: number;
+  /** 手前に出す（写真などに重ねる場合） */
+  front?: boolean;
+  /** ファーストビューに入るものは true（遅延読み込みしない） */
+  eager?: boolean;
+}
+
+const { src, pc, sp, float = false, twinkle = false, delay = 0, rotate = 0, front = false, eager = false } = Astro.props;
+
+const style = {
+  "--pc-x": pc[0],
+  "--pc-y": pc[1],
+  "--pc-w": pc[2],
+  ...(sp ? { "--sp-x": sp[0], "--sp-y": sp[1], "--sp-w": sp[2] } : {}),
+  "--delay": `${delay}s`,
+  "--rotate": `${rotate}deg`,
+};
+
+const classes = ["decor", sp === false && "is-pc-only", sp && "has-sp", float && "is-float", twinkle && "is-twinkle", front && "is-front"];
+---
+
+<LocalImage src={src} alt="" class:list={classes} style={style} aria-hidden="true" loading={eager ? "eager" : "lazy"} decoding="async" />
+
+<style>
+  .decor {
+    position: absolute;
+    z-index: var(--z-decor);
+    left: calc(var(--pc-x) / 12.8 * 1cqw);
+    top: calc(var(--pc-y) / 12.8 * 1cqw);
+    width: calc(var(--pc-w) / 12.8 * 1cqw);
+    height: auto;
+    rotate: var(--rotate);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .decor.is-front {
+    z-index: calc(var(--z-content) + 1);
+  }
+
+  @media (max-width: 767px) {
+    .decor.is-pc-only {
+      display: none;
+    }
+
+    .decor.has-sp {
+      left: calc(var(--sp-x) / 3.75 * 1cqw);
+      top: calc(var(--sp-y) / 3.75 * 1cqw);
+      width: calc(var(--sp-w) / 3.75 * 1cqw);
+    }
+  }
+
+  .decor.is-float {
+    animation: decor-float 6s ease-in-out var(--delay) infinite;
+  }
+
+  .decor.is-twinkle {
+    animation: decor-twinkle 2.8s steps(4, end) var(--delay) infinite;
+  }
+
+  @keyframes decor-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -12px;
+    }
+  }
+
+  @keyframes decor-twinkle {
+    0%,
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
+    50% {
+      opacity: 0.35;
+      scale: 0.8;
+    }
+  }
+</style>

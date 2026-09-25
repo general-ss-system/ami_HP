@@ -1,0 +1,73 @@
+---
+/**
+ * ヒーローとステートメントの境目に斜めに敷く、横に流れる帯。
+ * 文言はデザインの一部（タグライン）なのでコードで持つ。
+ */
+
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+// 帯の幅を埋めるだけ繰り返し、同じ並びを 2 組続けて継ぎ目なく流す
+const REPEAT = 4;
+---
+
+<div class="marquee" role="presentation">
+  <div class="marquee__band">
+    <div class="marquee__track">
+      {
+        [0, 1].map((group) => (
+          <p class="marquee__group" aria-hidden={group === 1 ? "true" : undefined}>
+            {Array.from({ length: REPEAT }, () => (
+              <span>{text}&nbsp;</span>
+            ))}
+          </p>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .marquee {
+    position: relative;
+    z-index: calc(var(--z-content) + 2);
+    height: 0;
+    overflow: visible;
+  }
+
+  .marquee__band {
+    position: absolute;
+    left: -10vw;
+    right: -10vw;
+    top: 0;
+    translate: 0 -50%;
+    rotate: 2.2deg;
+    overflow: hidden;
+    padding-block: clamp(10px, 1.6vw, 22px);
+    color: var(--color-text);
+    background: var(--color-surface);
+    border-block: 2px solid var(--color-border);
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: marquee 40s linear infinite;
+  }
+
+  .marquee__group {
+    flex: none;
+    white-space: nowrap;
+    font-size: clamp(28px, 4.4vw, 58px);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  @keyframes marquee {
+    to {
+      translate: -50% 0;
+    }
+  }
+</style>

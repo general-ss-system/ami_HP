@@ -1,0 +1,137 @@
+---
+/**
+ * Member。メンバーは CMS（members）。PC 3 列 / スマホ 2 列。
+ */
+import type { Member } from "../../lib/cms/types";
+import CmsImage from "../ui/CmsImage.astro";
+import Decor from "../ui/Decor.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+import heading from "../../assets/headings/member.webp";
+import planetBunnyPurple from "../../assets/decor/planet-bunny-purple.webp";
+import rocketCat from "../../assets/decor/rocket-cat.webp";
+
+interface Props {
+  members: Member[];
+  /** 一覧ページへのリンク。ページができるまでは未指定で非表示。 */
+  moreHref?: string;
+}
+
+const { members, moreHref } = Astro.props;
+---
+
+{
+  members.length > 0 && (
+    <section class="members" id="member" aria-labelledby="members-title">
+      <div class="stage members__stage">
+        <SectionHeading src={heading} text="Member" width={312} id="members-title" />
+
+        <ul class="members__list">
+          {members.map((member) => (
+            <li class="members__item">
+              <div class="members__portrait">{member.portrait && <CmsImage media={member.portrait} />}</div>
+              <p class="members__name">{member.name}</p>
+              {member.role && <p class="members__role">{member.role}</p>}
+            </li>
+          ))}
+        </ul>
+
+        {moreHref && (
+          <p class="members__more">
+            <a href={moreHref}>
+              View more ...<span class="visually-hidden">（メンバー一覧）</span>
+            </a>
+          </p>
+        )}
+
+        <Decor src={planetBunnyPurple} pc={[955, 167, 188]} sp={[295, -10, 70]} float delay={0.5} />
+        <Decor src={rocketCat} pc={[-22, 486, 200]} sp={false} float delay={1.4} />
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .members__stage {
+    padding-block: clamp(40px, 5vw, 93px) 0;
+  }
+
+  .members__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 233px));
+    justify-content: center;
+    gap: 38px 45px;
+    margin-top: clamp(56px, 7vw, 82px);
+    padding-inline: var(--gutter);
+  }
+
+  .members__item {
+    text-align: center;
+  }
+
+  .members__portrait {
+    aspect-ratio: 231 / 218;
+    overflow: hidden;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    background: rgb(255 255 255 / 0.2);
+  }
+
+  .members__portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .members__name {
+    margin-top: 19px;
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1;
+    letter-spacing: 0.06em;
+  }
+
+  .members__role {
+    margin-top: 11px;
+    line-height: 1;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    opacity: 0.9;
+  }
+
+  .members__more {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(56px, 7vw, 87px);
+  }
+
+  .members__more a {
+    display: grid;
+    place-items: center;
+    width: 190px;
+    height: 68px;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .members__more a:hover {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  @media (max-width: 767px) {
+    .members__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 20px;
+    }
+  }
+</style>
