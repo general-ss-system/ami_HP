@@ -2,6 +2,8 @@
 
 Astro（SSR）+ Cloudflare Workers。コンテンツはヘッドレスCMS（ss-hp-public-system）の Delivery API から取得する。
 
+**下層ページを作る人は、まず [docs/page-development-guide.md](docs/page-development-guide.md)（手順書・プロンプト付き）を読むこと。**
+
 ## はじめかた
 
 ```bash

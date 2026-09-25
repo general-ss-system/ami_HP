@@ -12,6 +12,8 @@
   `docs/02_BACKEND_DATA_API_SPEC.md`、案件別の `docs/projects/ami/CONTENT_CONTRACT.md`。
 - API の応答の型: `src/lib/cms/contracts.ts`（CMS の `packages/contracts` の写し。手で書き換えない）。
 
+- ページの作り方（手順とプロンプト）: `docs/page-development-guide.md`。新しいページはこの手順で作り、分かったことを追記する。
+
 ## 2. 技術構成
 
 - Astro（SSR, `output: "server"`）+ `@astrojs/cloudflare`。Cloudflare Workers にデプロイ。
