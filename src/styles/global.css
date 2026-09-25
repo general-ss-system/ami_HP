@@ -2,11 +2,12 @@
 
 /*
  * 魔導太丸ゴシック（Madou Futo Maru Gothic）。
- * 配信するのは public/fonts/ の woff2 のみ（元の TTF は design-src/fonts/）。
+ * 配信するのは src/assets/fonts/ の woff2 のみ（元の TTF は design-src/fonts/）。
+ * src/assets に置くのは、公開先のベースパス（GitHub Pages の /ami_HP/ など）をビルド時に解決させるため。
  */
 @font-face {
   font-family: "Madou Futo Maru Gothic";
-  src: url("/fonts/MadouFutoMaruGothic.woff2") format("woff2");
+  src: url("../assets/fonts/MadouFutoMaruGothic.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

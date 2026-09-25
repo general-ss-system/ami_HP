@@ -4,6 +4,7 @@
  * SEO の値はページ側で解決して渡す（CMS docs/04 §18: ページの上書き → site_info の既定値）。
  */
 import "../styles/global.css";
+import fontUrl from "../assets/fonts/MadouFutoMaruGothic.woff2?url";
 
 interface Props {
   title: string;
@@ -13,7 +14,9 @@ interface Props {
   noindex?: boolean;
 }
 
-const { title, description, ogImage, noindex = false } = Astro.props;
+const { title, description, ogImage, noindex: noindexProp = false } = Astro.props;
+// GitHub Pages のプレビューは検索に載せない
+const noindex = noindexProp || __PREVIEW_BUILD__;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -34,7 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="preload" href="/fonts/MadouFutoMaruGothic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <slot />

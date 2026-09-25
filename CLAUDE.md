@@ -22,7 +22,7 @@
 
 ```text
 src/
-  assets/        手元の画像（WebP）。装飾・見出し・背景など、コードで管理するもの
+  assets/        手元の画像（WebP）・フォント。装飾・見出し・背景など、コードで管理するもの
     headings/    英字見出しの画像
     decor/       ドット絵の装飾（Decor コンポーネントで配置）
   components/
@@ -40,7 +40,6 @@ src/
     fixtures.ts    仮データ（CMS の応答と同じ形）
   pages/
   styles/        tokens.css（色・余白・フォント）と global.css
-public/fonts/    Webフォント（README.md 参照）
 public/fixtures/ 仮データ用の画像
 docs/            Content Model の案など
 scripts/         素材の変換
@@ -53,6 +52,9 @@ design-src/      元データ（配信しない）
 - 装飾は `Decor` に PC デザイン上の座標 `pc={[x, y, 幅]}` を渡す。`.stage` の幅に比例して動く（cqw）。
   スマホは `sp={[x, y, 幅]}`（375px 基準）か `sp={false}`（出さない）。
 - ブレークポイント: スマホ 〜767px / タブレット 〜1023px（ヘッダーはメニューボタン）/ PC 1024px〜。
+- **サイト内リンク・パスは `withBase()` を通す**（GitHub Pages のプレビューは `/ami_HP/` の下に置かれる）。
+  フォント・背景画像など CSS から参照するファイルは `public/` ではなく `src/assets/` に置き、相対パスで参照する。
+- 手元の画像は `LocalImage`、CMS の画像は `CmsImage` で出す（astro:assets の `<Image>` は使わない）。
 - **SSR のため、`src/assets` の画像は実行時に変換されない。** 素材は WebP・表示サイズの 2 倍程度にしてから置く
   （`pnpm assets:webp`）。
 

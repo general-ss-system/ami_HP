@@ -4,6 +4,7 @@
  */
 import LocalImage from "../ui/LocalImage.astro";
 import { NAV_ITEMS } from "../../config/site";
+import { withBase } from "../../lib/url";
 import earth from "../../assets/illustrations/earth.webp";
 import Logo from "./Logo.astro";
 import NavMark from "../ui/NavMark.astro";
@@ -12,7 +13,7 @@ import NavMark from "../ui/NavMark.astro";
 <footer class="site-footer">
   <LocalImage src={earth} alt="" class="site-footer__earth" aria-hidden="true" loading="lazy" />
   <div class="site-footer__inner">
-    <a class="site-footer__logo" href="/" aria-label="株式会社ami トップページ">
+    <a class="site-footer__logo" href={withBase("/")} aria-label="株式会社ami トップページ">
       <Logo variant="white" height={36} />
     </a>
     <nav aria-label="フッターメニュー">
@@ -20,7 +21,7 @@ import NavMark from "../ui/NavMark.astro";
         {
           NAV_ITEMS.map((item) => (
             <li>
-              <a class="site-footer__link" href={item.href}>
+              <a class="site-footer__link" href={withBase(item.href)}>
                 <NavMark />
                 <span>{item.label}</span>
               </a>

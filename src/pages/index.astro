@@ -15,6 +15,7 @@ import ContactCta from "../components/sections/ContactCta.astro";
 import { CONTACT_HREF } from "../config/site";
 import { getCmsClient } from "../lib/cms/env";
 import { getTopPageData } from "../lib/cms/queries";
+import { withBase } from "../lib/url";
 
 const { home, services, topics, members } = await getTopPageData(getCmsClient());
 
@@ -32,8 +33,8 @@ const description = "「トキメキの発生点」を生み出す Z世代イン
       {home && <Statement statement={home.statement} />}
       <Business services={services} />
       <Topics topics={topics} />
-      <Members members={members} moreHref="/member" />
-      <ContactCta body={home?.contactBody ?? null} href={CONTACT_HREF} />
+      <Members members={members} moreHref={withBase("/member")} />
+      <ContactCta body={home?.contactBody ?? null} href={withBase(CONTACT_HREF)} />
     </main>
     <SiteFooter />
   </div>
@@ -43,7 +44,7 @@ const description = "「トキメキの発生点」を生み出す Z世代イン
   .page {
     overflow-x: clip;
     background:
-      url("/images/star-field.svg") center top / 1280px auto repeat,
+      url("../assets/backgrounds/star-field.svg") center top / 1280px auto repeat,
       var(--gradient-page);
   }
 </style>

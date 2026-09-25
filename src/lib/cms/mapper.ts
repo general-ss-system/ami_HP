@@ -15,6 +15,7 @@ import {
   type CmsLinkSchema,
 } from "./schemas";
 import type { HomeContent, Link, Media, Member, Service, StatementLine, Topic } from "./types";
+import { withBase } from "../url";
 
 export const DEFAULT_TOPICS_LIMIT = 4;
 
@@ -43,7 +44,7 @@ export function toMedia(media: DeliveryMedia | null | undefined): Media | null {
 
 export function toLink(link: z.infer<typeof CmsLinkSchema> | null | undefined): Link | null {
   if (!link) return null;
-  return { label: link.label, href: link.href, external: link.target === "_blank" };
+  return { label: link.label, href: withBase(link.href), external: link.target === "_blank" };
 }
 
 /** 本文を行に分け、強調語句を含む行はその部分を切り出す。 */

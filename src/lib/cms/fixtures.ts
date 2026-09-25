@@ -12,7 +12,7 @@ const AT = "2026-09-25T00:00:00.000Z";
 
 function media(id: string, file: string, width: number, height: number, alt: string | null): DeliveryMedia {
   const mimeType = file.endsWith(".png") ? "image/png" : "image/jpeg";
-  return { id, url: `/fixtures/${file}`, alt, width, height, mimeType };
+  return { id, url: `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/fixtures/${file}`, alt, width, height, mimeType };
 }
 
 function entry(id: string, slug: string | null, content: Record<string, unknown>): DeliveryEntry {

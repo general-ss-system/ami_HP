@@ -7,6 +7,7 @@ import type { Topic } from "../../lib/cms/types";
 import Decor from "../ui/Decor.astro";
 import SectionHeading from "../ui/SectionHeading.astro";
 import TopicCard from "./TopicCard.astro";
+import { withBase } from "../../lib/url";
 import heading from "../../assets/headings/topics.webp";
 import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
 
@@ -27,7 +28,7 @@ const { topics } = Astro.props;
           <ul class="topics__list">
             {topics.map((topic) => (
               <li class="topics__item">
-                <TopicCard topic={topic} href={topic.slug ? `/topics/${topic.slug}` : "/topics"} />
+                <TopicCard topic={topic} href={withBase(topic.slug ? `/topics/${topic.slug}` : "/topics")} />
               </li>
             ))}
           </ul>

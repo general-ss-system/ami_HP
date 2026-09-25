@@ -3,6 +3,7 @@
  * ヘッダー。PC はナビを横に並べ、スマホ・タブレットはメニューボタンで開閉する。
  */
 import { NAV_ITEMS } from "../../config/site";
+import { withBase } from "../../lib/url";
 import Logo from "./Logo.astro";
 import NavMark from "../ui/NavMark.astro";
 ---
@@ -13,7 +14,7 @@ import NavMark from "../ui/NavMark.astro";
       {
         NAV_ITEMS.map((item) => (
           <li>
-            <a class="site-header__link" href={item.href}>
+            <a class="site-header__link" href={withBase(item.href)}>
               <NavMark />
               <span>{item.label}</span>
             </a>
@@ -23,7 +24,7 @@ import NavMark from "../ui/NavMark.astro";
     </ul>
   </nav>
 
-  <a class="site-header__logo" href="/" aria-label="株式会社ami トップページ">
+  <a class="site-header__logo" href={withBase("/")} aria-label="株式会社ami トップページ">
     <Logo height={36} />
   </a>
 

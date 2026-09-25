@@ -2,20 +2,36 @@
 import { defineConfig, envField } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 
+/**
+ * GitHub Pages に置く、確認用のプレビュー（`pnpm build:pages`）。
+ * 仮データ（CMS_MODE=fixture）で静的に書き出し、/ami_HP/ の下に置く。本番の構成（SSR）とは別物。
+ */
+const isPagesPreview = process.env.PREVIEW_TARGET === "github-pages";
+
 // https://astro.build/config
 export default defineConfig({
   // 本番ドメインが決まったら差し替える（canonical / OGP の絶対URLに使う）。
-  site: "https://www.example.com",
+  site: isPagesPreview ? "https://general-ss-system.github.io" : "https://www.example.com",
+  base: isPagesPreview ? "/ami_HP" : "/",
 
-  // CMS の更新をリクエスト時に反映するため SSR にする。
+  // 本番は CMS の更新をリクエスト時に反映するため SSR にする。
   // Frontend 側で2つ目のキャッシュ層（ISR 等）は持たない（CMS docs/04 §20, ADR-022）。
-  output: "server",
+  output: isPagesPreview ? "static" : "server",
 
-  adapter: cloudflare({
-    // 手元の素材（src/assets）はビルド時に最適化し、
-    // CMS の画像は CMS が返す URL をそのまま使う（変換は CMS 側の Cloudflare Images）。
-    imageService: { build: "compile", runtime: "passthrough" },
-  }),
+  adapter: isPagesPreview
+    ? undefined
+    : cloudflare({
+        // 手元の素材（src/assets）は事前に WebP にしたものを直接配信し（LocalImage）、
+        // CMS の画像は CMS が返す URL をそのまま使う（変換は CMS 側の Cloudflare Images）。
+        imageService: { build: "compile", runtime: "passthrough" },
+      }),
+
+  vite: {
+    define: {
+      // プレビューのときは noindex を付ける（BaseLayout）
+      __PREVIEW_BUILD__: JSON.stringify(isPagesPreview),
+    },
+  },
 
   // ログインもカートも無いサイトなので、セッション（KV）は使わない。
   session: false,
