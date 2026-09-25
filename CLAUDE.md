@@ -1,6 +1,6 @@
-# Project Instructions — 株式会社ami 公式サイト
+# Project Instructions — 合同会社ami 公式サイト
 
-株式会社ami のコーポレートサイト（公開側）。コンテンツは別リポジトリのヘッドレスCMS
+合同会社ami のコーポレートサイト（公開側）。コンテンツは別リポジトリのヘッドレスCMS
 （ss-hp-public-system、以下「CMS」）の Delivery API から取得する。
 
 ## 1. 正本

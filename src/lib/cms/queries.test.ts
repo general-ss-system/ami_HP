@@ -7,9 +7,9 @@ import { getTopPageData } from "./queries";
 
 describe("toStatementLines", () => {
   it("強調語句を含む行を分割する", () => {
-    const lines = toStatementLines("株式会社amiは、\nそんな「トキメキの発生点」を生み出す", "「トキメキの発生点」");
+    const lines = toStatementLines("合同会社amiは、\nそんな「トキメキの発生点」を生み出す", "「トキメキの発生点」");
     expect(lines).toEqual([
-      { before: "株式会社amiは、", highlight: null, after: "" },
+      { before: "合同会社amiは、", highlight: null, after: "" },
       { before: "そんな", highlight: "「トキメキの発生点」", after: "を生み出す" },
     ]);
   });

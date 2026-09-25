@@ -1,4 +1,4 @@
-# 株式会社ami 公式サイト
+# 合同会社ami 公式サイト
 
 Astro（SSR）+ Cloudflare Workers。コンテンツはヘッドレスCMS（ss-hp-public-system）の Delivery API から取得する。
 

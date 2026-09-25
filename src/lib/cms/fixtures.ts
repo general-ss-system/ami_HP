@@ -39,7 +39,7 @@ export const fixtureHome: DeliveryEntry = entry("fx-home", null, {
     "そのエネルギーさえあれば、",
     "",
     "ありえないくらいの速さで走り出せる。",
-    "株式会社amiは、",
+    "合同会社amiは、",
     "",
     "そんな「トキメキの発生点」を生み出す",
     "",
