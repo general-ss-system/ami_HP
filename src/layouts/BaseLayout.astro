@@ -5,6 +5,7 @@
  */
 import "../styles/global.css";
 import fontUrl from "../assets/fonts/MadouFutoMaruGothic.woff2?url";
+import pixelFontUrl from "../assets/fonts/PixelifySans-Regular-latin.woff2?url";
 
 interface Props {
   title: string;
@@ -38,6 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={pixelFontUrl} as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <slot />

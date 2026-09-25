@@ -52,7 +52,7 @@ const { members, moreHref } = Astro.props;
 
 <style>
   .members__stage {
-    padding-block: clamp(40px, 5vw, 93px) 0;
+    padding-block: clamp(40px, 7.2656vw, 93px) 0;
   }
 
   .members__list {
@@ -62,7 +62,7 @@ const { members, moreHref } = Astro.props;
     grid-template-columns: repeat(3, minmax(0, 233px));
     justify-content: center;
     gap: 38px 45px;
-    margin-top: clamp(56px, 7vw, 82px);
+    margin-top: clamp(56px, 6.4062vw, 82px);
     padding-inline: var(--gutter);
   }
 
@@ -73,8 +73,8 @@ const { members, moreHref } = Astro.props;
   .members__portrait {
     aspect-ratio: 231 / 218;
     overflow: hidden;
-    border: 3px solid #fff;
-    border-radius: 10px;
+    border: 2.4px solid #fff;
+    border-radius: 12px;
     background: rgb(255 255 255 / 0.2);
   }
 
@@ -86,17 +86,15 @@ const { members, moreHref } = Astro.props;
 
   .members__name {
     margin-top: 19px;
-    font-size: clamp(15px, 1.4vw, 18px);
+    font-size: clamp(15px, 1.4062vw, 18px);
     line-height: 1;
-    letter-spacing: 0.06em;
   }
 
   .members__role {
     margin-top: 11px;
     line-height: 1;
-    font-size: var(--fs-xs);
-    letter-spacing: 0.06em;
-    opacity: 0.9;
+    font-size: 13px;
+    color: var(--color-text-muted);
   }
 
   .members__more {
@@ -104,7 +102,7 @@ const { members, moreHref } = Astro.props;
     z-index: var(--z-content);
     display: flex;
     justify-content: center;
-    margin-top: clamp(56px, 7vw, 87px);
+    margin-top: clamp(56px, 6.7969vw, 87px);
   }
 
   .members__more a {
@@ -112,12 +110,13 @@ const { members, moreHref } = Astro.props;
     place-items: center;
     width: 190px;
     height: 68px;
-    font-size: var(--fs-sm);
-    letter-spacing: 0.04em;
+    font-family: var(--font-pixel);
+    font-size: 20px;
     text-decoration: none;
+    white-space: pre;
     color: var(--color-text);
     background: var(--color-surface);
-    border: 2px solid var(--color-border);
+    border: 2px solid #000;
     transition:
       color var(--duration-base) var(--ease-out),
       background-color var(--duration-base) var(--ease-out);

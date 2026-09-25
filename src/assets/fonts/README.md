@@ -15,3 +15,12 @@
 pip install fonttools brotli
 python -c "from fontTools.ttLib import TTFont; f=TTFont('<入手した TTF のパス>'); f.flavor='woff2'; f.save('src/assets/fonts/MadouFutoMaruGothic.woff2')"
 ```
+
+## 英字の書体（デザインの指定）
+
+| 書体 | 使う場所 | ファイル | ライセンス |
+|---|---|---|---|
+| Pixelify Sans | ナビ・流れる帯・View more | `PixelifySans-Regular-latin.woff2` | SIL Open Font License 1.1（Google Fonts） |
+| Krona One | Topics の分類名（NEWS / SNS / COLUMN） | `KronaOne-Regular-latin.woff2` | SIL Open Font License 1.1（Google Fonts） |
+
+どちらも Google Fonts から英字（latin）部分だけを取得して同梱している（外部の CDN に依存しない・個人情報を送らないため）。

@@ -42,13 +42,13 @@ const { topics } = Astro.props;
 
 <style>
   .topics__stage {
-    padding-block: clamp(40px, 5vw, 70px) clamp(48px, 4.5vw, 57px);
+    padding-block: clamp(40px, 5.4688vw, 70px) clamp(48px, 5.0781vw, 65px);
   }
 
   .topics__scroller {
     position: relative;
     z-index: var(--z-content);
-    margin-top: clamp(48px, 6vw, 80px);
+    margin-top: clamp(48px, 6.25vw, 80px);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
@@ -59,12 +59,13 @@ const { topics } = Astro.props;
     display: none;
   }
 
+  /* デザインでは 1 枚目のカードの左端が x=81、カードの間隔は約 80px */
   .topics__list {
     display: flex;
-    gap: clamp(28px, 4.6cqw, 60px);
+    gap: clamp(28px, 6.25cqw, 80px);
     width: max-content;
     /* 傾けたカードの角が切れないように上下に余白を取る */
-    padding: 40px calc(62 / 12.8 * 1cqw) 48px;
+    padding: 40px calc(81 / 12.8 * 1cqw) 48px;
   }
 
   .topics__item {
@@ -72,17 +73,17 @@ const { topics } = Astro.props;
     scroll-snap-align: center;
   }
 
-  /* デザインの傾きを 4 枚周期で繰り返す */
+  /* デザインの傾き（Figma の値）を 4 枚周期で繰り返す */
   .topics__item:nth-child(4n + 1) {
-    rotate: -5deg;
+    rotate: -5.35deg;
   }
 
   .topics__item:nth-child(4n + 3) {
-    rotate: 4deg;
+    rotate: 5.44deg;
   }
 
   .topics__item:nth-child(4n + 4) {
-    rotate: -3deg;
+    rotate: -2.6deg;
   }
 
   @media (max-width: 767px) {

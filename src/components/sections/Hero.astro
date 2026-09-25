@@ -38,16 +38,15 @@ const images = Astro.props.images.slice(0, 3);
     {
       images.length > 0 && (
         <div class="hero__photos" data-hero-photos>
-          {/* 軌道の線（写真の後ろを回る） */}
-          <svg class="hero__orbit" viewBox="0 0 691 539" aria-hidden="true" focusable="false">
+          {/* 軌道の線（Figma: Ellipse 1）。手前の写真の後ろ、奥の2枚の前を通る。上半分は透明になる */}
+          <svg class="hero__orbit" width="728.636" height="267.965" viewBox="0 0 728.636 267.965" fill="none" aria-hidden="true" focusable="false">
+            <ellipse cx="364.318" cy="133.982" rx="362.818" ry="132.482" stroke="url(#hero-orbit)" stroke-width="3" />
             <defs>
-              <linearGradient id="hero-orbit" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stop-color="#b9e9ff" stop-opacity="0.2" />
-                <stop offset="0.4" stop-color="#8adcf7" />
-                <stop offset="1" stop-color="#78b2ff" />
+              <linearGradient id="hero-orbit" x1="364.318" y1="1.5" x2="364.318" y2="266.465" gradientUnits="userSpaceOnUse">
+                <stop offset="0.201934" stop-color="#6130FF" stop-opacity="0" />
+                <stop offset="1" stop-color="#9DF8FF" />
               </linearGradient>
             </defs>
-            <path d="M-51 527 C 10 668, 414 638, 646 398 C 668 372, 676 350, 672 330" fill="none" stroke="url(#hero-orbit)" stroke-width="2.5" />
           </svg>
           {images.map((image, i) => (
             <figure class="hero__photo" data-pos={i}>
@@ -154,28 +153,48 @@ const images = Astro.props.images.slice(0, 3);
     aspect-ratio: 691 / 539;
   }
 
+  /* 楕円の中心はデザインの (879.8, 610) */
   .hero__orbit {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    z-index: 3;
+    left: -10.27%;
+    top: 65.55%;
+    width: 105.44%;
+    height: auto;
+    aspect-ratio: 728.636 / 267.965;
     overflow: visible;
-    filter: drop-shadow(0 0 4px rgb(138 220 247 / 0.8));
+    rotate: -15.08deg;
+    pointer-events: none;
   }
 
+  /*
+   * 写真の枠（Figma: Rectangle 32 / 33 / 34）。位置は 691 x 539 の枠内の割合。
+   * 奥の写真ほど紺色の膜を濃く重ねる（明るさを落とすのではない）。
+   */
   .hero__photo {
+    --veil: 0;
     position: absolute;
-    aspect-ratio: 419 / 539;
+    aspect-ratio: 416 / 536;
     overflow: hidden;
     border: 3px solid #78b2ff;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--color-bg-1);
     transition:
       left 0.9s var(--ease-out),
       top 0.9s var(--ease-out),
       width 0.9s var(--ease-out),
-      rotate 0.9s var(--ease-out),
-      filter 0.9s var(--ease-out);
+      transform 0.9s var(--ease-out),
+      border-color 0.9s var(--ease-out);
+  }
+
+  .hero__photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgb(0 21 70);
+    opacity: var(--veil);
+    transition: opacity 0.9s var(--ease-out);
+    pointer-events: none;
   }
 
   .hero__photo :global(img) {
@@ -185,28 +204,30 @@ const images = Astro.props.images.slice(0, 3);
   }
 
   .hero__photo[data-pos="0"] {
-    z-index: 3;
-    left: 0;
-    top: 0;
-    width: 60.6%;
-    border-color: #e5c8f6;
+    z-index: 4;
+    left: 0.22%;
+    top: 0.24%;
+    width: 60.2%;
+    border-color: #e8d1ff;
   }
 
   .hero__photo[data-pos="1"] {
+    --veil: 0.5;
     z-index: 2;
-    left: 23%;
-    top: 7.1%;
-    width: 51.1%;
-    filter: brightness(0.85);
+    left: 23.2%;
+    top: 7.29%;
+    width: 50.65%;
+    border-color: #78b2ff;
   }
 
   .hero__photo[data-pos="2"] {
+    --veil: 0.7;
     z-index: 1;
-    left: 47%;
-    top: 9.5%;
-    width: 47%;
-    rotate: 4deg;
-    filter: brightness(0.7);
+    left: 42%;
+    top: 10.2%;
+    width: 45.2%;
+    border-color: #4758bd;
+    transform: rotate(7.68deg) skewX(-0.96deg);
   }
 
   /* ---- スマホ: 見出し → 写真の縦並び ---- */

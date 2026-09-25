@@ -13,6 +13,26 @@
   font-display: swap;
 }
 
+/* 英字（ナビ・流れる帯・View more）。Google Fonts、SIL Open Font License。英字部分のみ */
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("../assets/fonts/PixelifySans-Regular-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F;
+}
+
+/* Topics の分類名（NEWS / SNS / COLUMN）。Google Fonts、SIL Open Font License。英字部分のみ */
+@font-face {
+  font-family: "Krona One";
+  src: url("../assets/fonts/KronaOne-Regular-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F;
+}
+
 /* ---- リセット（最小限） ---- */
 *,
 *::before,

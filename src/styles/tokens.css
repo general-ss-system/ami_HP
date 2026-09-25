@@ -27,22 +27,30 @@
   /* ---- 色: 文字・面 ---- */
   --color-text-on-dark: #ffffff;
   --color-text: #1b1c22;
+  --color-text-muted: #ededed;
   --color-surface: #f6f6f6;
   --color-border: #1b1c22;
   --color-accent: #00addc;
   --color-accent-bright: #00c0e8;
   --color-heart: #d63636;
 
-  /* ---- 色: Topics の分類 ---- */
-  --color-topic-news-from: #1fc8f5;
-  --color-topic-news-to: #52a3ef;
+  /* ---- 色: Topics の分類（カードの地・淡い文字色） ---- */
+  --color-topic-news-from: #23caf8;
+  --color-topic-news-to: #7cd2ea;
+  --color-topic-news-tint: #c8ecf6;
   --color-topic-sns-from: #a26ae7;
   --color-topic-sns-to: #be8df9;
-  --color-topic-column-from: #4fd67a;
-  --color-topic-column-to: #7ee6a0;
+  --color-topic-sns-tint: #e5c8f6;
+  --color-topic-column-from: #53df7f;
+  --color-topic-column-to: #82e5a1;
+  --color-topic-column-tint: #ddf6c8;
 
   /* ---- フォント ---- */
   --font-base: "Madou Futo Maru Gothic", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Yu Gothic", sans-serif;
+  /* 英字（ナビ・流れる帯・View more）。日本語が混ざったら本文の書体で表示する */
+  --font-pixel: "Pixelify Sans", var(--font-base);
+  /* Topics の分類名 */
+  --font-label: "Krona One", var(--font-base);
 
   /* 画面幅に合わせて 375px〜1280px の間で連続的に変わる文字サイズ */
   --fs-xs: clamp(0.6875rem, 0.64rem + 0.2vw, 0.8125rem);
@@ -57,9 +65,9 @@
   /* ---- レイアウト ---- */
   --content-max: 1280px;
   --content-narrow: 800px;
-  --gutter: clamp(16px, 4vw, 40px);
+  --gutter: clamp(16px, 3.125vw, 40px);
   --header-height: 56px;
-  --section-gap: clamp(80px, 10vw, 160px);
+  --section-gap: clamp(80px, 12.5vw, 160px);
 
   --radius-card: 16px;
   --radius-pill: 999px;

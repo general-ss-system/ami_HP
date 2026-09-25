@@ -1,7 +1,7 @@
 ---
 /**
- * Topics のカード。分類（NEWS / SNS / COLUMN）で色が変わる。
- * ハート・吹き出しはデザイン上の飾り（件数などは持たない）。
+ * Topics のカード（Figma: Group 16 / 17 / 18）。分類（NEWS / SNS / COLUMN）で地の色と淡い文字色が変わる。
+ * ハート・吹き出し・しおりはデザインの飾り（件数などは持たない）。形はデザインの SVG のまま。
  */
 import type { Topic } from "../../lib/cms/types";
 import CmsImage from "../ui/CmsImage.astro";
@@ -14,17 +14,20 @@ interface Props {
 const { topic, href } = Astro.props;
 
 const CATEGORY_LABEL = { news: "NEWS", sns: "SNS", column: "COLUMN" } as const;
+const label = CATEGORY_LABEL[topic.category];
 ---
 
 <article class:list={["topic-card", `is-${topic.category}`]}>
   <a class="topic-card__link" href={href}>
-    <span class="topic-card__sheet is-top" aria-hidden="true"></span>
-    <span class="topic-card__sheet is-bottom" aria-hidden="true"></span>
+    <span class="topic-card__tape is-top" aria-hidden="true"></span>
+    <span class="topic-card__tape is-bottom" aria-hidden="true"></span>
 
     <div class="topic-card__head">
-      <p class="topic-card__category">{CATEGORY_LABEL[topic.category]}</p>
-      <svg class="topic-card__bookmark" viewBox="0 0 8 10" aria-hidden="true" focusable="false" shape-rendering="crispEdges">
-        <path d="M0 0h8v10L4 7 0 10z" />
+      <p class="topic-card__category" aria-label={label}>
+        <span class="topic-card__initial">{label.slice(0, 1)}</span>{label.slice(1)}
+      </p>
+      <svg class="topic-card__bookmark" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <path d="M2.5 20V1.875C2.5 0.839453 3.33945 0 4.375 0H15.625C16.6605 0 17.5 0.839453 17.5 1.875V20L10 15.625L2.5 20Z" />
       </svg>
     </div>
 
@@ -32,50 +35,58 @@ const CATEGORY_LABEL = { news: "NEWS", sns: "SNS", column: "COLUMN" } as const;
       {topic.thumbnail && <CmsImage media={topic.thumbnail} photo />}
     </div>
 
-    <h3 class="topic-card__title">{topic.title}</h3>
-    {topic.excerpt && <p class="topic-card__excerpt">{topic.excerpt}</p>}
+    <div class="topic-card__body">
+      <h3 class="topic-card__title">{topic.title}</h3>
+      {topic.excerpt && <p class="topic-card__excerpt">{topic.excerpt}</p>}
+    </div>
 
-    <p class="topic-card__icons" aria-hidden="true">
-      <svg viewBox="0 0 9 8" class="topic-card__heart" shape-rendering="crispEdges">
-        <path d="M1 0h2v1h1v1h1V1h1V0h2v1h1v3H8v1H7v1H6v1H5v1H4V7H3V6H2V5H1V4H0V1h1z" />
-      </svg>
-      <svg viewBox="0 0 10 9" class="topic-card__comment" shape-rendering="crispEdges">
-        <path d="M2 0h6v1h1v1h1v4H9v1H8v1H4v1H2V7H1V6H0V2h1V1h1zm0 1v1H1v4h1v1h1v1h1V7h4V6h1V2H8V1z" />
-      </svg>
-    </p>
+    <svg class="topic-card__icons" width="47" height="20" viewBox="0 0 47 20" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d="M16.2529 3.09402C14.3263 1.4262 11.4611 1.72619 9.69282 3.57973L9.00026 4.30472L8.30769 3.57973C6.54288 1.72619 3.67419 1.4262 1.74766 3.09402C-0.460107 5.00827 -0.57612 8.44393 1.39962 10.5189L8.20223 17.6545C8.64167 18.1152 9.35533 18.1152 9.79477 17.6545L16.5974 10.5189C18.5766 8.44393 18.4606 5.00827 16.2529 3.09402Z"
+        fill="var(--color-heart)"></path>
+      <path
+        d="M36 1C41.3352 1 46 4.60184 46 9.42871C45.9999 14.2555 41.3352 17.8574 36 17.8574C34.7289 17.8574 33.5166 17.65 32.3994 17.2852C31.3449 18.0411 29.5699 19 27.2813 19C26.7645 19 26.306 18.6931 26.1045 18.2207C25.9074 17.7582 25.9925 17.2113 26.3496 16.832L26.3564 16.8242L26.3643 16.8164C26.3933 16.7824 26.6992 16.4396 27.0537 15.915C27.3605 15.4611 27.6715 14.9134 27.8799 14.3467C26.7129 12.9806 26 11.2874 26 9.42871C26 4.60184 30.6648 1 36 1Z"
+        stroke="currentColor"
+        stroke-width="2"></path>
+    </svg>
     <time class="visually-hidden" datetime={topic.publishedDate}>{topic.publishedDate}</time>
   </a>
 </article>
 
 <style>
+  /* 寸法は Figma（305 x 430、内側の余白 21px、写真 262 x 170）に合わせている */
   .topic-card {
     --from: var(--color-topic-news-from);
     --to: var(--color-topic-news-to);
+    --tint: var(--color-topic-news-tint);
     position: relative;
     flex: none;
-    width: clamp(260px, 27cqw, 344px);
+    width: 305px;
   }
 
   .topic-card.is-sns {
     --from: var(--color-topic-sns-from);
     --to: var(--color-topic-sns-to);
+    --tint: var(--color-topic-sns-tint);
   }
 
   .topic-card.is-column {
     --from: var(--color-topic-column-from);
     --to: var(--color-topic-column-to);
+    --tint: var(--color-topic-column-tint);
   }
 
   .topic-card__link {
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 22px 22px 26px;
+    min-height: 430px;
+    padding: 24px 21px 26px 21px;
     text-decoration: none;
     color: #fff;
-    background: linear-gradient(110deg, var(--from), var(--to));
-    box-shadow: 0 10px 24px rgb(20 10 80 / 0.25);
+    background: linear-gradient(90deg, var(--from), var(--to));
+    border-block: 2px solid #fff;
+    box-shadow: 0 10px 24px rgb(20 10 80 / 0.2);
     transition:
       translate var(--duration-base) var(--ease-out),
       box-shadow var(--duration-base) var(--ease-out);
@@ -83,51 +94,53 @@ const CATEGORY_LABEL = { news: "NEWS", sns: "SNS", column: "COLUMN" } as const;
 
   .topic-card__link:hover {
     translate: 0 -6px;
-    box-shadow: 0 18px 32px rgb(20 10 80 / 0.35);
+    box-shadow: 0 18px 32px rgb(20 10 80 / 0.3);
   }
 
-  /* 紙が重なったように見せる白い縁 */
-  .topic-card__sheet {
+  /* 紙が重なったように見える白い帯（277 x 5） */
+  .topic-card__tape {
     position: absolute;
-    left: 4%;
-    right: -2%;
-    height: 8px;
+    left: 14px;
+    width: 277px;
+    height: 5px;
     background: #fff;
-    z-index: -1;
   }
 
-  .topic-card__sheet.is-top {
-    top: -6px;
+  .topic-card__tape.is-top {
+    top: -7px;
   }
 
-  .topic-card__sheet.is-bottom {
-    bottom: -6px;
-    left: 6%;
-    right: 2%;
+  .topic-card__tape.is-bottom {
+    bottom: -7px;
   }
 
   .topic-card__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    color: var(--tint);
   }
 
   .topic-card__category {
-    font-size: clamp(20px, 1.9vw, 24px);
-    line-height: 1.3;
-    letter-spacing: 0.08em;
+    font-family: var(--font-label);
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .topic-card__initial {
+    color: #fff;
   }
 
   .topic-card__bookmark {
-    width: 16px;
-    fill: rgb(255 255 255 / 0.75);
+    flex: none;
+    fill: currentColor;
   }
 
   .topic-card__thumb {
     aspect-ratio: 262 / 170;
-    margin-top: 12px;
+    margin-top: 13px;
     overflow: hidden;
-    background: rgb(255 255 255 / 0.3);
+    background: #fff;
   }
 
   .topic-card__thumb :global(img) {
@@ -137,43 +150,48 @@ const CATEGORY_LABEL = { news: "NEWS", sns: "SNS", column: "COLUMN" } as const;
     object-position: center 30%;
   }
 
+  .topic-card__body {
+    display: grid;
+    gap: 6px;
+    margin-top: 20px;
+  }
+
   .topic-card__title {
-    margin-top: 18px;
-    font-size: var(--fs-sm);
-    font-weight: 700;
-    line-height: 1.5;
-    letter-spacing: 0.04em;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.25;
   }
 
   .topic-card__excerpt {
     display: -webkit-box;
-    margin-top: 4px;
     overflow: hidden;
-    font-size: var(--fs-sm);
-    line-height: 1.7;
-    letter-spacing: 0.04em;
+    font-size: 15px;
+    line-height: 25px;
+    color: var(--tint);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }
 
   .topic-card__icons {
-    display: flex;
-    gap: 8px;
     margin-top: auto;
     padding-top: 16px;
+    box-sizing: content-box;
+    color: var(--tint);
+    overflow: visible;
   }
 
-  .topic-card__icons svg {
-    width: 18px;
-    height: 16px;
-  }
+  @media (max-width: 767px) {
+    .topic-card {
+      width: 270px;
+    }
 
-  .topic-card__heart {
-    fill: var(--color-heart);
-  }
+    .topic-card__link {
+      min-height: 400px;
+    }
 
-  .topic-card__comment {
-    fill: #fff;
+    .topic-card__tape {
+      width: calc(100% - 28px);
+    }
   }
 </style>

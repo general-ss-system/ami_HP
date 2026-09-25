@@ -64,9 +64,9 @@ const { statement } = Astro.props;
     <Decor src={planetBunnyPurple} pc={[335, 768, 214]} sp={false} float delay={0.4} />
     <Decor src={sparkleViolet} pc={[553, 755, 56]} sp={false} twinkle delay={1.4} />
     <Decor src={sparkleViolet} pc={[1182, 840, 56]} sp={false} twinkle delay={2.1} />
-    <Decor src={planetRinged} pc={[35, 998, 120]} sp={[10, 700, 56]} float delay={1.8} />
+    <Decor src={planetRinged} pc={[35, 998, 120]} sp={false} float delay={1.8} />
     <Decor src={sparkleCluster} pc={[358, 1066, 200]} sp={false} twinkle delay={0.9} />
-    <Decor src={nebula} pc={[1095, 1069, 245]} sp={[290, 760, 90]} float delay={2.8} />
+    <Decor src={nebula} pc={[1095, 1069, 245]} sp={false} float delay={2.8} />
   </div>
 </section>
 
@@ -76,7 +76,7 @@ const { statement } = Astro.props;
   }
 
   .statement__stage {
-    padding-block: clamp(140px, 19vw, 244px) clamp(80px, 9vw, 116px);
+    padding-block: clamp(140px, 19.0625vw, 244px) clamp(80px, 9.0625vw, 116px);
   }
 
   .statement__body {
@@ -91,8 +91,10 @@ const { statement } = Astro.props;
   }
 
   .statement__lead {
-    font-size: var(--fs-sm);
-    letter-spacing: var(--letter-spacing-wide);
+    font-size: clamp(14px, 1.25vw, 16px);
+    line-height: 20px;
+    letter-spacing: 0.23em;
+    text-shadow: 0 1px 1.4px #000;
   }
 
   .statement__keywords span,
@@ -104,15 +106,17 @@ const { statement } = Astro.props;
 
   /* 値はデザイン（PC）の箱の大きさ・間隔に合わせている */
   .statement__keywords {
-    margin-top: clamp(28px, 3.5vw, 45px);
+    margin-top: clamp(28px, 4.2188vw, 54px);
   }
 
+  /* 字間を含めた文字幅と白い箱（481 x 45）の差を左右の余白にする。末尾の字間ぶん左を広く取る */
   .statement__keywords span {
     display: inline-block;
-    padding: 0 0.6em 0 0.9em;
-    font-size: clamp(19px, 2.2vw, 28px);
-    line-height: 45px;
-    letter-spacing: 0.3em;
+    padding: 0 0.26em 0 0.49em;
+    font-size: clamp(20px, 2.4219vw, 31px);
+    line-height: 1.45;
+    letter-spacing: 0.23em;
+    text-shadow: 0 1px 1.4px #fff;
   }
 
   .statement__title {
@@ -120,24 +124,30 @@ const { statement } = Astro.props;
     font-weight: 400;
   }
 
+  /* 白い箱は 328 x 66 */
   .statement__title span {
     display: inline-block;
-    padding: 0 0.42em 0 0.6em;
-    font-size: clamp(30px, 3.1vw, 40px);
-    line-height: 66px;
-    letter-spacing: 0.17em;
+    padding: 0 0 0 0.18em;
+    font-size: clamp(30px, 3.4141vw, 43.7px);
+    line-height: 1.51;
+    letter-spacing: 0.23em;
+    text-shadow: 0 1px 1.4px #fff;
   }
 
+  /* ブラウザは行末の文字の後ろにも字間を足すため、デザインの幅（470px）より少し広く取る */
   .statement__text {
-    width: min(100%, 470px);
-    margin-top: clamp(48px, 5.2vw, 67px);
+    width: min(100%, 490px);
+    margin-top: clamp(48px, 5.2344vw, 67px);
     font-size: clamp(14px, 1.25vw, 16px);
     line-height: 38px;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.31em;
   }
 
+  /* 強調語句は本文より大きく（20px）、白い帯の上に水色で出す */
   .statement__highlight {
-    padding: 0.4em 0.25em;
+    padding: 0.2em 0;
+    font-size: 1.25em;
+    letter-spacing: 0.31em;
   }
 
   .statement__body :global(.view-more) {
