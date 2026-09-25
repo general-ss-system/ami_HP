@@ -43,7 +43,6 @@ src/
 public/fixtures/ 仮データ用の画像
 docs/            Content Model の案など
 scripts/         素材の変換
-design-src/      元データ（配信しない）
 ```
 
 ## 3.5 レイアウトの作り方
