@@ -1,0 +1,273 @@
+---
+/**
+ * TOPICS 一覧の中身（分類のタブ・カード・ページ送り）。ページ番号・分類ごとのルートから共通で使う。
+ */
+import PageLayout from "../../layouts/PageLayout.astro";
+import TopicCard from "../sections/TopicCard.astro";
+import Decor from "../ui/Decor.astro";
+import { TOPIC_CATEGORIES } from "../../lib/cms/schemas";
+import type { TopicsArchiveData } from "../../lib/cms/queries";
+import { TOPIC_CATEGORY_LABEL, topicsListHref } from "../../lib/topics";
+import { pageDescription, pageTitle } from "../../lib/seo";
+import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
+import planetBunnyBlue from "../../assets/decor/planet-bunny-blue.webp";
+import rocketBunny from "../../assets/decor/rocket-bunny.webp";
+
+interface Props {
+  data: TopicsArchiveData;
+}
+
+const { siteInfo, topics, category, page, totalPages } = Astro.props.data;
+
+const categoryLabel = category ? TOPIC_CATEGORY_LABEL[category] : null;
+const titleParts = ["Topics", categoryLabel, page > 1 ? `${page}ページ目` : null].filter(Boolean);
+
+const tabs = [
+  { key: "all", label: "ALL", href: topicsListHref(null), current: category === null },
+  ...TOPIC_CATEGORIES.map((c) => ({ key: c, label: TOPIC_CATEGORY_LABEL[c], href: topicsListHref(c), current: category === c })),
+];
+
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+const crumbs = [
+  { label: "TOPICS", href: category || page > 1 ? topicsListHref(null) : undefined },
+  ...(categoryLabel ? [{ label: categoryLabel, href: page > 1 ? topicsListHref(category) : undefined }] : []),
+  ...(page > 1 ? [{ label: `${page}ページ目` }] : []),
+];
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, titleParts.join(" / "))}
+  description={pageDescription(siteInfo)}
+  heading="Topics"
+  headingSub="お知らせ・SNS・コラム"
+  crumbs={crumbs}
+>
+  <section class="topics-archive" aria-label="記事の一覧">
+    <div class="stage topics-archive__stage">
+      <nav class="topics-archive__tabs" aria-label="分類で絞り込む">
+        <ul>
+          {
+            tabs.map((tab) => (
+              <li>
+                <a class:list={["topics-archive__tab", `is-${tab.key}`]} href={tab.href} aria-current={tab.current ? "page" : undefined}>
+                  {tab.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      {
+        topics.length > 0 ? (
+          <ul class="topics-archive__list">
+            {topics.map((topic) => (
+              <li class="topics-archive__item">
+                <TopicCard topic={topic} headingLevel={2} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="topics-archive__empty">まだ記事がありません。</p>
+        )
+      }
+
+      {
+        totalPages > 1 && (
+          <nav class="topics-archive__pager" aria-label="ページ送り">
+            {page > 1 && (
+              <a class="topics-archive__step" href={topicsListHref(category, page - 1)} rel="prev">
+                <span aria-hidden="true">&lt;</span>
+                <span class="visually-hidden">前のページ</span>
+              </a>
+            )}
+            <ol>
+              {pages.map((n) => (
+                <li>
+                  <a
+                    class="topics-archive__page"
+                    href={topicsListHref(category, n)}
+                    aria-current={n === page ? "page" : undefined}
+                  >
+                    <span class="visually-hidden">ページ</span>
+                    {n}
+                  </a>
+                </li>
+              ))}
+            </ol>
+            {page < totalPages && (
+              <a class="topics-archive__step" href={topicsListHref(category, page + 1)} rel="next">
+                <span aria-hidden="true">&gt;</span>
+                <span class="visually-hidden">次のページ</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+
+      <Decor src={sparkleCluster} pc={[1080, 0, 170]} sp={false} twinkle delay={0.4} />
+      <Decor src={planetBunnyBlue} pc={[30, 560, 130]} sp={false} float delay={1.1} />
+      <Decor src={rocketBunny} pc={[1110, 900, 170]} sp={false} float delay={2} />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .topics-archive__stage {
+    padding: 0 var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .topics-archive__tabs ul {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .topics-archive__tab {
+    --from: #fff;
+    --to: #fff;
+    display: grid;
+    place-items: center;
+    min-width: 120px;
+    height: 48px;
+    padding-inline: 20px;
+    font-family: var(--font-label);
+    font-size: 15px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      translate var(--duration-base) var(--ease-out);
+  }
+
+  .topics-archive__tab.is-news {
+    --from: var(--color-topic-news-from);
+    --to: var(--color-topic-news-to);
+  }
+
+  .topics-archive__tab.is-sns {
+    --from: var(--color-topic-sns-from);
+    --to: var(--color-topic-sns-to);
+  }
+
+  .topics-archive__tab.is-column {
+    --from: var(--color-topic-column-from);
+    --to: var(--color-topic-column-to);
+  }
+
+  .topics-archive__tab.is-all {
+    --from: var(--color-bg-2);
+    --to: var(--color-bg-3);
+  }
+
+  .topics-archive__tab:hover {
+    translate: 0 -3px;
+  }
+
+  /* 選んでいる分類は、カードと同じ色の地にする */
+  .topics-archive__tab[aria-current="page"] {
+    color: #fff;
+    background: linear-gradient(90deg, var(--from), var(--to));
+    border-color: #fff;
+  }
+
+  .topics-archive__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(3, 305px);
+    justify-content: center;
+    gap: 72px clamp(32px, 4.7vw, 60px);
+    margin-top: clamp(56px, 6.25vw, 80px);
+  }
+
+  .topics-archive__item {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* トップと同じく少しずつ傾けて並べる（控えめに） */
+  .topics-archive__item:nth-child(3n + 1) {
+    rotate: -2deg;
+  }
+
+  .topics-archive__item:nth-child(3n + 3) {
+    rotate: 2deg;
+  }
+
+  .topics-archive__empty {
+    position: relative;
+    z-index: var(--z-content);
+    margin-top: 64px;
+    text-align: center;
+  }
+
+  .topics-archive__pager {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: clamp(64px, 7.8vw, 100px);
+    font-family: var(--font-pixel);
+    font-size: 18px;
+  }
+
+  .topics-archive__pager ol {
+    display: flex;
+    gap: 8px;
+  }
+
+  .topics-archive__page,
+  .topics-archive__step {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .topics-archive__page:hover,
+  .topics-archive__step:hover,
+  .topics-archive__page[aria-current="page"] {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  @media (max-width: 1099px) {
+    .topics-archive__list {
+      grid-template-columns: repeat(2, 305px);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .topics-archive__list {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .topics-archive__item {
+      rotate: 0deg !important;
+    }
+
+    .topics-archive__tab {
+      min-width: 0;
+      height: 42px;
+      padding-inline: 14px;
+      font-size: 13px;
+    }
+  }
+</style>

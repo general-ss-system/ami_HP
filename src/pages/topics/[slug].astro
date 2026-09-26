@@ -1,0 +1,233 @@
+---
+/**
+ * TOPICS 詳細。記事名を h1 にし、英字の「Topics」は飾りの見出しにする。
+ * 外部リンクだけの記事・非公開の記事は 404。
+ */
+import type { GetStaticPaths } from "astro";
+import PageLayout from "../../layouts/PageLayout.astro";
+import TopicCard from "../../components/sections/TopicCard.astro";
+import CmsImage from "../../components/ui/CmsImage.astro";
+import Panel from "../../components/ui/Panel.astro";
+import RichText from "../../components/ui/RichText.astro";
+import Decor from "../../components/ui/Decor.astro";
+import { getCmsClient } from "../../lib/cms/env";
+import { getAllTopics, getTopicDetail } from "../../lib/cms/queries";
+import { isEmptyRichText } from "../../lib/cms/richtext";
+import { pageDescription, pageTitle } from "../../lib/seo";
+import { TOPIC_CATEGORY_LABEL, formatTopicDate, topicsListHref } from "../../lib/topics";
+import sparkleGold from "../../assets/decor/sparkle-gold.webp";
+import planetRinged from "../../assets/decor/planet-ringed.webp";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const topics = await getAllTopics(getCmsClient());
+  return topics.filter((t) => t.slug && !t.externalLink).map((t) => ({ params: { slug: t.slug! } }));
+}) satisfies GetStaticPaths;
+
+const slug = Astro.params.slug;
+const data = slug ? await getTopicDetail(getCmsClient(), slug) : null;
+if (!data) return Astro.rewrite("/404");
+
+const { siteInfo, topic, recent } = data;
+const label = TOPIC_CATEGORY_LABEL[topic.category];
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, topic.title)}
+  description={pageDescription(siteInfo, topic.excerpt)}
+  ogImage={topic.thumbnail ? new URL(topic.thumbnail.url, Astro.site).toString() : undefined}
+  heading="Topics"
+  headingSub="お知らせ・SNS・コラム"
+  headingIsTitle={false}
+  crumbs={[
+    { label: "TOPICS", href: topicsListHref(null) },
+    { label, href: topicsListHref(topic.category) },
+    { label: topic.title },
+  ]}
+>
+  <div class="stage article__stage">
+    <Panel as="article" class:list={["article", `is-${topic.category}`]} aria-labelledby="article-title">
+      <header class="article__header">
+        <p class="article__meta">
+          <a class="article__category" href={topicsListHref(topic.category)}>{label}</a>
+          <time datetime={topic.publishedDate}>{formatTopicDate(topic.publishedDate)}</time>
+        </p>
+        <h1 class="article__title" id="article-title">{topic.title}</h1>
+      </header>
+
+      {
+        topic.thumbnail && (
+          <figure class="article__thumb">
+            <CmsImage media={topic.thumbnail} photo loading="eager" />
+          </figure>
+        )
+      }
+
+      {!isEmptyRichText(topic.body) ? <RichText blocks={topic.body} class="article__body" /> : topic.excerpt && <p class="article__body">{topic.excerpt}</p>}
+    </Panel>
+
+    <p class="article__back">
+      <a href={topicsListHref(null)}>一覧へもどる</a>
+    </p>
+
+    <Decor src={planetRinged} pc={[40, 120, 130]} sp={false} float delay={0.8} />
+    <Decor src={sparkleGold} pc={[1150, 420, 56]} sp={false} twinkle delay={1.6} />
+  </div>
+
+  {
+    recent.length > 0 && (
+      <section class="recent" aria-labelledby="recent-title">
+        <div class="stage recent__stage">
+          <h2 class="recent__title" id="recent-title">
+            <span class="recent__title-en">New Topics</span>
+            <span class="recent__title-ja">新着記事</span>
+          </h2>
+          <ul class="recent__list">
+            {recent.map((t) => (
+              <li>
+                <TopicCard topic={t} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</PageLayout>
+
+<style>
+  .article__stage {
+    padding: 0 var(--gutter);
+  }
+
+  .article {
+    --accent-from: var(--color-topic-news-from);
+    --accent-to: var(--color-topic-news-to);
+    max-width: 880px;
+    margin-inline: auto;
+  }
+
+  .article.is-sns {
+    --accent-from: var(--color-topic-sns-from);
+    --accent-to: var(--color-topic-sns-to);
+  }
+
+  .article.is-column {
+    --accent-from: var(--color-topic-column-from);
+    --accent-to: var(--color-topic-column-to);
+  }
+
+  /* 上辺に分類の色の帯 */
+  .article::before {
+    content: "";
+    position: absolute;
+    inset: -2px -2px auto;
+    height: 10px;
+    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+    border: 2px solid var(--color-border);
+  }
+
+  .article__meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-pixel);
+    font-size: 15px;
+  }
+
+  .article__category {
+    padding: 4px 14px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+  }
+
+  .article__title {
+    margin-top: 16px;
+    font-size: clamp(22px, 2.34vw, 30px);
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .article__thumb {
+    margin-top: 32px;
+    overflow: hidden;
+    border: 2px solid var(--color-border);
+  }
+
+  .article__thumb :global(img) {
+    width: 100%;
+    max-height: 520px;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .article :global(.article__body) {
+    margin-top: 40px;
+  }
+
+  .article__back {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    margin-top: 56px;
+  }
+
+  .article__back a {
+    display: grid;
+    place-items: center;
+    width: 220px;
+    height: 60px;
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .article__back a:hover {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  .recent__stage {
+    padding: clamp(80px, 10vw, 128px) var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .recent__title {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    font-weight: 400;
+  }
+
+  .recent__title-en {
+    font-family: var(--font-pixel);
+    font-size: clamp(28px, 2.8vw, 36px);
+    line-height: 1;
+  }
+
+  .recent__title-ja {
+    font-size: var(--fs-sm);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .recent__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 48px clamp(32px, 4.7vw, 60px);
+    margin-top: 56px;
+  }
+</style>

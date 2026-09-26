@@ -2,23 +2,32 @@
 /**
  * Topics のカード（Figma: Group 16 / 17 / 18）。分類（NEWS / SNS / COLUMN）で地の色と淡い文字色が変わる。
  * ハート・吹き出し・しおりはデザインの飾り（件数などは持たない）。形はデザインの SVG のまま。
+ * リンク先は詳細ページ。外部リンクが設定された記事は、その URL を開く。
  */
 import type { Topic } from "../../lib/cms/types";
+import { TOPIC_CATEGORY_LABEL, topicHref } from "../../lib/topics";
 import CmsImage from "../ui/CmsImage.astro";
 
 interface Props {
   topic: Topic;
-  href: string;
+  /** 見出しの階層（一覧ページでは h2） */
+  headingLevel?: 2 | 3;
 }
 
-const { topic, href } = Astro.props;
+const { topic, headingLevel = 3 } = Astro.props;
 
-const CATEGORY_LABEL = { news: "NEWS", sns: "SNS", column: "COLUMN" } as const;
-const label = CATEGORY_LABEL[topic.category];
+const label = TOPIC_CATEGORY_LABEL[topic.category];
+const { href, external } = topicHref(topic);
+const Title = `h${headingLevel}` as "h2" | "h3";
 ---
 
 <article class:list={["topic-card", `is-${topic.category}`]}>
-  <a class="topic-card__link" href={href}>
+  <a
+    class="topic-card__link"
+    href={href}
+    target={external ? "_blank" : undefined}
+    rel={external ? "noopener noreferrer" : undefined}
+  >
     <span class="topic-card__tape is-top" aria-hidden="true"></span>
     <span class="topic-card__tape is-bottom" aria-hidden="true"></span>
 
@@ -36,7 +45,10 @@ const label = CATEGORY_LABEL[topic.category];
     </div>
 
     <div class="topic-card__body">
-      <h3 class="topic-card__title">{topic.title}</h3>
+      <Title class="topic-card__title">
+        {topic.title}
+        {external && <span class="visually-hidden">（外部サイトが開きます）</span>}
+      </Title>
       {topic.excerpt && <p class="topic-card__excerpt">{topic.excerpt}</p>}
     </div>
 

@@ -1,0 +1,17 @@
+---
+/** TOPICS 一覧（分類ごと・1 ページ目）。 */
+import type { GetStaticPaths } from "astro";
+import TopicsArchive from "../../../../components/topics/TopicsArchive.astro";
+import { getCmsClient } from "../../../../lib/cms/env";
+import { getTopicsArchive, isTopicCategory } from "../../../../lib/cms/queries";
+import { TOPIC_CATEGORIES } from "../../../../lib/cms/schemas";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (() => TOPIC_CATEGORIES.map((category) => ({ params: { category } }))) satisfies GetStaticPaths;
+
+const { category } = Astro.params;
+const data = isTopicCategory(category) ? await getTopicsArchive(getCmsClient(), { category, page: 1 }) : null;
+if (!data) return Astro.rewrite("/404");
+---
+
+<TopicsArchive data={data} />

@@ -9,18 +9,19 @@ interface Props {
   text: string;
   /** 日本語の添え書き（例: "私たちについて"） */
   sub?: string;
-  /** h1（ページの見出し）か h2（ページ内の見出し） */
-  level?: 1 | 2;
+  /** h1（ページの見出し）か h2（ページ内の見出し）。"none" は見出しにしない（記事ページで記事名を h1 にする場合） */
+  level?: 1 | 2 | "none";
   /** 傾き（度） */
   tilt?: number;
   id?: string;
 }
 
 const { text, sub, level = 1, tilt = -3, id } = Astro.props;
-const Tag = `h${level}` as "h1" | "h2";
+const Tag = level === "none" ? "p" : (`h${level}` as "h1" | "h2");
+const size = level === 2 ? 2 : 1;
 ---
 
-<Tag class:list={["page-heading", `is-level-${level}`]} id={id} style={{ "--tilt": `${tilt}deg` }}>
+<Tag class:list={["page-heading", `is-level-${size}`]} id={id} style={{ "--tilt": `${tilt}deg` }}>
   <span class="page-heading__sticker">
     <span class="page-heading__initial">{text.slice(0, 1)}</span>{text.slice(1)}
   </span>

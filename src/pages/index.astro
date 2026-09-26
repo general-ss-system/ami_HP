@@ -32,7 +32,7 @@ const description = "「トキメキの発生点」を生み出す Z世代イン
       <Marquee text={'Where "Tokimeki" Originates.'} />
       {home && <Statement statement={home.statement} />}
       <Business services={services} />
-      <Topics topics={topics} />
+      <Topics topics={topics} moreHref={withBase("/topics")} />
       <Members members={members} moreHref={withBase("/member")} />
       <ContactCta body={home?.contactBody ?? null} href={withBase(CONTACT_HREF)} />
     </main>

@@ -1,0 +1,21 @@
+---
+/** TOPICS 一覧（2 ページ目以降）。1 ページ目は /topics に寄せる。 */
+import type { GetStaticPaths } from "astro";
+import TopicsArchive from "../../../components/topics/TopicsArchive.astro";
+import { getCmsClient } from "../../../lib/cms/env";
+import { getTopicsArchive } from "../../../lib/cms/queries";
+import { laterPages, parsePageParam, topicsListHref } from "../../../lib/topics";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const first = await getTopicsArchive(getCmsClient(), { category: null, page: 1 });
+  return laterPages(first?.totalPages ?? 1).map((page) => ({ params: { page: String(page) } }));
+}) satisfies GetStaticPaths;
+
+if (Astro.params.page === "1") return Astro.redirect(topicsListHref(null), 301);
+const page = parsePageParam(Astro.params.page);
+const data = page ? await getTopicsArchive(getCmsClient(), { category: null, page }) : null;
+if (!data) return Astro.rewrite("/404");
+---
+
+<TopicsArchive data={data} />

@@ -1,0 +1,28 @@
+---
+/** TOPICS 一覧（分類ごと・2 ページ目以降）。 */
+import type { GetStaticPaths } from "astro";
+import TopicsArchive from "../../../../../components/topics/TopicsArchive.astro";
+import { getCmsClient } from "../../../../../lib/cms/env";
+import { getTopicsArchive, isTopicCategory } from "../../../../../lib/cms/queries";
+import { TOPIC_CATEGORIES } from "../../../../../lib/cms/schemas";
+import { laterPages, parsePageParam, topicsListHref } from "../../../../../lib/topics";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const client = getCmsClient();
+  const paths = [];
+  for (const category of TOPIC_CATEGORIES) {
+    const first = await getTopicsArchive(client, { category, page: 1 });
+    for (const page of laterPages(first?.totalPages ?? 1)) paths.push({ params: { category, page: String(page) } });
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { category } = Astro.params;
+if (isTopicCategory(category) && Astro.params.page === "1") return Astro.redirect(topicsListHref(category), 301);
+const page = parsePageParam(Astro.params.page);
+const data = isTopicCategory(category) && page ? await getTopicsArchive(getCmsClient(), { category, page }) : null;
+if (!data) return Astro.rewrite("/404");
+---
+
+<TopicsArchive data={data} />

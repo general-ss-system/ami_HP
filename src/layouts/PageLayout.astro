@@ -31,9 +31,11 @@ interface Props {
   headingSub?: string;
   /** TOP の後ろに続くパンくず。最後が現在のページ */
   crumbs: Crumb[];
+  /** 英字の見出しを h1 にしない（記事ページなど、本文側に h1 がある場合） */
+  headingIsTitle?: boolean;
 }
 
-const { title, description, ogImage, noindex, heading, headingSub, crumbs } = Astro.props;
+const { title, description, ogImage, noindex, heading, headingSub, crumbs, headingIsTitle = true } = Astro.props;
 const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
 ---
 
@@ -55,7 +57,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
             </ol>
           </nav>
 
-          <PageHeading text={heading} sub={headingSub} />
+          <PageHeading text={heading} sub={headingSub} level={headingIsTitle ? 1 : "none"} />
 
           <Decor src={galaxy} pc={[1020, 40, 190]} sp={[300, 20, 64]} float delay={0.4} eager />
           <Decor src={sparkleCluster} pc={[110, 150, 170]} sp={[8, 110, 60]} twinkle delay={0.8} eager />

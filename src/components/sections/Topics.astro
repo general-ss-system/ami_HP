@@ -6,16 +6,18 @@
 import type { Topic } from "../../lib/cms/types";
 import Decor from "../ui/Decor.astro";
 import SectionHeading from "../ui/SectionHeading.astro";
+import ViewMore from "../ui/ViewMore.astro";
 import TopicCard from "./TopicCard.astro";
-import { withBase } from "../../lib/url";
 import heading from "../../assets/headings/topics.webp";
 import sparkleCluster from "../../assets/decor/sparkle-cluster.webp";
 
 interface Props {
   topics: Topic[];
+  /** 一覧ページへのリンク。未指定なら出さない。 */
+  moreHref?: string;
 }
 
-const { topics } = Astro.props;
+const { topics, moreHref } = Astro.props;
 ---
 
 {
@@ -28,11 +30,17 @@ const { topics } = Astro.props;
           <ul class="topics__list">
             {topics.map((topic) => (
               <li class="topics__item">
-                <TopicCard topic={topic} href={withBase(topic.slug ? `/topics/${topic.slug}` : "/topics")} />
+                <TopicCard topic={topic} />
               </li>
             ))}
           </ul>
         </div>
+
+        {moreHref && (
+          <div class="topics__more">
+            <ViewMore link={{ label: "View more", href: moreHref, external: false }} context="Topics の一覧" />
+          </div>
+        )}
 
         <Decor src={sparkleCluster} pc={[67, 16, 200]} sp={[10, 10, 70]} twinkle delay={0.3} />
       </div>
@@ -66,6 +74,14 @@ const { topics } = Astro.props;
     width: max-content;
     /* 傾けたカードの角が切れないように上下に余白を取る */
     padding: 40px calc(81 / 12.8 * 1cqw) 48px;
+  }
+
+  .topics__more {
+    position: relative;
+    z-index: var(--z-content);
+    width: min(100%, 1118px);
+    margin: 8px auto 0;
+    padding-inline: var(--gutter);
   }
 
   .topics__item {
