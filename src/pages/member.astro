@@ -1,0 +1,158 @@
+---
+/**
+ * MEMBER。メンバー（members）全員を、アイコン・名前・役職・紹介文で並べる。PC 3 列 / スマホ 1 列。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import ContactCta from "../components/sections/ContactCta.astro";
+import CmsImage from "../components/ui/CmsImage.astro";
+import Decor from "../components/ui/Decor.astro";
+import { CONTACT_HREF } from "../config/site";
+import { getCmsClient } from "../lib/cms/env";
+import { getMemberPageData } from "../lib/cms/queries";
+import { pageDescription, pageTitle } from "../lib/seo";
+import { withBase } from "../lib/url";
+import planetBunnyPurple from "../assets/decor/planet-bunny-purple.webp";
+import rocketCat from "../assets/decor/rocket-cat.webp";
+import sparkleBlue from "../assets/decor/sparkle-blue.webp";
+import moonBunny from "../assets/decor/moon-bunny.webp";
+
+const { siteInfo, members } = await getMemberPageData(getCmsClient());
+
+const toLines = (text: string) => text.replace(/\r\n?/g, "\n").split("\n");
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, "Member")}
+  description={pageDescription(siteInfo)}
+  heading="Member"
+  headingSub="メンバー"
+  crumbs={[{ label: "MEMBER" }]}
+>
+  <section class="member-list" aria-label="メンバー一覧">
+    <div class="stage member-list__stage">
+      {
+        members.length > 0 ? (
+          <ul class="member-list__grid">
+            {members.map((member) => (
+              <li class="member" id={member.slug ?? member.id}>
+                <div class="member__portrait">{member.portrait && <CmsImage media={member.portrait} />}</div>
+                <div class="member__text">
+                  <h2 class="member__name">{member.name}</h2>
+                  {member.role && <p class="member__role">{member.role}</p>}
+                  {member.profile && (
+                    <p class="member__profile">
+                      {toLines(member.profile).map((line, i) => (
+                        <>
+                          {i > 0 && <br />}
+                          {line}
+                        </>
+                      ))}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="member-list__empty">メンバーの情報は準備中です。</p>
+        )
+      }
+
+      <Decor src={planetBunnyPurple} pc={[1130, 1020, 130]} sp={false} float delay={0.5} />
+      <Decor src={rocketCat} pc={[-30, 900, 180]} sp={false} float delay={1.4} />
+      <Decor src={moonBunny} pc={[20, 160, 120]} sp={false} float delay={2.1} />
+      <Decor src={sparkleBlue} pc={[1180, 1100, 70]} sp={false} twinkle delay={0.9} />
+    </div>
+  </section>
+
+  <ContactCta body={null} href={withBase(CONTACT_HREF)} />
+</PageLayout>
+
+<style>
+  .member-list__stage {
+    padding: 0 var(--gutter) clamp(40px, 6.25vw, 80px);
+  }
+
+  .member-list__grid {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 300px));
+    justify-content: center;
+    gap: 64px clamp(32px, 4.7vw, 60px);
+  }
+
+  .member {
+    display: flex;
+    flex-direction: column;
+    scroll-margin-top: calc(var(--header-height) + 24px);
+  }
+
+  .member__portrait {
+    aspect-ratio: 231 / 218;
+    overflow: hidden;
+    border: 2.4px solid #fff;
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.2);
+    transition: translate var(--duration-base) var(--ease-out);
+  }
+
+  .member:hover .member__portrait {
+    translate: 0 -4px;
+  }
+
+  .member__portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .member__text {
+    margin-top: 20px;
+    text-align: center;
+    /* 背景が明るくなるページ下部でも読めるように（トップの本文と同じ影） */
+    text-shadow: 1px 2px 0 rgb(4 16 74 / 0.4);
+  }
+
+  .member__name {
+    font-size: clamp(17px, 1.56vw, 20px);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .member__role {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-accent-bright);
+  }
+
+  .member__profile {
+    margin-top: 16px;
+    padding-top: 16px;
+    font-size: 14px;
+    line-height: 1.9;
+    text-align: left;
+    color: var(--color-text-muted);
+    border-top: 2px dashed rgb(255 255 255 / 0.3);
+  }
+
+  .member-list__empty {
+    position: relative;
+    z-index: var(--z-content);
+    text-align: center;
+  }
+
+  @media (max-width: 1023px) {
+    .member-list__grid {
+      grid-template-columns: repeat(2, minmax(0, 300px));
+    }
+  }
+
+  @media (max-width: 599px) {
+    .member-list__grid {
+      grid-template-columns: minmax(0, 320px);
+      gap: 48px;
+    }
+  }
+</style>
