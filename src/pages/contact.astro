@@ -1,0 +1,131 @@
+---
+/**
+ * CONTACT。案内文・個人情報の取り扱い・同意文は contact_page（CMS）、入力欄は Form API の定義。
+ * フォームを出せない（定義を取れない・受付停止中・同意文が無い）ときは、その旨だけを出す。
+ */
+import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import PageLayout from "../layouts/PageLayout.astro";
+import ContactForm from "../components/contact/ContactForm.astro";
+import Decor from "../components/ui/Decor.astro";
+import Panel from "../components/ui/Panel.astro";
+import { getCmsClient, getFormSubmissionEndpoint } from "../lib/cms/env";
+import { CONTACT_FORM_KEY, getContactPageData, reportCmsError } from "../lib/cms/queries";
+import type { FormField } from "../lib/cms/types";
+import { pageDescription, pageTitle } from "../lib/seo";
+import { withBase } from "../lib/url";
+import astronautBunny from "../assets/decor/astronaut-bunny.webp";
+import planetRinged from "../assets/decor/planet-ringed.webp";
+import sparkleGold from "../assets/decor/sparkle-gold.webp";
+
+const { siteInfo, contactPage, form } = await getContactPageData(getCmsClient());
+
+// このサイトで入力欄を出せる型（値を文字列で送るもの）
+const SUPPORTED: FormField["type"][] = ["text", "textarea", "email", "tel", "url", "date", "select"];
+const fields = form?.fields.filter((f) => SUPPORTED.includes(f.type)) ?? [];
+const unsupported = form?.fields.filter((f) => !SUPPORTED.includes(f.type)) ?? [];
+if (unsupported.length > 0) reportCmsError("form has unsupported field types", { form: CONTACT_FORM_KEY, fields: unsupported.map((f) => f.key) });
+
+const consentLabel = contactPage?.consentLabel ?? null;
+if (form?.consentRequired && !consentLabel) reportCmsError("contact_page.consent_label is empty", { form: CONTACT_FORM_KEY });
+
+const canShowForm =
+  form !== null &&
+  form.acceptingSubmissions &&
+  fields.length > 0 &&
+  !unsupported.some((f) => f.required) &&
+  (!form.consentRequired || consentLabel !== null);
+
+const endpoint = getFormSubmissionEndpoint(CONTACT_FORM_KEY);
+const turnstileSiteKey = PUBLIC_TURNSTILE_SITE_KEY ?? null;
+if (canShowForm && endpoint && !turnstileSiteKey) reportCmsError("PUBLIC_TURNSTILE_SITE_KEY is not set", { form: CONTACT_FORM_KEY });
+
+const leadLines = contactPage?.lead ? contactPage.lead.replace(/\r\n?/g, "\n").split("\n") : [];
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, "Contact")}
+  description={pageDescription(siteInfo, contactPage?.lead?.replace(/\s+/g, " "))}
+  heading="Contact"
+  headingSub="お問い合わせ"
+  crumbs={[{ label: "CONTACT" }]}
+>
+  <section class="contact" aria-label="お問い合わせフォーム">
+    <div class="stage contact__stage">
+      {
+        leadLines.length > 0 && (
+          <p class="contact__lead">
+            {leadLines.map((line, i) => (
+              <>
+                {i > 0 && <br />}
+                {line}
+              </>
+            ))}
+          </p>
+        )
+      }
+
+      <Panel class="contact__panel">
+        {
+          canShowForm && form ? (
+            <ContactForm
+              form={form}
+              fields={fields}
+              consentLabel={consentLabel}
+              privacyNote={contactPage?.privacyNote ?? []}
+              endpoint={endpoint}
+              turnstileSiteKey={turnstileSiteKey}
+              topHref={withBase("/")}
+            />
+          ) : (
+            <p class="contact__closed">
+              ただいまフォームからのお問い合わせを受け付けておりません。<br />
+              時間をおいて、もう一度アクセスしてください。
+            </p>
+          )
+        }
+      </Panel>
+
+      <Decor src={planetRinged} pc={[40, 60, 140]} sp={false} float delay={0.6} />
+      <Decor src={astronautBunny} pc={[1110, 420, 150]} sp={false} float delay={1.3} />
+      <Decor src={sparkleGold} pc={[140, 700, 56]} sp={false} twinkle delay={0.9} />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .contact__stage {
+    padding: 0 var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .contact__lead {
+    position: relative;
+    z-index: var(--z-content);
+    margin-bottom: clamp(40px, 5vw, 64px);
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 2.2;
+    letter-spacing: 0.1em;
+    text-align: center;
+    text-shadow: 1px 2px 0 rgb(4 16 74 / 0.4);
+  }
+
+  .contact__stage :global(.contact__panel) {
+    max-width: 820px;
+    margin-inline: auto;
+  }
+
+  .contact__closed {
+    line-height: 2.2;
+    text-align: center;
+  }
+
+  @media (max-width: 767px) {
+    .contact__lead {
+      letter-spacing: 0.04em;
+      text-align: left;
+    }
+
+    .contact__lead :global(br) {
+      display: none;
+    }
+  }
+</style>

@@ -25,6 +25,22 @@ function client(fetchImpl: ReturnType<typeof mockFetch>) {
 }
 
 describe("createCmsClient", () => {
+  it("フォーム定義は Form API から、公開キーを付けずに取得する", async () => {
+    const form = {
+      key: "ami_contact",
+      name: "お問い合わせ",
+      acceptingSubmissions: true,
+      consentRequired: true,
+      consentTextVersion: "v1",
+      fields: [{ key: "name", label: "お名前", type: "text", required: true, helpText: null, options: null, maxLength: 100 }],
+    };
+    const f = mockFetch(200, { form });
+    expect(await client(f).getForm("ami_contact")).toEqual(form);
+    const [url, init] = f.mock.calls[0]!;
+    expect(url).toBe("https://cms.example.com/api/v1/forms/ami/ami_contact");
+    expect(new Headers(init?.headers).get("Authorization")).toBeNull();
+  });
+
   it("公開キーを Authorization に載せて singleton を取得する", async () => {
     const f = mockFetch(200, { data: entry });
     const result = await client(f).getSingleton("ami_home");

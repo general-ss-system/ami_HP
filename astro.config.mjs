@@ -50,6 +50,9 @@ export default defineConfig({
       CMS_SITE_KEY: envField.string({ context: "server", access: "public", optional: true }),
       // Delivery API の公開キー（ssdk_...）。リポジトリに置かない。
       CMS_DELIVERY_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      // お問い合わせフォームのボット対策（Cloudflare Turnstile）のサイトキー。公開してよい値。
+      // CMS の許可オリジンと同じホスト名で発行する（CMS docs/04 §21）。live で未設定なら送信できない。
+      PUBLIC_TURNSTILE_SITE_KEY: envField.string({ context: "client", access: "public", optional: true }),
     },
   },
 });

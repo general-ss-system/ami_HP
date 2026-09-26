@@ -1,0 +1,743 @@
+---
+/**
+ * お問い合わせフォーム（入力 → 確認 → 送信 → 完了）。
+ *
+ * - 入力欄は CMS のフォーム定義（Form API）から組み立てる。定義に無い項目は送らない（送ると 400）。
+ * - 同意文は contact_page.consent_label、同意文の版はフォーム定義の consentTextVersion を送る（ADR-015）。
+ * - ボット対策（Turnstile）は確認画面で行う。サイトキーは PUBLIC_TURNSTILE_SITE_KEY。
+ * - endpoint が null（CMS_MODE=fixture）のときは送信せずに完了まで進める（プレビュー用）。
+ * - 送信処理は lib/cms/form-submit.ts。ここは画面の切り替えと表示だけを持つ。
+ */
+import type { ContactForm, FormField, RtBlock } from "../../lib/cms/types";
+import RichText from "../ui/RichText.astro";
+
+interface Props {
+  form: ContactForm;
+  /** 画面に出す入力欄（form.fields のうち、このサイトで扱える型のもの） */
+  fields: FormField[];
+  consentLabel: string | null;
+  privacyNote: RtBlock[];
+  endpoint: string | null;
+  turnstileSiteKey: string | null;
+  topHref: string;
+}
+
+const { form, fields, consentLabel, privacyNote, endpoint, turnstileSiteKey, topHref } = Astro.props;
+
+const autocomplete: Record<string, string> = {
+  name: "name",
+  company: "organization",
+  email: "email",
+  tel: "tel",
+};
+const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "date">> = {
+  email: "email",
+  tel: "tel",
+  url: "url",
+  date: "date",
+};
+---
+
+<div
+  class="contact-form"
+  data-contact-form
+  data-endpoint={endpoint ?? ""}
+  data-turnstile-sitekey={turnstileSiteKey ?? ""}
+  data-consent-required={form.consentRequired ? "true" : "false"}
+  data-consent-version={form.consentTextVersion ?? ""}
+  data-fields={JSON.stringify(fields)}
+>
+  <ol class="contact-form__steps" aria-label="お問い合わせの流れ">
+    <li data-step-mark="input" aria-current="step"><span>1</span>入力</li>
+    <li data-step-mark="confirm"><span>2</span>確認</li>
+    <li data-step-mark="done"><span>3</span>完了</li>
+  </ol>
+
+  {
+    !endpoint && (
+      <p class="contact-form__demo" role="note">
+        プレビュー用の表示です。送信ボタンを押しても、実際には送信されません。
+      </p>
+    )
+  }
+
+  <noscript>
+    <p class="contact-form__alert">お問い合わせフォームのご利用には、JavaScript を有効にしてください。</p>
+  </noscript>
+
+  {/* ---- 入力 ---- */}
+  <form class="contact-form__step" data-step="input" novalidate>
+    <p class="contact-form__alert" data-alert="input" role="alert" hidden></p>
+
+    <div class="contact-form__fields">
+      {
+        fields.map((field) => {
+          const id = `cf-${field.key}`;
+          const describedBy = [field.helpText && `${id}-help`, `${id}-error`].filter(Boolean).join(" ");
+          return (
+            <div class="contact-form__field" data-field={field.key}>
+              <label class="contact-form__label" for={id}>
+                {field.label}
+                <span class:list={["contact-form__badge", field.required ? "is-required" : "is-optional"]}>
+                  {field.required ? "必須" : "任意"}
+                </span>
+              </label>
+              {field.type === "textarea" ? (
+                <textarea
+                  id={id}
+                  name={field.key}
+                  rows="8"
+                  required={field.required}
+                  maxlength={field.maxLength ?? undefined}
+                  aria-describedby={describedBy}
+                />
+              ) : field.type === "select" ? (
+                <select id={id} name={field.key} required={field.required} aria-describedby={describedBy}>
+                  <option value="">選択してください</option>
+                  {(field.options ?? []).map((o) => (
+                    <option value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id={id}
+                  name={field.key}
+                  type={inputType[field.type] ?? "text"}
+                  required={field.required}
+                  maxlength={field.maxLength ?? undefined}
+                  autocomplete={autocomplete[field.key]}
+                  inputmode={field.type === "email" ? "email" : undefined}
+                  aria-describedby={describedBy}
+                />
+              )}
+              {field.helpText && (
+                <p class="contact-form__help" id={`${id}-help`}>
+                  {field.helpText}
+                </p>
+              )}
+              <p class="contact-form__error" id={`${id}-error`} data-error={field.key}></p>
+            </div>
+          );
+        })
+      }
+    </div>
+
+    {
+      privacyNote.length > 0 && (
+        <section class="contact-form__privacy" aria-labelledby="cf-privacy-title" tabindex="0">
+          <h2 class="contact-form__privacy-title" id="cf-privacy-title">
+            個人情報の取り扱い
+          </h2>
+          <RichText blocks={privacyNote} />
+        </section>
+      )
+    }
+
+    {
+      form.consentRequired && consentLabel && (
+        <div class="contact-form__consent" data-field="consent">
+          <label>
+            <input type="checkbox" name="consent" aria-describedby="cf-consent-error" />
+            <span>{consentLabel}</span>
+          </label>
+          <p class="contact-form__error" id="cf-consent-error" data-error="consent"></p>
+        </div>
+      )
+    }
+
+    <div class="contact-form__actions">
+      <button class="contact-form__button is-primary" type="submit">入力内容を確認する</button>
+    </div>
+  </form>
+
+  {/* ---- 確認 ---- */}
+  <div class="contact-form__step" data-step="confirm" hidden>
+    <h2 class="contact-form__step-title" tabindex="-1">入力内容の確認</h2>
+    <p class="contact-form__note">内容をご確認のうえ、「送信する」を押してください。</p>
+    <dl class="contact-form__review">
+      {
+        fields.map((field) => (
+          <div>
+            <dt>{field.label}</dt>
+            <dd data-review={field.key} />
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="contact-form__turnstile" data-turnstile></div>
+    <p class="contact-form__alert" data-alert="confirm" role="alert" hidden></p>
+
+    <div class="contact-form__actions">
+      <button class="contact-form__button is-secondary" type="button" data-action="back">修正する</button>
+      <button class="contact-form__button is-primary" type="button" data-action="send">
+        <span data-send-label>送信する</span>
+      </button>
+    </div>
+  </div>
+
+  {/* ---- 完了 ---- */}
+  <div class="contact-form__step contact-form__done" data-step="done" hidden>
+    <h2 class="contact-form__step-title" tabindex="-1">送信しました</h2>
+    <p>
+      お問い合わせいただき、ありがとうございます。<br />
+      内容を確認のうえ、担当者よりご連絡いたします。
+    </p>
+    <div class="contact-form__actions">
+      <a class="contact-form__button is-secondary" href={topHref}>TOP へもどる</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  import {
+    checkValue,
+    checkValues,
+    normalizeValue,
+    submitForm,
+    toSubmissionFields,
+    type FormValues,
+  } from "../../lib/cms/form-submit";
+  import type { FormField } from "../../lib/cms/types";
+
+  interface TurnstileApi {
+    render(el: HTMLElement, options: Record<string, unknown>): string;
+    reset(id: string): void;
+    getResponse(id: string): string | undefined;
+  }
+
+  const TURNSTILE_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
+  function loadTurnstile(): Promise<TurnstileApi> {
+    const w = window as unknown as { turnstile?: TurnstileApi };
+    if (w.turnstile) return Promise.resolve(w.turnstile);
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = TURNSTILE_SRC;
+      script.async = true;
+      script.onload = () => (w.turnstile ? resolve(w.turnstile) : reject(new Error("turnstile missing")));
+      script.onerror = () => reject(new Error("turnstile failed to load"));
+      document.head.append(script);
+    });
+  }
+
+  function setup(root: HTMLElement) {
+    const fields = JSON.parse(root.dataset.fields ?? "[]") as FormField[];
+    const endpoint = root.dataset.endpoint || null;
+    const siteKey = root.dataset.turnstileSitekey || null;
+    const consentRequired = root.dataset.consentRequired === "true";
+    const consentVersion = root.dataset.consentVersion || undefined;
+
+    const form = root.querySelector<HTMLFormElement>('[data-step="input"]')!;
+    const steps = {
+      input: form as HTMLElement,
+      confirm: root.querySelector<HTMLElement>('[data-step="confirm"]')!,
+      done: root.querySelector<HTMLElement>('[data-step="done"]')!,
+    };
+    const consentBox = form.querySelector<HTMLInputElement>('input[name="consent"]');
+    const sendButton = root.querySelector<HTMLButtonElement>('[data-action="send"]')!;
+    const backButton = root.querySelector<HTMLButtonElement>('[data-action="back"]')!;
+    const sendLabel = root.querySelector<HTMLElement>("[data-send-label]")!;
+    const turnstileBox = root.querySelector<HTMLElement>("[data-turnstile]")!;
+
+    let values: FormValues = {};
+    let sending = false;
+    let turnstile: TurnstileApi | null = null;
+    let widgetId: string | null = null;
+
+    const control = (key: string) =>
+      form.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${key}"]`);
+
+    function show(step: keyof typeof steps) {
+      for (const [name, el] of Object.entries(steps)) el.hidden = name !== step;
+      root.querySelectorAll<HTMLElement>("[data-step-mark]").forEach((mark) => {
+        if (mark.dataset.stepMark === step) mark.setAttribute("aria-current", "step");
+        else mark.removeAttribute("aria-current");
+      });
+      root.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      const heading = steps[step].querySelector<HTMLElement>(".contact-form__step-title");
+      heading?.focus({ preventScroll: true });
+    }
+
+    function setAlert(name: "input" | "confirm", message: string | null) {
+      const el = root.querySelector<HTMLElement>(`[data-alert="${name}"]`)!;
+      el.textContent = message ?? "";
+      el.hidden = !message;
+    }
+
+    function setFieldError(key: string, message: string | null) {
+      const el = root.querySelector<HTMLElement>(`[data-error="${key}"]`);
+      if (el) el.textContent = message ?? "";
+      const input = key === "consent" ? consentBox : control(key);
+      if (!input) return;
+      if (message) input.setAttribute("aria-invalid", "true");
+      else input.removeAttribute("aria-invalid");
+    }
+
+    function readValues(): FormValues {
+      const out: FormValues = {};
+      for (const field of fields) out[field.key] = normalizeValue(field, control(field.key)?.value ?? "");
+      return out;
+    }
+
+    function showErrors(fieldErrors: Record<string, string>, consentError: string | null) {
+      for (const field of fields) setFieldError(field.key, fieldErrors[field.key] ?? null);
+      setFieldError("consent", consentError);
+      const firstKey = fields.find((f) => fieldErrors[f.key])?.key ?? (consentError ? "consent" : null);
+      if (!firstKey) return false;
+      setAlert("input", "入力内容を確認してください。");
+      const target = firstKey === "consent" ? consentBox : control(firstKey);
+      target?.focus();
+      return true;
+    }
+
+    // 指摘のある欄は、入力し直すたびに見直す（直ったら消す）。
+    // blur では何もしない: 欄から離れた瞬間に指摘が消えると下の要素がずれ、押そうとしたボタンやチェックを外すため。
+    for (const field of fields) {
+      control(field.key)?.addEventListener("input", (e) => {
+        const el = e.currentTarget as HTMLInputElement;
+        if (el.getAttribute("aria-invalid") !== "true") return;
+        setFieldError(field.key, checkValue(field, normalizeValue(field, el.value)));
+      });
+    }
+    consentBox?.addEventListener("change", () => {
+      if (consentBox.checked) setFieldError("consent", null);
+    });
+
+    async function prepareTurnstile() {
+      if (!endpoint || !siteKey) return;
+      try {
+        turnstile ??= await loadTurnstile();
+        if (widgetId === null) {
+          widgetId = turnstile.render(turnstileBox, {
+            sitekey: siteKey,
+            language: "ja",
+            "refresh-expired": "auto",
+          });
+        }
+      } catch {
+        setAlert("confirm", "ボット対策の確認を読み込めませんでした。ページを再読み込みしてください。");
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      setAlert("input", null);
+      values = readValues();
+      const fieldErrors = checkValues(fields, values);
+      const consentError = consentRequired && consentBox && !consentBox.checked ? "同意が必要です" : null;
+      if (showErrors(fieldErrors, consentError)) return;
+
+      for (const field of fields) {
+        const dd = root.querySelector<HTMLElement>(`[data-review="${field.key}"]`)!;
+        const value = values[field.key] ?? "";
+        const label = field.options?.find((o) => o.value === value)?.label;
+        dd.textContent = label ?? (value || "（未入力）");
+        dd.classList.toggle("is-empty", value === "");
+      }
+      setAlert("confirm", null);
+      show("confirm");
+      void prepareTurnstile();
+    });
+
+    backButton.addEventListener("click", () => {
+      if (sending) return;
+      show("input");
+    });
+
+    function setSending(on: boolean) {
+      sending = on;
+      sendButton.disabled = on;
+      backButton.disabled = on;
+      sendButton.setAttribute("aria-busy", String(on));
+      sendLabel.textContent = on ? "送信中…" : "送信する";
+    }
+
+    sendButton.addEventListener("click", async () => {
+      if (sending) return; // 二重送信を防ぐ
+      setAlert("confirm", null);
+
+      let token = "";
+      if (endpoint && siteKey) {
+        token = (turnstile && widgetId !== null && turnstile.getResponse(widgetId)) || "";
+        if (!token) {
+          setAlert("confirm", "ボット対策の確認が終わるまでお待ちください。");
+          return;
+        }
+      }
+
+      setSending(true);
+      const result = endpoint
+        ? await submitForm(endpoint, {
+            fields: toSubmissionFields(fields, values),
+            ...(consentRequired ? { consent: true, consentTextVersion: consentVersion } : {}),
+            turnstileToken: token,
+          })
+        : await new Promise<{ ok: true }>((resolve) => setTimeout(() => resolve({ ok: true }), 800));
+      setSending(false);
+
+      if (result.ok) {
+        form.reset();
+        values = {};
+        show("done");
+        return;
+      }
+
+      // ボット対策のトークンは 1 回しか使えないので、失敗したらやり直す
+      if (turnstile && widgetId !== null) turnstile.reset(widgetId);
+
+      if (result.kind === "validation") {
+        const hasInputErrors =
+          fields.some((f) => result.fieldErrors[f.key]) || result.consentError !== null;
+        if (hasInputErrors) {
+          // 入力画面に戻してから、指摘のある欄にフォーカスする
+          show("input");
+          showErrors(result.fieldErrors, result.consentError);
+          setAlert("input", result.message);
+          return;
+        }
+        setAlert("confirm", result.turnstileError ?? result.message);
+        return;
+      }
+      if (result.kind === "rate_limited" && result.retryAfterSeconds) {
+        const minutes = Math.max(1, Math.ceil(result.retryAfterSeconds / 60));
+        setAlert("confirm", `${result.message}（約${minutes}分後）`);
+        return;
+      }
+      setAlert("confirm", result.message);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-contact-form]").forEach(setup);
+</script>
+
+<style>
+  .contact-form {
+    scroll-margin-top: calc(var(--header-height) + 24px);
+  }
+
+  /* ---- 流れ（1 入力 / 2 確認 / 3 完了） ---- */
+  .contact-form__steps {
+    display: flex;
+    justify-content: center;
+    gap: clamp(8px, 2vw, 24px);
+    margin-bottom: 40px;
+    font-size: 14px;
+  }
+
+  .contact-form__steps li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgb(27 28 34 / 0.45);
+  }
+
+  .contact-form__steps li + li::before {
+    content: "";
+    width: clamp(16px, 4vw, 48px);
+    border-top: 2px dashed currentColor;
+    margin-right: clamp(0px, 1vw, 12px);
+  }
+
+  .contact-form__steps span {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    font-family: var(--font-pixel);
+    color: #fff;
+    background: rgb(27 28 34 / 0.3);
+  }
+
+  .contact-form__steps [aria-current="step"] {
+    color: var(--color-text);
+  }
+
+  .contact-form__steps [aria-current="step"] span {
+    background: var(--color-bg-3);
+  }
+
+  .contact-form__demo {
+    margin-bottom: 32px;
+    padding: 10px 16px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--color-bg-2);
+    background: rgb(0 192 232 / 0.12);
+    border: 2px dashed var(--color-accent);
+  }
+
+  .contact-form__alert {
+    margin-bottom: 28px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #a61b1b;
+    background: #fdecec;
+    border: 2px solid #d63636;
+  }
+
+  .contact-form__alert[hidden] {
+    display: none;
+  }
+
+  /* ---- 入力欄 ---- */
+  .contact-form__fields {
+    display: grid;
+    gap: 28px;
+  }
+
+  .contact-form__label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 15px;
+  }
+
+  .contact-form__badge {
+    padding: 1px 8px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: #fff;
+  }
+
+  .contact-form__badge.is-required {
+    background: #d63636;
+  }
+
+  .contact-form__badge.is-optional {
+    background: #8a8b93;
+  }
+
+  .contact-form input:not([type="checkbox"]),
+  .contact-form textarea,
+  .contact-form select {
+    width: 100%;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 16px; /* iOS で拡大されないように 16px 以上 */
+    line-height: 1.6;
+    color: var(--color-text);
+    background: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 0;
+    transition:
+      border-color var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  .contact-form textarea {
+    resize: vertical;
+    min-height: 180px;
+  }
+
+  .contact-form input:focus-visible,
+  .contact-form textarea:focus-visible,
+  .contact-form select:focus-visible {
+    outline: none;
+    border-color: var(--color-bg-3);
+    box-shadow: 4px 4px 0 var(--color-accent-bright);
+  }
+
+  .contact-form [aria-invalid="true"] {
+    border-color: #d63636;
+    background: #fff7f7;
+  }
+
+  .contact-form__help {
+    margin-top: 6px;
+    font-size: 13px;
+    color: rgb(27 28 34 / 0.7);
+  }
+
+  .contact-form__error {
+    font-size: 13px;
+    color: #c41f1f;
+  }
+
+  .contact-form__error:not(:empty) {
+    margin-top: 6px;
+  }
+
+  .contact-form__error:not(:empty)::before {
+    content: "! ";
+    font-family: var(--font-pixel);
+  }
+
+  /* ---- 個人情報の取り扱い・同意 ---- */
+  .contact-form__privacy {
+    max-height: 220px;
+    margin-top: 40px;
+    padding: 20px 24px;
+    overflow-y: auto;
+    background: #fff;
+    border: 2px solid rgb(27 28 34 / 0.2);
+  }
+
+  .contact-form__privacy-title {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 400;
+  }
+
+  .contact-form__privacy :global(.rich-text) {
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .contact-form__consent {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .contact-form__consent label {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .contact-form__consent input {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--color-bg-3);
+  }
+
+  /* ---- 確認 ---- */
+  .contact-form__step-title {
+    font-size: clamp(20px, 1.9vw, 24px);
+    font-weight: 400;
+    text-align: center;
+  }
+
+  .contact-form__step-title:focus {
+    outline: none;
+  }
+
+  .contact-form__note {
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .contact-form__review {
+    margin-top: 32px;
+    border-top: 2px dashed rgb(27 28 34 / 0.2);
+  }
+
+  .contact-form__review > div {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 16px;
+    padding: 18px 8px;
+    border-bottom: 2px dashed rgb(27 28 34 / 0.2);
+  }
+
+  .contact-form__review dt {
+    color: var(--color-bg-3);
+  }
+
+  .contact-form__review dd {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .contact-form__review dd.is-empty {
+    color: rgb(27 28 34 / 0.45);
+  }
+
+  .contact-form__turnstile {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+  }
+
+  .contact-form__turnstile:empty {
+    display: none;
+  }
+
+  .contact-form__step[data-step="confirm"] .contact-form__alert {
+    margin: 24px 0 0;
+  }
+
+  /* ---- 完了 ---- */
+  .contact-form__done {
+    text-align: center;
+  }
+
+  .contact-form__done p {
+    margin-top: 24px;
+    line-height: 2.2;
+  }
+
+  /* ---- ボタン ---- */
+  .contact-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .contact-form__button {
+    display: grid;
+    place-items: center;
+    min-width: 220px;
+    height: 56px;
+    padding-inline: 28px;
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      translate var(--duration-base) var(--ease-out),
+      filter var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out),
+      color var(--duration-base) var(--ease-out);
+  }
+
+  .contact-form__button.is-primary {
+    color: #fff;
+    background: linear-gradient(90deg, #4758bd 0%, #6a5bd6 55%, #967adf 100%);
+    border: 2px solid var(--color-border);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 var(--color-border);
+  }
+
+  .contact-form__button.is-primary:hover:not(:disabled) {
+    translate: 0 -2px;
+    filter: brightness(1.12);
+  }
+
+  .contact-form__button.is-secondary {
+    color: var(--color-text);
+    background: #fff;
+    border: 2px solid #000;
+  }
+
+  .contact-form__button.is-secondary:hover:not(:disabled) {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  .contact-form__button:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 767px) {
+    .contact-form__review > div {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .contact-form__button {
+      width: 100%;
+    }
+
+    .contact-form__steps {
+      font-size: 13px;
+    }
+  }
+</style>

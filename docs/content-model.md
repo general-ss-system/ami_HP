@@ -69,7 +69,50 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | profile | long_text | | | 詳細ページ用 |
 | sort_order | number | | ✔ | 昇順。トップでは先頭 6 件 |
 
-## 未決（下層ページの制作時に決める）
+## 下層ページ（2026-09-26 追加）
 
-- `site_info`（SEO の既定値・ロゴ・SNS の URL）の使い方。現在トップの title / description はコードの仮の値（`src/pages/index.astro` の TODO）。
-- Topics・Member・Service・About・Contact の下層ページの構成（リンク先はまだ存在しない）。
+デザインが無いため、トップのデザインに合わせてこのリポジトリで組んだ。モデルは CMS の汎用モデル
+（`site_info` / `about` / `contact_page` / `members`）の key をそのまま使い、案件モデルには本文などを足した。
+**CMS 側（`packages/content-schema`）にまだ無い項目は、CMS 側に足してから live で使う。**
+
+| ページ | URL | 使うデータ |
+|---|---|---|
+| ABOUT | `/about` | `ami_home.statement_*`（トップと同じステートメント）、`about`、`site_info` |
+| SERVICE | `/service`（各事業は `#slug`） | `ami_services`（`body` を追加） |
+| MEMBER | `/member`（各メンバーは `#slug`） | `members`（`profile`） |
+| TOPICS 一覧 | `/topics`、`/topics/page/{n}`、`/topics/category/{news|sns|column}` | `ami_topics`（12 件ずつ） |
+| TOPICS 詳細 | `/topics/{slug}` | `ami_topics`（`body`・`external_url` を追加）。`external_url` がある記事は詳細を作らずカードから直接開く |
+| CONTACT | `/contact` | `contact_page`、フォーム `ami_contact`（Form API の定義） |
+| 404 | — | — |
+
+### 追加・利用する項目
+
+| モデル | key | 型 | 使い方 |
+|---|---|---|---|
+| `ami_services` | body | rich_text | SERVICE の本文 |
+| `ami_topics` | body | rich_text | 詳細の本文 |
+| `ami_topics` | external_url | link | 設定するとカードから直接この URL を開く |
+| `members` | profile | long_text | MEMBER の紹介文（改行あり） |
+| `site_info` | company_name（必須）/ address / default_title / title_template / default_description / default_og_image | | 会社概要の表、下層ページの `<title>`（`title_template` の `%s` にページ名） |
+| `about` | lead / body（rich_text）/ main_image / representative / established / capital / business_summary | | ABOUT のメッセージと会社概要の表。空の行は出さない |
+| `contact_page` | lead / privacy_note（rich_text）/ consent_label | | CONTACT の案内文・個人情報の取り扱い・同意チェックの文言 |
+
+rich_text は `src/lib/cms/richtext.ts` で許可したノードだけを描画する（段落・見出し・リスト・引用・コード・画像・区切り線・リンク）。
+リンクは http(s) / mailto / tel / サイト内パスのみ。本文の h1 は h2 に下げる。
+
+### お問い合わせフォーム
+
+- 入力欄は `GET /api/v1/forms/{siteKey}/ami_contact` の定義から組み立てる（項目を増やすときは CMS のフォーム定義だけを直す）。
+- 送信はブラウザから Form API へ直接行う（CMS が送信者の IP でレート制限・Turnstile の検証をするため）。
+  処理は `src/lib/cms/form-submit.ts`、画面は `src/components/contact/ContactForm.astro`（入力 → 確認 → 完了）。
+- 同意文の版（`consentTextVersion`）を一緒に送る。古い版で 400 が返ったら、再読み込みを促す。
+- `PUBLIC_TURNSTILE_SITE_KEY`（公開してよい値）が必要。**ビルド時に埋め込まれる**ので、本番のビルド環境に設定する。
+  CMS 側では、サイトの許可オリジン（`allowedOrigins`）に公開ドメインを登録する。
+- `CMS_MODE=fixture`（GitHub Pages のプレビューを含む）では送信せずに完了まで進める（画面に「プレビュー用」と出る）。
+- フォームを出せないとき（定義を取れない・受付停止中・同意文が空）は、受け付けていない旨だけを出し、エラーを記録する。
+
+## 未決
+
+- トップの title / description はまだコードの仮の値（`src/pages/index.astro` の TODO）。下層ページは `site_info` から解決している。
+- 会社情報・代表メッセージ・個人情報の取り扱いの実際の文言（仮データは「〇〇（仮）」）。
+- お問い合わせの通知先（CMS の管理画面で設定）。

@@ -6,3 +6,6 @@ CMS_MODE=fixture
 # CMS_BASE_URL=http://localhost:8787
 # CMS_SITE_KEY=
 # CMS_DELIVERY_KEY=
+# お問い合わせフォームのボット対策（Cloudflare Turnstile）。live で送信するときに必要。
+# ローカルで試すときは Cloudflare のテスト用キー（常に成功）: 1x00000000000000000000AA
+# PUBLIC_TURNSTILE_SITE_KEY=

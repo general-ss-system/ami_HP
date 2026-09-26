@@ -15,6 +15,19 @@ export function getCmsMode(): CmsMode {
 }
 
 /** fixture なら仮データ、live なら Delivery API。live で設定が欠けていれば設定ミスとして落とす。 */
+/**
+ * フォームの送信先（Form API）。ブラウザから直接送る。
+ * fixture では null（送信せずに完了まで進める、制作中の確認用）。
+ */
+export function getFormSubmissionEndpoint(formKey: string): string | null {
+  if (CMS_MODE === "fixture") return null;
+  if (!CMS_BASE_URL || !CMS_SITE_KEY) {
+    throw new Error("CMS_MODE=live requires CMS_BASE_URL and CMS_SITE_KEY");
+  }
+  const base = CMS_BASE_URL.replace(/\/+$/, "");
+  return `${base}/api/v1/forms/${encodeURIComponent(CMS_SITE_KEY)}/${encodeURIComponent(formKey)}/submissions`;
+}
+
 export function getCmsClient(): CmsClient {
   if (CMS_MODE === "fixture") return createFixtureClient();
   if (!CMS_BASE_URL || !CMS_SITE_KEY || !CMS_DELIVERY_KEY) {
