@@ -11,8 +11,10 @@ import {
   DeliveryDetailResponseSchema,
   DeliveryListResponseSchema,
   ErrorResponseSchema,
+  PublicFormResponseSchema,
   type DeliveryEntry,
   type DeliveryListResponse,
+  type PublicFormResponse,
 } from "./contracts";
 
 export interface CmsClientConfig {
@@ -51,19 +53,21 @@ export interface CmsClient {
   /** 未公開・存在しない slug は null（404 をページ側で扱えるように）。 */
   getEntry(modelKey: string, slug: string): Promise<DeliveryEntry | null>;
   getCollection(modelKey: string, query?: ListQuery): Promise<DeliveryListResponse>;
+  /** フォームの定義（Form API。公開キーは使わない）。 */
+  getForm(formKey: string): Promise<PublicFormResponse["form"]>;
 }
 
 export function createCmsClient(config: CmsClientConfig): CmsClient {
   const baseUrl = config.baseUrl.replace(/\/+$/, "");
   const doFetch = config.fetch ?? fetch;
   const root = `${baseUrl}/api/v1/delivery/${encodeURIComponent(config.siteKey)}`;
+  const formsRoot = `${baseUrl}/api/v1/forms/${encodeURIComponent(config.siteKey)}`;
 
-  async function request<T extends z.ZodType>(url: string, schema: T): Promise<z.infer<T>> {
+  async function request<T extends z.ZodType>(url: string, schema: T, auth = true): Promise<z.infer<T>> {
     const res = await doFetch(url, {
-      headers: {
-        Authorization: `${DELIVERY_AUTH_SCHEME} ${config.deliveryKey}`,
-        Accept: "application/json",
-      },
+      headers: auth
+        ? { Authorization: `${DELIVERY_AUTH_SCHEME} ${config.deliveryKey}`, Accept: "application/json" }
+        : { Accept: "application/json" },
     });
 
     const body: unknown = await res.json().catch(() => null);
@@ -114,6 +118,11 @@ export function createCmsClient(config: CmsClientConfig): CmsClient {
       }
       const qs = params.size > 0 ? `?${params.toString()}` : "";
       return request(`${root}/content/${encodeURIComponent(modelKey)}${qs}`, DeliveryListResponseSchema);
+    },
+
+    async getForm(formKey) {
+      const res = await request(`${formsRoot}/${encodeURIComponent(formKey)}`, PublicFormResponseSchema, false);
+      return res.form;
     },
   };
 }

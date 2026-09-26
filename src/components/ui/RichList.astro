@@ -1,0 +1,25 @@
+---
+/** RichText のリスト。入れ子のリストを描くために自分自身を呼ぶ。 */
+import type { RtList } from "../../lib/cms/richtext";
+import RichInline from "./RichInline.astro";
+
+interface Props {
+  list: RtList;
+}
+
+const { list } = Astro.props;
+const Tag = list.ordered ? "ol" : "ul";
+---
+
+<Tag class:list={["rich-list", list.ordered ? "is-ordered" : "is-bullet"]}>
+  {
+    list.items.map((item) => (
+      <li>
+        <RichInline nodes={item.children} />
+        {item.lists.map((nested) => (
+          <Astro.self list={nested} />
+        ))}
+      </li>
+    ))
+  }
+</Tag>

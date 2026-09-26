@@ -1,0 +1,96 @@
+---
+/**
+ * 会社概要の表。会社名・所在地は site_info、代表・設立・資本金・事業内容は about（CMS）。
+ * 値が空の行は出さない。項目名と並び順はコードで持つ。
+ */
+import type { AboutContent, SiteInfo } from "../../lib/cms/types";
+import Panel from "../ui/Panel.astro";
+
+interface Props {
+  siteInfo: SiteInfo | null;
+  about: AboutContent | null;
+}
+
+const { siteInfo, about } = Astro.props;
+
+const rows = [
+  { label: "会社名", value: siteInfo?.companyName ?? null },
+  { label: "代表", value: about?.representative ?? null },
+  { label: "設立", value: about?.established ?? null },
+  { label: "資本金", value: about?.capital ?? null },
+  { label: "所在地", value: siteInfo?.address ?? null },
+  { label: "事業内容", value: about?.businessSummary ?? null },
+]
+  .filter((row): row is { label: string; value: string } => Boolean(row.value?.trim()))
+  .map((row) => ({ ...row, lines: row.value.replace(/\r\n?/g, "\n").split("\n") }));
+---
+
+{
+  rows.length > 0 && (
+    <Panel class="company-profile">
+      <dl class="company-profile__list">
+        {rows.map((row) => (
+          <div class="company-profile__row">
+            <dt>{row.label}</dt>
+            <dd>
+              {row.lines.map((line, i) => (
+                <>
+                  {i > 0 && <br />}
+                  {line}
+                </>
+              ))}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </Panel>
+  )
+}
+
+<style>
+  .company-profile__row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 16px;
+    padding: 22px 8px;
+    border-bottom: 2px dashed rgb(27 28 34 / 0.2);
+  }
+
+  .company-profile__row:first-child {
+    padding-top: 0;
+  }
+
+  .company-profile__row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .company-profile__row dt {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--color-bg-3);
+  }
+
+  .company-profile__row dt::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent-bright);
+    translate: 0 -2px;
+  }
+
+  .company-profile__row dd {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  @media (max-width: 767px) {
+    .company-profile__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding-block: 16px;
+    }
+  }
+</style>

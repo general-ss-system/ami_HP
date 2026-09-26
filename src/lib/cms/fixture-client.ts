@@ -4,9 +4,23 @@
 
 import type { CmsClient, ListQuery } from "./client";
 import type { DeliveryEntry } from "./contracts";
-import { fixtureHome, fixtureMembers, fixtureServices, fixtureTopics } from "./fixtures";
+import {
+  fixtureAbout,
+  fixtureContactForm,
+  fixtureContactPage,
+  fixtureHome,
+  fixtureMembers,
+  fixtureServices,
+  fixtureSiteInfo,
+  fixtureTopics,
+} from "./fixtures";
 
-const singletons: Record<string, DeliveryEntry> = { ami_home: fixtureHome };
+const singletons: Record<string, DeliveryEntry> = {
+  ami_home: fixtureHome,
+  site_info: fixtureSiteInfo,
+  about: fixtureAbout,
+  contact_page: fixtureContactPage,
+};
 const collections: Record<string, DeliveryEntry[]> = {
   ami_services: fixtureServices,
   ami_topics: fixtureTopics,
@@ -47,8 +61,14 @@ export function createFixtureClient(): CmsClient {
     async getEntry(modelKey, slug) {
       return collections[modelKey]?.find((e) => e.slug === slug) ?? null;
     },
+    async getForm(formKey) {
+      if (formKey !== fixtureContactForm.key) throw new Error(`No fixture for form "${formKey}"`);
+      return fixtureContactForm;
+    },
     async getCollection(modelKey, query = {}) {
-      const all = collections[modelKey] ?? [];
+      const all = (collections[modelKey] ?? []).filter((e) =>
+        Object.entries(query.filter ?? {}).every(([k, v]) => String(e.content[k]) === v),
+      );
       const data = applyQuery(all, query);
       const limit = query.limit ?? 20;
       return {

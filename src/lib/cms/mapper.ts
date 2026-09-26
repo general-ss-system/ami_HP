@@ -8,13 +8,29 @@
 import type { z } from "zod";
 import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 import {
+  AboutContentSchema,
   AmiHomeContentSchema,
   AmiServiceContentSchema,
   AmiTopicContentSchema,
+  ContactPageContentSchema,
   MemberContentSchema,
+  SiteInfoContentSchema,
   type CmsLinkSchema,
 } from "./schemas";
-import type { HomeContent, Link, Media, Member, Service, StatementLine, Topic } from "./types";
+import { toRichText, type RichTextReporter } from "./richtext";
+import type {
+  AboutContent,
+  ContactPageContent,
+  HomeContent,
+  Link,
+  Media,
+  Member,
+  Service,
+  SiteInfo,
+  StatementLine,
+  Topic,
+  TopicDetail,
+} from "./types";
 import { withBase } from "../url";
 
 export const DEFAULT_TOPICS_LIMIT = 4;
@@ -81,13 +97,26 @@ export function mapHome(entry: DeliveryEntry): MapResult<HomeContent> {
   };
 }
 
-export function mapService(entry: DeliveryEntry): MapResult<Service> {
+/** rich_text で飛ばしたノードを、どのエントリのどの項目か分かる形で報告する。 */
+function richTextReporter(report: RichTextReporter | undefined, model: string, entry: DeliveryEntry, field: string) {
+  return (message: string, detail: unknown) => report?.(message, { model, entryId: entry.id, field, detail });
+}
+
+export function mapService(entry: DeliveryEntry, report?: RichTextReporter): MapResult<Service> {
   const r = parseContent("ami_services", entry, AmiServiceContentSchema);
   if (!r.ok) return r;
   const c = r.value;
   return {
     ok: true,
-    value: { id: entry.id, title: c.title, summary: c.summary ?? null, image: toMedia(c.image), link: toLink(c.link) },
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      summary: c.summary ?? null,
+      image: toMedia(c.image),
+      link: toLink(c.link),
+      body: toRichText(c.body, richTextReporter(report, "ami_services", entry, "body")),
+    },
   };
 }
 
@@ -105,8 +134,16 @@ export function mapTopic(entry: DeliveryEntry): MapResult<Topic> {
       thumbnail: toMedia(c.thumbnail),
       excerpt: c.excerpt ?? null,
       publishedDate: c.published_date,
+      externalLink: toLink(c.external_url),
     },
   };
+}
+
+export function mapTopicDetail(entry: DeliveryEntry, report?: RichTextReporter): MapResult<TopicDetail> {
+  const r = mapTopic(entry);
+  if (!r.ok) return r;
+  const body = (entry.content as { body?: unknown }).body;
+  return { ok: true, value: { ...r.value, body: toRichText(body, richTextReporter(report, "ami_topics", entry, "body")) } };
 }
 
 export function mapMember(entry: DeliveryEntry): MapResult<Member> {
@@ -115,6 +152,62 @@ export function mapMember(entry: DeliveryEntry): MapResult<Member> {
   const c = r.value;
   return {
     ok: true,
-    value: { id: entry.id, name: c.name, role: c.role ?? null, portrait: toMedia(c.portrait) },
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      name: c.name,
+      role: c.role ?? null,
+      portrait: toMedia(c.portrait),
+      profile: c.profile ?? null,
+    },
+  };
+}
+
+export function mapSiteInfo(entry: DeliveryEntry): MapResult<SiteInfo> {
+  const r = parseContent("site_info", entry, SiteInfoContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      companyName: c.company_name,
+      address: c.address ?? null,
+      defaultTitle: c.default_title ?? null,
+      titleTemplate: c.title_template ?? null,
+      defaultDescription: c.default_description ?? null,
+      defaultOgImage: toMedia(c.default_og_image),
+    },
+  };
+}
+
+export function mapAbout(entry: DeliveryEntry, report?: RichTextReporter): MapResult<AboutContent> {
+  const r = parseContent("about", entry, AboutContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      lead: c.lead ?? null,
+      body: toRichText(c.body, richTextReporter(report, "about", entry, "body")),
+      mainImage: toMedia(c.main_image),
+      representative: c.representative ?? null,
+      established: c.established ?? null,
+      capital: c.capital ?? null,
+      businessSummary: c.business_summary ?? null,
+    },
+  };
+}
+
+export function mapContactPage(entry: DeliveryEntry, report?: RichTextReporter): MapResult<ContactPageContent> {
+  const r = parseContent("contact_page", entry, ContactPageContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      lead: c.lead ?? null,
+      privacyNote: toRichText(c.privacy_note, richTextReporter(report, "contact_page", entry, "privacy_note")),
+      consentLabel: c.consent_label ?? null,
+    },
   };
 }

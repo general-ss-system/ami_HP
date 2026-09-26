@@ -1,0 +1,118 @@
+---
+/**
+ * 下層ページの枠。ヘッダー・ページの見出し（パンくず付き）・フッターを置き、本文は slot に入れる。
+ * 背景はトップと同じ（星空 + 紺 → 紫 → 水色のグラデーション）。
+ */
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/layout/SiteHeader.astro";
+import SiteFooter from "../components/layout/SiteFooter.astro";
+import Decor from "../components/ui/Decor.astro";
+import PageHeading from "../components/ui/PageHeading.astro";
+import { withBase } from "../lib/url";
+import sparkleCluster from "../assets/decor/sparkle-cluster.webp";
+import sparkleGold from "../assets/decor/sparkle-gold.webp";
+import planetoid from "../assets/decor/planetoid.webp";
+import galaxy from "../assets/decor/galaxy.webp";
+
+export interface Crumb {
+  label: string;
+  /** 省略すると現在のページ */
+  href?: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  noindex?: boolean;
+  /** 英字の見出し */
+  heading: string;
+  /** 日本語の添え書き */
+  headingSub?: string;
+  /** TOP の後ろに続くパンくず。最後が現在のページ */
+  crumbs: Crumb[];
+}
+
+const { title, description, ogImage, noindex, heading, headingSub, crumbs } = Astro.props;
+const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
+---
+
+<BaseLayout title={title} description={description} ogImage={ogImage} noindex={noindex}>
+  <SiteHeader />
+  <div class="page">
+    <main>
+      <header class="page-hero">
+        <div class="stage page-hero__stage">
+          <nav class="page-hero__crumbs" aria-label="パンくずリスト">
+            <ol>
+              {
+                trail.map((crumb) => (
+                  <li>
+                    {crumb.href ? <a href={crumb.href}>{crumb.label}</a> : <span aria-current="page">{crumb.label}</span>}
+                  </li>
+                ))
+              }
+            </ol>
+          </nav>
+
+          <PageHeading text={heading} sub={headingSub} />
+
+          <Decor src={galaxy} pc={[1020, 40, 190]} sp={[300, 20, 64]} float delay={0.4} eager />
+          <Decor src={sparkleCluster} pc={[110, 150, 170]} sp={[8, 110, 60]} twinkle delay={0.8} eager />
+          <Decor src={planetoid} pc={[300, 40, 90]} sp={false} float delay={1.6} eager />
+          <Decor src={sparkleGold} pc={[900, 230, 50]} sp={false} twinkle delay={1.2} eager />
+        </div>
+      </header>
+
+      <slot />
+    </main>
+    <SiteFooter />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    overflow-x: clip;
+    background:
+      url("../assets/backgrounds/star-field.svg") center top / 1280px auto repeat,
+      var(--gradient-page);
+  }
+
+  .page-hero__stage {
+    padding: calc(var(--header-height) + clamp(24px, 3.125vw, 40px)) var(--gutter) clamp(56px, 7.8vw, 100px);
+  }
+
+  .page-hero__crumbs {
+    position: relative;
+    z-index: var(--z-content);
+    margin-bottom: clamp(48px, 6.25vw, 80px);
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page-hero__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 10px;
+  }
+
+  .page-hero__crumbs li + li::before {
+    content: ">";
+    margin-right: 10px;
+    opacity: 0.6;
+  }
+
+  .page-hero__crumbs a {
+    text-underline-offset: 4px;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .page-hero__crumbs a:hover {
+    color: var(--color-accent-bright);
+  }
+
+  .page-hero__crumbs [aria-current] {
+    color: var(--color-text-muted);
+  }
+</style>

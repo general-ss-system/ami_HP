@@ -1,0 +1,162 @@
+---
+/**
+ * ABOUT。ステートメント（ami_home）・メッセージ（about）・会社概要（site_info + about）。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import Statement from "../components/sections/Statement.astro";
+import CompanyProfile from "../components/sections/CompanyProfile.astro";
+import ContactCta from "../components/sections/ContactCta.astro";
+import CmsImage from "../components/ui/CmsImage.astro";
+import Decor from "../components/ui/Decor.astro";
+import PageHeading from "../components/ui/PageHeading.astro";
+import RichText from "../components/ui/RichText.astro";
+import { CONTACT_HREF } from "../config/site";
+import { getCmsClient } from "../lib/cms/env";
+import { getAboutPageData } from "../lib/cms/queries";
+import { isEmptyRichText } from "../lib/cms/richtext";
+import { pageDescription, pageTitle } from "../lib/seo";
+import { withBase } from "../lib/url";
+import rocket from "../assets/decor/rocket.webp";
+import sparkleBlue from "../assets/decor/sparkle-blue.webp";
+import planetBunnyBlue from "../assets/decor/planet-bunny-blue.webp";
+
+const { siteInfo, home, about } = await getAboutPageData(getCmsClient());
+
+const hasMessage = about && (about.lead || about.mainImage || !isEmptyRichText(about.body));
+const leadLines = about?.lead ? about.lead.replace(/\r\n?/g, "\n").split("\n") : [];
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, "About")}
+  description={pageDescription(siteInfo, about?.lead)}
+  heading="About"
+  headingSub="私たちについて"
+  crumbs={[{ label: "ABOUT" }]}
+>
+  {/* トップのステートメントをそのまま見せる（このページ自身への View more は外す） */}
+  {
+    home && (
+      <div class="about-statement">
+        <Statement statement={{ ...home.statement, link: null }} />
+      </div>
+    )
+  }
+
+  {
+    about && hasMessage && (
+      <section class="message" aria-labelledby="message-title">
+        <div class="stage message__stage">
+          <PageHeading text="Message" sub="代表メッセージ" level={2} tilt={2} id="message-title" />
+
+          <div class:list={["message__body", about.mainImage && "has-image"]}>
+            {about.mainImage && (
+              <figure class="message__photo">
+                <CmsImage media={about.mainImage} photo />
+              </figure>
+            )}
+            <div class="message__text">
+              {leadLines.length > 0 && (
+                <p class="message__lead">
+                  {leadLines.map((line, i) => (
+                    <>
+                      {i > 0 && <br />}
+                      {line}
+                    </>
+                  ))}
+                </p>
+              )}
+              {!isEmptyRichText(about.body) && <RichText blocks={about.body} tone="dark" />}
+              {about.representative && <p class="message__sign">代表 {about.representative}</p>}
+            </div>
+          </div>
+
+          <Decor src={rocket} pc={[1080, 120, 150]} sp={false} float delay={0.6} />
+          <Decor src={sparkleBlue} pc={[60, 420, 70]} sp={[330, 60, 30]} twinkle delay={1.1} />
+        </div>
+      </section>
+    )
+  }
+
+  <section class="company" aria-labelledby="company-title">
+    <div class="stage company__stage">
+      <PageHeading text="Company" sub="会社概要" level={2} tilt={-2} id="company-title" />
+      <div class="company__table">
+        <CompanyProfile siteInfo={siteInfo} about={about} />
+      </div>
+      <Decor src={planetBunnyBlue} pc={[1100, 20, 140]} sp={[300, -10, 60]} float delay={1.4} />
+    </div>
+  </section>
+
+  <ContactCta body={home?.contactBody ?? null} href={withBase(CONTACT_HREF)} />
+</PageLayout>
+
+<style>
+  /* トップではマーキーの下に置く前提の余白なので、見出しの直下に合わせて詰める */
+  .about-statement :global(.statement__stage) {
+    padding-top: clamp(24px, 3.125vw, 40px);
+  }
+
+  .message__stage,
+  .company__stage {
+    padding: clamp(64px, 7.8vw, 100px) var(--gutter);
+  }
+
+  .message__body {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    gap: clamp(32px, 5vw, 64px);
+    max-width: 1000px;
+    margin: clamp(48px, 6.25vw, 80px) auto 0;
+  }
+
+  .message__body.has-image {
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .message__photo {
+    overflow: hidden;
+    border: 3px solid #fff;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgb(4 16 74 / 0.45);
+    rotate: -2.5deg;
+  }
+
+  .message__photo :global(img) {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .message__lead {
+    margin-bottom: 28px;
+    font-size: clamp(20px, 2.03vw, 26px);
+    line-height: 1.7;
+    letter-spacing: 0.08em;
+    color: var(--color-accent-bright);
+    text-shadow: 1px 2px 0 rgb(4 16 74 / 0.4);
+  }
+
+  .message__sign {
+    margin-top: 32px;
+    text-align: right;
+    letter-spacing: 0.12em;
+  }
+
+  .company__table {
+    max-width: 880px;
+    margin: clamp(48px, 6.25vw, 80px) auto 0;
+  }
+
+  @media (max-width: 767px) {
+    .message__body.has-image {
+      grid-template-columns: 1fr;
+    }
+
+    .message__photo {
+      width: min(100%, 320px);
+      margin-inline: auto;
+    }
+  }
+</style>

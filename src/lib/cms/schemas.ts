@@ -24,6 +24,13 @@ const optionalText = z.string().nullable().optional();
 const optionalMedia = DeliveryMediaSchema.nullable().optional();
 const optionalLink = CmsLinkSchema.nullable().optional();
 
+/**
+ * rich_text の配信形式（Lexical の JSON / CMS docs/02 §5.3）。
+ * ここでは外形だけを見る。中のノードは richtext.ts が許可したものだけ描画する。
+ */
+export const RichTextSchema = z.object({ root: z.looseObject({ type: z.literal("root") }) });
+const optionalRichText = RichTextSchema.nullable().optional();
+
 // ---------------------------------------------------------------------------
 // ami_home（singleton）: トップページ
 // ---------------------------------------------------------------------------
@@ -58,6 +65,8 @@ export const AmiServiceContentSchema = z.object({
   /** 背景を透過した商品・画面の画像。角丸の枠からはみ出して見せる。 */
   image: optionalMedia,
   link: optionalLink,
+  /** SERVICE ページの本文。 */
+  body: optionalRichText,
   sort_order: z.number().int().nullable().optional(),
 });
 
@@ -73,6 +82,10 @@ export const AmiTopicContentSchema = z.object({
   thumbnail: optionalMedia,
   excerpt: optionalText,
   published_date: z.string().min(1),
+  /** 詳細ページの本文。 */
+  body: optionalRichText,
+  /** 設定されていればカードから直接この URL を開く（詳細ページは使わない）。 */
+  external_url: optionalLink,
 });
 
 // ---------------------------------------------------------------------------
@@ -83,10 +96,55 @@ export const MemberContentSchema = z.object({
   name: z.string().min(1),
   role: optionalText,
   portrait: optionalMedia,
+  /** MEMBER ページの紹介文（改行あり）。 */
+  profile: optionalText,
   sort_order: z.number().int().nullable().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// site_info（singleton、CMS の汎用モデル）: 会社名・SEO の既定値
+// ---------------------------------------------------------------------------
+
+export const SiteInfoContentSchema = z.object({
+  company_name: z.string().min(1),
+  address: optionalText,
+  default_title: optionalText,
+  /** 例: `%s | 合同会社ami` */
+  title_template: optionalText,
+  default_description: optionalText,
+  default_og_image: optionalMedia,
+});
+
+// ---------------------------------------------------------------------------
+// about（singleton、CMS の汎用モデル）: ABOUT ページ・会社概要
+// ---------------------------------------------------------------------------
+
+export const AboutContentSchema = z.object({
+  lead: optionalText,
+  body: optionalRichText,
+  main_image: optionalMedia,
+  representative: optionalText,
+  established: optionalText,
+  capital: optionalText,
+  business_summary: optionalText,
+});
+
+// ---------------------------------------------------------------------------
+// contact_page（singleton、CMS の汎用モデル）: CONTACT ページ
+// ---------------------------------------------------------------------------
+
+export const ContactPageContentSchema = z.object({
+  lead: optionalText,
+  /** 個人情報の取り扱い。 */
+  privacy_note: optionalRichText,
+  /** 同意チェックの文言。 */
+  consent_label: optionalText,
 });
 
 export type AmiHomeContent = z.infer<typeof AmiHomeContentSchema>;
 export type AmiServiceContent = z.infer<typeof AmiServiceContentSchema>;
 export type AmiTopicContent = z.infer<typeof AmiTopicContentSchema>;
 export type MemberContent = z.infer<typeof MemberContentSchema>;
+export type SiteInfoContent = z.infer<typeof SiteInfoContentSchema>;
+export type AboutContent = z.infer<typeof AboutContentSchema>;
+export type ContactPageContent = z.infer<typeof ContactPageContentSchema>;
