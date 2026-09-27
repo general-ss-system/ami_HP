@@ -205,8 +205,9 @@ const facts = (m: Member) =>
    * アイコン 231×218（角丸 10.8・白の線 2.4）を x=246.2 / 524.5 / 802.9、y=474.7 から 378.6 ごとに並べる。
    * 選んだ人は 10.5 上に浮かせ、上に ▽（31×22）を出す。パネルは y=1623.5（帯）から。
    */
+  /* stage に左右の余白を付けると cqw（飾りの位置）がずれるので、左右の余白は中身に付ける */
   .member-grid__stage {
-    padding: calc(54.7 / 12.8 * 1cqw) var(--gutter) 0;
+    padding-top: calc(54.7 / 12.8 * 1cqw);
   }
 
   .member-grid__list {
@@ -216,6 +217,7 @@ const facts = (m: Member) =>
     grid-template-columns: repeat(3, 231px);
     justify-content: center;
     gap: 90px 47.3px;
+    padding-inline: var(--gutter);
   }
 
   .member-grid__link {
@@ -282,14 +284,13 @@ const facts = (m: Member) =>
   .member-details__stage {
     display: grid;
     gap: 80px;
-    padding: calc(123 / 12.8 * 1cqw) var(--gutter) clamp(120px, calc(240 / 12.8 * 1vw), 240px);
+    padding-block: calc(123 / 12.8 * 1cqw) clamp(120px, calc(240 / 12.8 * 1vw), 240px);
   }
 
   .member-detail {
     position: relative;
     z-index: var(--z-content);
-    width: 100%;
-    max-width: 1100px;
+    width: min(1100px, 100% - var(--gutter) * 2);
     margin-inline: auto;
     padding: calc(79 / 12.8 * 1cqw) var(--gutter) calc(77 / 12.8 * 1cqw);
     color: #1b1c22;

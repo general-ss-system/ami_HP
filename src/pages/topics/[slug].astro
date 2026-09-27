@@ -78,14 +78,15 @@ const label = TOPIC_CATEGORY_LABEL[topic.category];
    * 見出し: 分類 y=398・記事名 y=446（3 行）・写真 466×352 が x=650・y=317。本文は y=764 から。
    */
   .article__stage {
-    padding: calc(160 / 12.8 * 1cqw) var(--gutter) clamp(120px, calc(240 / 12.8 * 1vw), 240px);
+    /* stage に左右の余白を付けると cqw がずれるので、左右の余白はパネルの幅で取る */
+    padding-block: calc(160 / 12.8 * 1cqw) clamp(120px, calc(240 / 12.8 * 1vw), 240px);
   }
 
   .article {
     --accent: #00c0e8;
     position: relative;
     z-index: var(--z-content);
-    max-width: 1100px;
+    width: min(1100px, 100% - var(--gutter) * 2);
     margin-inline: auto;
     padding: calc(91 / 12.8 * 1cqw) calc(74 / 12.8 * 1cqw) calc(215 / 12.8 * 1cqw) calc(76 / 12.8 * 1cqw);
     color: #1b1c22;

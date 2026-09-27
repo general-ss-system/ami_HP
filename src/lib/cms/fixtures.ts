@@ -84,11 +84,17 @@ export const fixtureServices: DeliveryEntry[] = [
     image: media("fx-service-sns-img", "business-sns.png", 483, 900, "SNS の投稿画面を表示したスマートフォン"),
     link: { label: "View more", href: "/service#sns-marketing", target: "_self" },
     body: rich(
-      p(text("Z世代の当事者であるメンバーが、同世代の「いいな」「欲しい」をいちばん近くで感じ取り、企画に変えます。")),
-      h("h3", "できること"),
-      ul("SNSアカウントの運用代行・コンサルティング", "インフルエンサーを起用したプロモーションの企画", "ショート動画の企画・撮影・編集", "投稿データの分析と改善の提案"),
+      p(text("私たちは、メンバー全員がZ世代であり、SNSを生活の一部として使いこなすデジタルネイティブ集団です。")),
+      p(
+        text(
+          "既存のマーケティングデータだけでは見えてこない、当事者だからこそ分かる、潜在的なニーズの言語化と共感の設計を軸に、企画・撮影・編集からデータ分析までを一気通貫で実行します。",
+        ),
+      ),
     ),
     sort_order: 1,
+    title_en: "SNS Marketing",
+    photo: media("fx-service-sns-photo", "hero-2.jpg", 720, 951, "桃を手にほほえむメンバー"),
+    accent: "blue",
   }),
   entry("fx-service-product", "product-development", {
     title: "商品開発事業",
@@ -97,11 +103,141 @@ export const fixtureServices: DeliveryEntry[] = [
     image: media("fx-service-product-img", "business-product.png", 368, 1000, "ハート型のキーホルダー"),
     link: { label: "View more", href: "/service#product-development", target: "_self" },
     body: rich(
-      p(text("「こんなものがあったらトキメく」という小さな声を拾い上げ、かたちにします。")),
-      h("h3", "できること"),
-      ul("コンセプト設計・商品企画", "パッケージ・グッズのデザイン", "製造パートナーとの調整", "発売時のSNSプロモーション"),
+      p(
+        text(
+          "私たちは、Z世代のリアルなインサイトを起点に、「今、本当に求められているもの」を圧倒的なトレンド感度で具現化するクリエイティブユニットです。",
+        ),
+      ),
+      p(
+        text(
+          "既存のマーケティングフレームワークでは捉えきれない微細な熱量をキャッチし、コンセプト立案からプロダクト開発、プロモーションまでを一気通貫でプロデュースします。",
+        ),
+      ),
     ),
     sort_order: 2,
+    title_en: "Product development",
+    photo: media("fx-service-product-photo", "topic-sample.jpg", 640, 961, "ハートのキーホルダーを手にするメンバー"),
+    accent: "pink",
+  }),
+];
+
+/** SERVICE ページの案内文（ami_service_page）。文言はデザインから */
+export const fixtureServicePage: DeliveryEntry = entry("fx-service-page", null, {
+  lead: ["Z世代のリアルなインサイトを起点に、", "商品開発とSNSマーケティングの２つの軸で", "トキメキあふれる体験と価値を生み出します。"].join("\n"),
+});
+
+const serviceRef = (slug: "product-development" | "sns-marketing") => ({
+  id: slug === "product-development" ? "fx-service-product" : "fx-service-sns",
+  model: "ami_services",
+  slug,
+});
+const mediaAccount = { instagram: "@ricoyamada", x: "@ricoyamada", tiktok: "@ricoyamada" };
+const snsLinks = {
+  instagram: { label: mediaAccount.instagram, href: "https://www.instagram.com/", target: "_blank" },
+  x: { label: mediaAccount.x, href: "https://x.com/", target: "_blank" },
+  tiktok: { label: mediaAccount.tiktok, href: "https://www.tiktok.com/", target: "_blank" },
+};
+const tieUpPricing = ["タイアップ投稿|150,000円〜 / 1本|※企画、制作、投稿、分析レポートを含む。", "納期目安|ヒアリングから1ヶ月後ごろ"].join("\n");
+const reels = (prefix: string) => [
+  media(`${prefix}-1`, "hero-1.jpg", 840, 1092, "ショート動画の一場面"),
+  media(`${prefix}-2`, "hero-2.jpg", 720, 951, "ショート動画の一場面"),
+  media(`${prefix}-3`, "hero-3.jpg", 640, 820, "ショート動画の一場面"),
+  media(`${prefix}-4`, "topic-sample.jpg", 640, 961, "ショート動画の一場面"),
+];
+
+/** SERVICE ページの Case Study（ami_service_cases）。文言はデザインの見本（仮） */
+export const fixtureServiceCases: DeliveryEntry[] = [
+  entry("fx-case-chamini", null, {
+    service: serviceRef("product-development"),
+    label: "コスメブランド",
+    title: "「Chamini」",
+    main_image: media("fx-case-chamini-main", "business-product.png", 368, 1000, "ハート型のキーホルダー"),
+    body: rich(
+      lines(
+        "現役大学生6名によるプロデュースチームが、コンセプト立案からプロダクト開発、SNSプロモーションまでを一貫して手掛けました。",
+        "2026年3月のローンチ直後から大きな反響を呼び、戦略的なマーケティングと確かなプロダクト力で、市場に新たな価値を提示しました。",
+      ),
+    ),
+    points: rich(
+      h("h3", "戦略的プロセスエコノミー"),
+      p(
+        text(
+          "SNSアカウント「可愛くなりたい青学生」を起点に、開発過程からファンを巻き込むプロセスエコノミーを展開。運用開始から半年足らずで総フォロワー数10,000人を突破しました。",
+        ),
+      ),
+      h("h3", "マーケット実績"),
+      p(text("発売からわずか10日で累計販売個数10,000個を達成。")),
+      h("h3", "展開"),
+      lines("国内最大手の総合ディスカウントストアにて全国展開", "（一部店舗除く）"),
+    ),
+    gallery: [
+      media("fx-case-chamini-g1", "topic-sample.jpg", 640, 961, "商品の写真"),
+      media("fx-case-chamini-g2", "hero-1.jpg", 840, 1092, "商品を使うようす"),
+      media("fx-case-chamini-g3", "hero-2.jpg", 720, 951, "商品を手にするメンバー"),
+      media("fx-case-chamini-g4", "hero-3.jpg", 640, 820, "商品を使うようす"),
+      media("fx-case-chamini-g5", "hero-1.jpg", 840, 1092, "商品を手にするメンバー"),
+    ],
+    sort_order: 1,
+  }),
+  entry("fx-case-aogaku", null, {
+    service: serviceRef("sns-marketing"),
+    label: "自社メディア",
+    title: "難攻不落の青学生",
+    ...snsLinks,
+    body: rich(
+      lines("等身大の大学生の日常を切り取った、", "ライフスタイル特化型アカウント。"),
+      lines(
+        "運用開始から約半年で総フォロワー数10,000人を突破。",
+        "ターゲット目線でのコーデ動画やTips動画により、",
+        "「共感」をベースとした高エンゲージメントなコミュニティを構築。",
+      ),
+    ),
+    pricing: tieUpPricing,
+    gallery: reels("fx-case-aogaku"),
+    sort_order: 2,
+  }),
+  entry("fx-case-kawaao", null, {
+    service: serviceRef("sns-marketing"),
+    label: "自社メディア",
+    title: "かわあお",
+    ...snsLinks,
+    body: rich(
+      p(text("美容・コスメに特化した、共創型マーケティングメディア。")),
+      lines(
+        "運用開始から約半年で総フォロワー数20,000人を突破。",
+        "自社コスメブランド「chamini」の開発過程をゼロから公開。",
+        "視聴者を開発パートナーとして位置づけ、",
+        "コメント欄を通じて意見を反映させる「共創型プロデュース」を実現。",
+        "発売前からの熱狂的なファン形成に成功しました。",
+      ),
+    ),
+    pricing: tieUpPricing,
+    gallery: reels("fx-case-kawaao"),
+    sort_order: 3,
+  }),
+  entry("fx-case-consulting", null, {
+    service: serviceRef("sns-marketing"),
+    label: "SNS Consulting",
+    title: "SNSコンサルティング・クリエイティブ制作",
+    body: rich(
+      p(
+        text(
+          "自社メディアで実証された「伸びるロジック」と「当事者の感性」をクライアント企業の課題に適用。企画からデータ分析までを一気通貫でサポートし、ブランドのファン化を促進します。",
+        ),
+      ),
+    ),
+    points: rich(
+      h("h3", "事例"),
+      lines(
+        "・10代向け人気ファッション誌における公式SNSのコンテンツ制作",
+        "（企画・撮影・ディレクション）",
+        "・国内最大手ヘアケアメーカーのプロモーション用クリエイティブ制作",
+        "　および運用支援",
+      ),
+    ),
+    pricing: ["企画|150,000円〜 / 1本", "企画＋制作|300,000円〜 / 1本", "納期目安|ヒアリングから1ヶ月後ごろ"].join("\n"),
+    gallery: [media("fx-case-consulting-1", "hero-2.jpg", 720, 951, "制作したショート動画の一場面")],
+    sort_order: 4,
   }),
 ];
 

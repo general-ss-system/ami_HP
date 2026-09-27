@@ -53,6 +53,29 @@ export interface Service {
   link: Link | null;
   /** SERVICE ページの本文。空なら []。 */
   body: RtBlock[];
+  titleEn: string | null;
+  photo: Media | null;
+  accent: "pink" | "blue" | null;
+}
+
+export interface PriceRow {
+  label: string;
+  value: string;
+  note: string | null;
+}
+
+export interface ServiceCase {
+  id: string;
+  /** 事業（ami_services）の id。null ならどの事業にも出さない */
+  serviceId: string | null;
+  label: string | null;
+  title: string;
+  mainImage: Media | null;
+  body: RtBlock[];
+  points: RtBlock[];
+  sns: MemberSns[];
+  pricing: PriceRow[];
+  gallery: Media[];
 }
 
 export type TopicCategory = "news" | "sns" | "column";

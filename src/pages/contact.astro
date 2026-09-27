@@ -9,7 +9,8 @@ import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
 import PageLayout from "../layouts/PageLayout.astro";
 import ContactForm from "../components/contact/ContactForm.astro";
 import CompanyProfile from "../components/sections/CompanyProfile.astro";
-import Decor from "../components/ui/Decor.astro";
+import EarthHeroDecor from "../components/layout/EarthHeroDecor.astro";
+import SkySection from "../components/layout/SkySection.astro";
 import LocalImage from "../components/ui/LocalImage.astro";
 import { PRIVACY_HREF } from "../config/site";
 import { getCmsClient, getFormSubmissionEndpoint } from "../lib/cms/env";
@@ -19,19 +20,8 @@ import { pageDescription, pageTitle } from "../lib/seo";
 import { withBase } from "../lib/url";
 import title from "../assets/headings/title-contact.webp";
 import sticker from "../assets/headings/sticker-contact.webp";
-import earth from "../assets/illustrations/earth-horizon.webp";
 import companyPhone from "../assets/illustrations/company-phone.webp";
 import heart from "../assets/icons/heart-bubble.webp";
-import asteroid from "../assets/decor/asteroid.webp";
-import planetoid from "../assets/decor/planetoid.webp";
-import planetRinged from "../assets/decor/planet-ringed.webp";
-import planetBunnyPurple from "../assets/decor/planet-bunny-purple.webp";
-import planetBunnyBlueTilt from "../assets/decor/planet-bunny-blue-tilt.webp";
-import sparkleGold from "../assets/decor/sparkle-gold.webp";
-import sparkleBlue from "../assets/decor/sparkle-blue.webp";
-import sparkleViolet from "../assets/decor/sparkle-violet.webp";
-import moonBunny from "../assets/decor/moon-bunny.webp";
-import rocket from "../assets/decor/rocket.webp";
 
 const { siteInfo, contactPage, about, form } = await getContactPageData(getCmsClient(Astro.locals));
 
@@ -55,7 +45,6 @@ const endpoint = getFormSubmissionEndpoint(CONTACT_FORM_KEY);
 const turnstileSiteKey = PUBLIC_TURNSTILE_SITE_KEY ?? null;
 if (canShowForm && endpoint && !turnstileSiteKey) reportCmsError("PUBLIC_TURNSTILE_SITE_KEY is not set", { form: CONTACT_FORM_KEY });
 
-const leadLines = contactPage?.lead ? contactPage.lead.replace(/\r\n?/g, "\n").split("\n") : [];
 const hasCompany = Boolean(siteInfo || about);
 ---
 
@@ -73,162 +62,59 @@ const hasCompany = Boolean(siteInfo || about);
   heroMinHeightSp={300}
 >
   <Fragment slot="hero-decor">
-    <div class="hero-space" aria-hidden="true"></div>
-    <Decor src={earth} pc={[0, 398, 1280]} sp={[-20, 165, 415]} eager />
-    <Decor src={asteroid} pc={[182, 101, 126]} sp={[10, 66, 52]} float delay={0.3} eager />
-    <Decor src={planetRinged} pc={[374, 80, 104.3]} sp={false} rotate={-16.6} float delay={1.4} eager />
-    <Decor src={sparkleGold} pc={[62, 153, 60]} sp={false} twinkle delay={0.9} eager />
-    <Decor src={sparkleGold} pc={[632, 121, 28]} sp={false} twinkle delay={1.8} eager />
-    <Decor src={sparkleViolet} pc={[864, 145, 56]} sp={false} twinkle delay={1.1} eager />
-    <Decor src={planetoid} pc={[941, 130, 147]} sp={[300, 60, 64]} float delay={0.8} eager />
-    <Decor src={sparkleBlue} pc={[1080, 131, 118]} sp={false} twinkle delay={0.2} eager />
-    <Decor src={sparkleBlue} pc={[254, 350, 99]} sp={false} twinkle delay={0.5} eager />
-    <Decor src={sparkleGold} pc={[1169, 354, 60]} sp={false} twinkle delay={1.3} eager />
-    <Decor src={planetBunnyBlueTilt} pc={[107, 266, 150]} sp={false} float delay={1.7} eager />
-    <Decor src={planetBunnyPurple} pc={[942, 252, 257]} sp={false} float delay={0.6} eager />
+    <EarthHeroDecor />
   </Fragment>
 
-  <div class="contact-sky">
-    <div class="stage contact-sky__stage">
-      <LocalImage src={sticker} alt="" class="contact-sky__sticker" loading="eager" />
-
+  <SkySection sticker={sticker} stickerBox={[278, -38, 326]} lead={contactPage?.lead ?? null}>
+    <section class="contact-card" aria-label="お問い合わせフォーム">
       {
-        leadLines.length > 0 && (
-          <p class="contact__lead">
-            {leadLines.map((line, i) => (
-              <>
-                {i > 0 && <br />}
-                {line}
-              </>
-            ))}
+        canShowForm && form ? (
+          <ContactForm
+            form={form}
+            fields={fields}
+            consentLabel={consentLabel}
+            privacyHref={withBase(PRIVACY_HREF)}
+            endpoint={endpoint}
+            turnstileSiteKey={turnstileSiteKey}
+            topHref={withBase("/")}
+          />
+        ) : (
+          <p class="contact__closed">
+            ただいまフォームからのお問い合わせを受け付けておりません。
+            <br />
+            時間をおいて、もう一度アクセスしてください。
           </p>
         )
       }
+    </section>
 
-      <section class="contact-card" aria-label="お問い合わせフォーム">
-        {
-          canShowForm && form ? (
-            <ContactForm
-              form={form}
-              fields={fields}
-              consentLabel={consentLabel}
-              privacyHref={withBase(PRIVACY_HREF)}
-              endpoint={endpoint}
-              turnstileSiteKey={turnstileSiteKey}
-              topHref={withBase("/")}
-            />
-          ) : (
-            <p class="contact__closed">
-              ただいまフォームからのお問い合わせを受け付けておりません。
-              <br />
-              時間をおいて、もう一度アクセスしてください。
-            </p>
-          )
-        }
-      </section>
-
-      {
-        hasCompany && (
-          <section class="company" aria-labelledby="company-title">
-            <div class="company__visual">
-              <LocalImage src={companyPhone} alt="" />
-            </div>
-            <div class="company__body">
-              <h2 class="company__title" id="company-title">
-                <LocalImage src={heart} alt="" class="company__heart" />
-                会社概要
-              </h2>
-              <CompanyProfile siteInfo={siteInfo} about={about} variant="lines" />
-            </div>
-          </section>
-        )
-      }
-
-      <Decor src={rocket} pc={[1022, -6, 140]} sp={false} front float delay={1.2} />
-      <Decor src={moonBunny} pc={[191, 106, 132]} sp={false} front float delay={0.4} />
-      <Decor src={sparkleGold} pc={[284, 71, 60]} sp={false} front twinkle delay={1.6} />
-      <Decor src={sparkleGold} pc={[1081, 130, 60]} sp={false} front twinkle delay={0.7} />
-      <Decor src={sparkleBlue} pc={[83, 90, 82]} sp={false} front twinkle delay={1.1} />
-      <Decor src={sparkleBlue} pc={[933, 136, 82]} sp={false} front twinkle delay={0.3} />
-      <Decor src={sparkleViolet} pc={[923, 61, 41]} sp={false} front twinkle delay={1.9} />
-      <Decor src={sparkleViolet} pc={[155, 160, 41]} sp={false} front twinkle delay={0.9} />
-    </div>
-  </div>
+    {
+      hasCompany && (
+        <section class="company" aria-labelledby="company-title">
+          <div class="company__visual">
+            <LocalImage src={companyPhone} alt="" />
+          </div>
+          <div class="company__body">
+            <h2 class="company__title" id="company-title">
+              <LocalImage src={heart} alt="" class="company__heart" />
+              会社概要
+            </h2>
+            <CompanyProfile siteInfo={siteInfo} about={about} variant="lines" />
+          </div>
+        </section>
+      )
+    }
+  </SkySection>
 </PageLayout>
 
 <style>
-  /*
-   * 地平線: 中心 x=639.5・横の半径 938.5・縦の半径 414 の楕円の上半分（y=586 が頂点）。線は #3AD4FF 4px。
-   * 地は #F6FDFF に、45° の淡い斜線（#F1F8FA、20px ごと）。
-   */
-  /*
-   * 見出しの帯の背景: 紺のグラデーションに星と雲（デザインから取り出した絵。高さ 713）。
-   * 帯（586）より下まで伸ばし、地平線の左右の端（楕円が画面の外へ下がる部分）にも同じ背景を見せる。
-   */
-  .hero-space {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: max(100vw, 100cqw);
-    aspect-ratio: 1280 / 713;
-    translate: -50% 0;
-    background: url("../assets/backgrounds/hero-space.webp") center top / cover no-repeat;
-  }
-
-  .contact-sky {
-    --u: calc(min(100vw, 1280px) / 1280);
-    position: relative;
-    z-index: var(--z-content);
-    padding-bottom: clamp(96px, calc(160 / 12.8 * 1vw), 160px);
-    color: #1b1c22;
-  }
-
-  .contact-sky::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: calc(1877 * var(--u));
-    translate: -50% 0;
-    background: repeating-linear-gradient(135deg, #f6fdff 0 7.07px, #f1f8fa 7.07px 14.14px);
-    border: 4px solid #3ad4ff;
-    border-bottom: 0;
-    border-radius: 50% 50% 0 0 / calc(414 * var(--u)) calc(414 * var(--u)) 0 0;
-  }
-
-  .contact-sky__stage {
-    padding: calc(114 / 12.8 * 1cqw) var(--gutter) 0;
-  }
-
-  /* 「Contact」のステッカー 326×110。地平線の 38 上、x=278 */
-  .contact-sky__stage :global(.contact-sky__sticker) {
-    position: absolute;
-    z-index: 2;
-    top: calc(-38 / 12.8 * 1cqw);
-    left: calc(278 / 12.8 * 1cqw);
-    width: calc(326 / 12.8 * 1cqw);
-    min-width: 150px;
-    height: auto;
-  }
-
-  .contact__lead {
-    position: relative;
-    z-index: var(--z-content);
-    font-size: clamp(15px, calc(22 / 12.8 * 1vw), 22px);
-    line-height: 2.09;
-    letter-spacing: 0.17em;
-    text-align: center;
-  }
-
   /* フォームの台紙 1000 幅（x=140）、地平線から 368（案内文の下 93） */
   .contact-card {
     position: relative;
     z-index: var(--z-content);
     max-width: 1000px;
-    /* 案内文の最後の行の文字の下端から 93（行の余白の分を引いて 70） */
-    margin: calc(70 / 12.8 * 1cqw) auto 0;
+    /* 案内文の最後の行の文字の下端から 93（行の余白の分を引いて 82） */
+    margin: calc(82 / 12.8 * 1cqw) auto 0;
     padding: 40px 40px 40px;
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -291,19 +177,6 @@ const hasCompany = Boolean(siteInfo || about);
   }
 
   @media (max-width: 767px) {
-    .contact-sky__stage {
-      padding-top: 72px;
-    }
-
-    .contact-sky__stage :global(.contact-sky__sticker) {
-      top: -40px;
-      left: 16px;
-    }
-
-    .contact__lead {
-      letter-spacing: 0.06em;
-    }
-
     .contact-card {
       margin-top: 48px;
       padding: 28px 20px;

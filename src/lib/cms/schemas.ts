@@ -10,7 +10,7 @@
  */
 
 import { z } from "zod";
-import { DeliveryMediaSchema } from "./contracts";
+import { DeliveryEntryRefSchema, DeliveryMediaSchema } from "./contracts";
 
 /** link フィールドの配信形式（CMS docs/02 §16）。 */
 export const CmsLinkSchema = z.object({
@@ -67,6 +67,46 @@ export const AmiServiceContentSchema = z.object({
   link: optionalLink,
   /** SERVICE ページの本文。 */
   body: optionalRichText,
+  sort_order: z.number().int().nullable().optional(),
+  // ---- SERVICE ページ（2026-09-27 追加。CMS の ami_services にも足す） ----
+  /** 英語の添え書き（例: Product development） */
+  title_en: optionalText,
+  /** SERVICE ページの写真（横長 393:298） */
+  photo: optionalMedia,
+  /** 枠の色。未入力なら並び順で交互（ピンク → 水色） */
+  accent: z.enum(["pink", "blue"]).nullable().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// ami_service_page（singleton）: SERVICE ページの案内文
+// ---------------------------------------------------------------------------
+
+export const AmiServicePageContentSchema = z.object({
+  /** 地球の下の案内文（改行で行を分ける） */
+  lead: optionalText,
+});
+
+// ---------------------------------------------------------------------------
+// ami_service_cases（collection）: SERVICE ページの Case Study
+// ---------------------------------------------------------------------------
+
+export const AmiServiceCaseContentSchema = z.object({
+  /** どの事業の事例か（ami_services への relation） */
+  service: DeliveryEntryRefSchema.nullable().optional(),
+  /** 小さな見出し（例: コスメブランド / 自社メディア / SNS Consulting） */
+  label: optionalText,
+  title: z.string().min(1),
+  /** 左に大きく出す写真。あると「商品」の並び（写真が左、下に写真の一覧）、無いと「メディア」の並び（写真が右） */
+  main_image: optionalMedia,
+  body: optionalRichText,
+  /** 実績などの小見出しと文章（rich_text の h3 ごとに区切り、1 つ目は全幅、2 つ目からは 2 列） */
+  points: optionalRichText,
+  instagram: optionalLink,
+  x: optionalLink,
+  tiktok: optionalLink,
+  /** 料金の表。1 行に「項目|値|注記」（注記は省略可） */
+  pricing: optionalText,
+  gallery: z.array(DeliveryMediaSchema).nullable().optional(),
   sort_order: z.number().int().nullable().optional(),
 });
 

@@ -10,7 +10,9 @@ import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 import {
   AboutContentSchema,
   AmiHomeContentSchema,
+  AmiServiceCaseContentSchema,
   AmiServiceContentSchema,
+  AmiServicePageContentSchema,
   AmiTopicContentSchema,
   ContactPageContentSchema,
   FaqContentSchema,
@@ -32,8 +34,11 @@ import type {
   Link,
   Media,
   Member,
+  MemberSns,
+  PriceRow,
   RecruitContent,
   Service,
+  ServiceCase,
   SiteInfo,
   StatementLine,
   Topic,
@@ -127,6 +132,60 @@ export function mapService(entry: DeliveryEntry, report?: RichTextReporter): Map
       image: toMedia(c.image),
       link: toLink(c.link),
       body: toRichText(c.body, richTextReporter(report, "ami_services", entry, "body")),
+      titleEn: c.title_en ?? null,
+      photo: toMedia(c.photo),
+      accent: c.accent ?? null,
+    },
+  };
+}
+
+/** Instagram / X / TikTok の link を、表示する SNS の一覧にする（http(s) の URL とアカウント名があるものだけ）。 */
+function toSns(links: Partial<Record<"instagram" | "x" | "tiktok", z.infer<typeof CmsLinkSchema> | null | undefined>>): MemberSns[] {
+  return (
+    [
+      ["Instagram", links.instagram],
+      ["X", links.x],
+      ["TikTok", links.tiktok],
+    ] as const
+  ).flatMap(([service, link]) => {
+    const target = link ? sanitizeHref(link.href) : null;
+    return link && target?.external && link.label.trim() ? [{ service, account: link.label.trim(), href: target.href }] : [];
+  });
+}
+
+/** 料金の表: 1 行に「項目|値|注記」。項目か値が空の行は読み飛ばす。 */
+export function parsePricing(text: string | null | undefined): PriceRow[] {
+  return (text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.split(/[|｜]/).map((s) => s.trim()))
+    .filter(([label, value]) => Boolean(label && value))
+    .map(([label, value, note]) => ({ label: label!, value: value!, note: note || null }));
+}
+
+export function mapServicePage(entry: DeliveryEntry): MapResult<{ lead: string | null }> {
+  const r = parseContent("ami_service_page", entry, AmiServicePageContentSchema);
+  if (!r.ok) return r;
+  return { ok: true, value: { lead: r.value.lead ?? null } };
+}
+
+export function mapServiceCase(entry: DeliveryEntry, report?: RichTextReporter): MapResult<ServiceCase> {
+  const r = parseContent("ami_service_cases", entry, AmiServiceCaseContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      serviceId: c.service?.id ?? null,
+      label: c.label ?? null,
+      title: c.title,
+      mainImage: toMedia(c.main_image),
+      body: toRichText(c.body, richTextReporter(report, "ami_service_cases", entry, "body")),
+      points: toRichText(c.points, richTextReporter(report, "ami_service_cases", entry, "points")),
+      sns: toSns(c),
+      pricing: parsePricing(c.pricing),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
     },
   };
 }
@@ -176,17 +235,7 @@ export function mapMember(entry: DeliveryEntry): MapResult<Member> {
       height: c.height ?? null,
       mbti: c.mbti ?? null,
       personalColor: c.personal_color ?? null,
-      sns: (
-        [
-          ["Instagram", c.instagram],
-          ["X", c.x],
-          ["TikTok", c.tiktok],
-        ] as const
-      ).flatMap(([service, link]) => {
-        // 外部サイト（http(s)）の URL だけを出す
-        const target = link ? sanitizeHref(link.href) : null;
-        return link && target?.external && link.label.trim() ? [{ service, account: link.label.trim(), href: target.href }] : [];
-      }),
+      sns: toSns(c),
       photos: (c.photos ?? []).slice(0, 4).map((m) => toMedia(m)!),
     },
   };

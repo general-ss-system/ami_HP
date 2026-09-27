@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { CmsClient } from "./client";
 import { createFixtureClient } from "./fixture-client";
 import { fixtureHome, fixtureMembers, fixtureSiteInfo } from "./fixtures";
-import { mapMember, mapSiteInfo, toStatementLines } from "./mapper";
+import { mapMember, mapSiteInfo, parsePricing, toStatementLines } from "./mapper";
 import type { SiteInfo } from "./types";
 import {
   getAboutPageData,
@@ -96,10 +96,25 @@ describe("下層ページ", () => {
     expect(data.about?.body.length).toBeGreaterThan(0);
   });
 
-  it("SERVICE: 本文とアンカー用の slug を持つ", async () => {
-    const { services } = await getServicePageData(createFixtureClient());
+  it("SERVICE: 本文・写真・案内文と、事業ごとの Case Study を持つ", async () => {
+    const report = vi.fn();
+    const { services, lead, casesByService } = await getServicePageData(createFixtureClient(), report);
+    expect(report).not.toHaveBeenCalled();
     expect(services.map((s) => s.slug)).toEqual(["sns-marketing", "product-development"]);
-    expect(services[0]?.body.some((b) => b.kind === "list")).toBe(true);
+    expect(services[0]?.body.length).toBeGreaterThan(0);
+    expect(services[0]?.titleEn).toBe("SNS Marketing");
+    expect(lead).toContain("Z世代");
+    expect(casesByService.get("fx-service-sns")?.map((c) => c.title)).toEqual(["難攻不落の青学生", "かわあお", "SNSコンサルティング・クリエイティブ制作"]);
+    const chamini = casesByService.get("fx-service-product")?.[0];
+    expect(chamini?.mainImage).not.toBeNull();
+    expect(chamini?.gallery).toHaveLength(5);
+  });
+
+  it("SERVICE: 料金の表は「項目|値|注記」の行を読み、欠けた行は飛ばす", () => {
+    expect(parsePricing("タイアップ投稿|150,000円〜 / 1本|※注記\n納期目安｜1ヶ月\n|値だけ\n項目だけ")).toEqual([
+      { label: "タイアップ投稿", value: "150,000円〜 / 1本", note: "※注記" },
+      { label: "納期目安", value: "1ヶ月", note: null },
+    ]);
   });
 
   it("MEMBER: 紹介文とプロフィール（生年月日・SNS・写真）を持つ", async () => {

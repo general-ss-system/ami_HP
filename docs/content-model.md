@@ -149,6 +149,39 @@ CMS の管理画面の「プレビュー」から、公開前の内容を本番�
   （Cloudflare のアダプタは `wrangler.jsonc` の `vars` と `.dev.vars` から読む）。live に切り替えるときはビルドし直す。
   `CMS_DELIVERY_KEY` だけは実行時に読む（`wrangler secret`）。
 
+## 下層ページのデザイン（2026-09-27 追加）
+
+Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVGYjY`）の下層ページ（service / member / topics / topics-2 / contact）に合わせて作り直した。
+デザインの SVG と、要素ごとの CSV は `design/`（README を参照）。
+
+**次の項目・モデルはサイト側だけに足してある。live で使う前に、CMS 側（`packages/content-schema`）にも同じ key で足す。**
+
+| モデル | key | 型 | 使い方 |
+|---|---|---|---|
+| `ami_topics` | pickup | boolean（indexed） | TOPICS 一覧の「Pick UP!」に出す（新しい順に 5 件まで） |
+| `members` | birthday | date | MEMBER のプロフィール（1998/06/12 の形で出す） |
+| `members` | hometown / height / mbti / personal_color | short_text | 同上（出身・身長・MBTI・パーソナルカラー） |
+| `members` | instagram / x / tiktok | link | label にアカウント名（@…）、href に URL。http(s) の URL だけ出す |
+| `members` | photos | media_list（最大 4） | 証明写真の台紙に 2×2 で並べる |
+| `ami_services` | title_en | short_text | 英語の添え書き（Product development など） |
+| `ami_services` | photo | media | SERVICE ページの写真（横長 393:298） |
+| `ami_services` | accent | select（pink / blue） | パネルの色。未入力なら並び順で交互 |
+| `ami_service_page`（singleton・新規） | lead | long_text | SERVICE の地球の下の案内文（改行で行を分ける） |
+| `ami_service_cases`（collection・新規） | service | relation → ami_services | どの事業の Case Study か |
+| 〃 | label / title（必須） | short_text | 小見出し（コスメブランド / 自社メディア …）と名前 |
+| 〃 | main_image | media | あると「商品」の並び（写真が左・下に写真の一覧 5 枚）、無いと「メディア」の並び（写真が右に 2×2、1 枚なら大きく） |
+| 〃 | body / points | rich_text | 本文と、実績など（points は h3 ごとに区切り、✦ の小見出しにする。1 つ目は全幅、2 つ目から 2 列） |
+| 〃 | instagram / x / tiktok | link | members と同じ |
+| 〃 | pricing | long_text | 料金の表。1 行に「項目\|値\|注記」（注記は省略可） |
+| 〃 | gallery | media_list | 写真 |
+| 〃 | sort_order | number（indexed） | 昇順 |
+
+- `contact_page.consent_label` の「プライバシーポリシー」の部分は、プライバシーポリシーのページへのリンクにする（無ければ文の後ろにリンクを添える）。
+  CONTACT のフォームには、個人情報の取り扱いの文章（`privacy_note`）を出さない（`/privacy` に出す）。
+- お問い合わせフォームの入力例（例）山田太郎 など）は、CMS のフォーム定義の `helpText`。入力欄の薄い文字は項目名から作る。
+- SERVICE の事業の並びは `ami_services.sort_order`（トップの Our Business と同じ）。デザインでは商品開発が 01。
+- ヘッダーのナビは 4 項目のまま（service / contact のデザインには CONTACT があるが、topics / member のデザインには無い）。
+
 ## 見出し画像の修正（2026-09-27）
 
 素材の Topics の英字見出しが「Tpics」（o が無い）だったため、p の丸い部分を o として T と p の間に足し、ステッカーを横に伸ばした（幅 433 → 523px、表示幅 212 → 256px）。

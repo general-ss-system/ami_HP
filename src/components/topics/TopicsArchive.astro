@@ -86,6 +86,7 @@ const crumbs = [
 
   <section class:list={["topics-archive", pickups.length > 0 && "has-pickup"]} aria-label="記事の一覧">
     <div class="stage topics-archive__stage">
+      <div class="topics-archive__inner">
       <h2 class="visually-hidden">記事の一覧</h2>
       <FilterTabs tabs={tabs} label="分類で絞り込む" variant="pixel" />
 
@@ -104,6 +105,7 @@ const crumbs = [
       }
 
       <Pager page={page} totalPages={totalPages} hrefFor={(n) => topicsListHref(category, n)} />
+      </div>
 
       <Decor src={moonBunny} pc={[40, 80, 137]} sp={false} float delay={1.1} />
     </div>
@@ -112,8 +114,13 @@ const crumbs = [
 
 <style>
   /* Pick UP! の下端（y=839）から札（y=967）まで 128、札の下端から カード（y=1092.5）まで 87 */
+  /* stage に左右の余白を付けると cqw（飾りの位置）がずれるので、左右の余白は中身に付ける */
   .topics-archive__stage {
-    padding: clamp(24px, 3.125vw, 40px) var(--gutter) clamp(96px, 12.5vw, 160px);
+    padding-block: clamp(24px, 3.125vw, 40px) clamp(96px, 12.5vw, 160px);
+  }
+
+  .topics-archive__inner {
+    padding-inline: var(--gutter);
   }
 
   .topics-archive.has-pickup .topics-archive__stage {

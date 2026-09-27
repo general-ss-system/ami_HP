@@ -16,6 +16,8 @@ import {
   mapMember,
   mapRecruit,
   mapService,
+  mapServiceCase,
+  mapServicePage,
   mapSiteInfo,
   mapTopic,
   mapTopicDetail,
@@ -36,6 +38,7 @@ import type {
   RecruitContent,
   RtBlock,
   Service,
+  ServiceCase,
   SiteInfo,
   Topic,
   TopicCategory,
@@ -163,12 +166,31 @@ export async function getAboutPageData(client: CmsClient, report: CmsErrorReport
 
 export interface ServicePageData {
   siteInfo: SiteInfo | null;
+  /** 地球の下の案内文（ami_service_page.lead） */
+  lead: string | null;
   services: Service[];
+  /** 事業（ami_services）の id → Case Study（表示順） */
+  casesByService: Map<string, ServiceCase[]>;
 }
 
+/** SERVICE ページの Case Study の上限。 */
+const SERVICE_CASES_LIMIT = 50;
+
 export async function getServicePageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<ServicePageData> {
-  const [siteInfo, services] = await Promise.all([
+  const [siteInfo, page, cases, services] = await Promise.all([
     getSiteInfo(client, report),
+    loadSingleton(client, "ami_service_page", mapServicePage, report),
+    safely(
+      "ami_service_cases",
+      [],
+      async () =>
+        collect(
+          (await client.getCollection("ami_service_cases", { sort: "sort_order", limit: SERVICE_CASES_LIMIT })).data,
+          (e) => mapServiceCase(e, report),
+          report,
+        ),
+      report,
+    ),
     safely(
       "ami_services",
       [],
@@ -181,7 +203,12 @@ export async function getServicePageData(client: CmsClient, report: CmsErrorRepo
       report,
     ),
   ]);
-  return { siteInfo, services };
+  const casesByService = new Map<string, ServiceCase[]>();
+  for (const c of cases) {
+    if (!c.serviceId) continue;
+    casesByService.set(c.serviceId, [...(casesByService.get(c.serviceId) ?? []), c]);
+  }
+  return { siteInfo, lead: page?.lead ?? null, services, casesByService };
 }
 
 export interface MemberPageData {
