@@ -16,3 +16,13 @@ Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVG
 | TOPICS 一覧 | topics.svg | 7254 |
 | TOPICS 詳細 | topics-2.svg | 7254 |
 | CONTACT | contact.svg | 5476 |
+
+## 部品を取り出す
+
+- `node scripts/design-extract.mjs <svg> <行番号の範囲> <出力.webp>` … CSV の行番号の図形だけを残して画像にする。
+  元の SVG の構造（グループの transform・filter・mask）をそのまま使うので、Figma の「外側の線」や影も同じに描ける。
+  例: 下層ページのドット絵のタイトル `src/assets/headings/title-*.webp`、Pick UP! のラベル、アイコン。
+- `node scripts/design-element.mjs <svg> <行番号...>` … 要素の元の属性（path の d など）を表示する。
+  角がドットの形の枠（`src/assets/shapes/`）は、この d をそのまま使い、viewBox を要素の外接矩形にしている。
+- 装飾（惑星・星など）の画像は、デザインでは 1254px 四方の画像を枠に入れている。`src/assets/decor/` の素材も同じ余白を含むので、
+  デザインの枠の [x, y, 幅] をそのまま `Decor` の `pc` に渡せる。

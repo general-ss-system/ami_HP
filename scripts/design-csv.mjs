@@ -8,7 +8,8 @@
  * 文字は「1 つのテキストレイヤー = 1 つの path」として、色と外接矩形だけが分かる（書体・字間は SVG に残らない）。
  *
  * 列: index, tag, x, y, width, height, rotate, fill, fill_opacity, stroke, stroke_width, rx, opacity,
- *     shadow（filter の drop-shadow: dx dy blur spread color）, blend, clip, kind
+ *     shadow（filter の drop-shadow: dx dy blur spread color）, blend, clip, mask, kind
+ *   mask: yes なら Figma の「外側／内側の線」など、マスクで切り抜いて描く図形（外接矩形は切り抜く前の値）
  *   kind: text?（細長く小さい単色 path。文字の可能性が高い）/ image / shape
  */
 
@@ -100,7 +101,8 @@ function convert(file) {
       filter: a.filter ?? top.filter,
       clip: a["clip-path"] ?? top.clip,
       blend: style["mix-blend-mode"] ?? top.blend,
-      inDefs: top.inDefs || node.name === "defs",
+      inDefs: top.inDefs || ["defs", "mask", "clipPath"].includes(node.name),
+      mask: a.mask ?? top.mask ?? null,
       fill: a.fill ?? top.fill,
     };
     stack.push(frame);
@@ -162,7 +164,7 @@ function convert(file) {
       tag: node.name, x: round(x0), y: round(y0), width: round(w), height: round(h), rotate,
       fill, fill_opacity: a["fill-opacity"] ?? "", stroke, stroke_width: a["stroke-width"] ?? "",
       rx: a.rx ?? "", opacity: round(frame.opacity * 100) / 100, shadow, blend: frame.blend ?? "",
-      clip: frame.clip ? "yes" : "", kind,
+      clip: frame.clip ? "yes" : "", mask: frame.mask ? "yes" : "", kind,
     });
   };
   const onclosetag = (tag) => {
@@ -183,7 +185,7 @@ function convert(file) {
     parser.write(text).close();
   }
 
-  const cols = ["index", "tag", "x", "y", "width", "height", "rotate", "fill", "fill_opacity", "stroke", "stroke_width", "rx", "opacity", "shadow", "blend", "clip", "kind"];
+  const cols = ["index", "tag", "x", "y", "width", "height", "rotate", "fill", "fill_opacity", "stroke", "stroke_width", "rx", "opacity", "shadow", "blend", "clip", "mask", "kind"];
   const esc = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const lines = [cols.join(","), ...rows.map((r, i) => cols.map((c) => esc(c === "index" ? i + 1 : r[c])).join(","))];
   const out = path.join(outDir, `${name}.csv`);
