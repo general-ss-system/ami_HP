@@ -67,6 +67,8 @@ export interface Topic {
   publishedDate: string;
   /** 設定されていれば、カードから直接この URL を開く。 */
   externalLink: Link | null;
+  /** TOPICS 一覧の「Pick UP!」に出す。 */
+  pickup: boolean;
 }
 
 export interface TopicDetail extends Topic {

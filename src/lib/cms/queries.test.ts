@@ -111,11 +111,14 @@ describe("下層ページ", () => {
   it("TOPICS 一覧: 分類で絞り込み、範囲外のページは null", async () => {
     const client = createFixtureClient();
     const all = await getTopicsArchive(client, { category: null, page: 1 });
-    expect(all?.topics.length).toBe(7);
+    expect(all?.topics.length).toBe(8);
+    // Pick UP! は 1 ページ目（分類なし）だけ。pickup を付けた記事を新しい順に
+    expect(all?.pickups.map((t) => t.slug)).toEqual(["brand-movie", "sample-sns", "sample-column"]);
     const news = await getTopicsArchive(client, { category: "news", page: 1 });
     expect(news?.topics.every((t) => t.category === "news")).toBe(true);
+    expect(news?.pickups).toEqual([]);
     expect(await getTopicsArchive(client, { category: null, page: 2 })).toBeNull();
-    expect((await getAllTopics(client)).length).toBe(7);
+    expect((await getAllTopics(client)).length).toBe(8);
   });
 
   it("TOPICS 詳細: 本文と新着を返し、無い記事・外部リンクの記事は null", async () => {

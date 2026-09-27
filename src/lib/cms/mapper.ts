@@ -146,6 +146,7 @@ export function mapTopic(entry: DeliveryEntry): MapResult<Topic> {
       excerpt: c.excerpt ?? null,
       publishedDate: c.published_date,
       externalLink: toLink(c.external_url),
+      pickup: c.pickup === true,
     },
   };
 }

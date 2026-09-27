@@ -12,6 +12,9 @@ export interface FilterTab {
   /** 選んでいるときの地の色（グラデーション） */
   from?: string;
   to?: string;
+  /** variant="pixel" のときの地の色と文字色（デザインでは分類ごとに常に色が付いている） */
+  bg?: string;
+  fg?: string;
 }
 
 interface Props {
@@ -19,21 +22,28 @@ interface Props {
   label: string;
   /** Krona One（Topics の分類名と同じ英字の書体）で表示する */
   latin?: boolean;
+  /** pixel: TOPICS 一覧のデザイン（角がドットの形の札。136×38.5） */
+  variant?: "default" | "pixel";
 }
 
-const { tabs, label, latin = false } = Astro.props;
+const { tabs, label, latin = false, variant = "default" } = Astro.props;
 ---
 
-<nav class:list={["filter-tabs", latin && "is-latin"]} aria-label={label}>
+<nav class:list={["filter-tabs", latin && "is-latin", variant === "pixel" && "is-pixel"]} aria-label={label}>
   <ul>
     {
       tabs.map((tab) => (
         <li>
           <a
-            class="filter-tabs__tab"
+            class:list={["filter-tabs__tab", /[^\u0020-\u007E]/.test(tab.label) && "is-ja"]}
             href={tab.href}
             aria-current={tab.current ? "page" : undefined}
-            style={{ "--tab-from": tab.from ?? "var(--color-bg-2)", "--tab-to": tab.to ?? "var(--color-bg-3)" }}
+            style={{
+              "--tab-from": tab.from ?? "var(--color-bg-2)",
+              "--tab-to": tab.to ?? "var(--color-bg-3)",
+              ...(tab.bg ? { "--tab-bg": tab.bg } : {}),
+              ...(tab.fg ? { "--tab-fg": tab.fg } : {}),
+            }}
           >
             {tab.label}
           </a>
@@ -81,6 +91,61 @@ const { tabs, label, latin = false } = Astro.props;
     color: #fff;
     background: linear-gradient(90deg, var(--tab-from), var(--tab-to));
     border-color: #fff;
+  }
+
+  /* ---- pixel（Figma: topics の絞り込み。札 136×38.5・間隔 25） ---- */
+  .is-pixel ul {
+    gap: 12px 25px;
+  }
+
+  .is-pixel .filter-tabs__tab {
+    position: relative;
+    min-width: 0;
+    width: 136px;
+    height: 38.5px;
+    padding: 0;
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    letter-spacing: 0.06em;
+    color: var(--tab-fg, #041049);
+    background: none;
+    border: 0;
+    isolation: isolate;
+  }
+
+  .is-pixel .filter-tabs__tab::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--tab-bg, #c8ecf6);
+    mask: url("../../assets/shapes/pixel-pill.svg") center / 100% 100% no-repeat;
+  }
+
+  /* 日本語（すべて）は本文の書体で少し大きく */
+  .is-pixel .filter-tabs__tab.is-ja {
+    font-family: var(--font-base);
+    font-size: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  /* 選んでいる札は光らせる（デザインの Pick UP! の光と同じ色） */
+  .is-pixel .filter-tabs__tab[aria-current="page"] {
+    color: var(--tab-fg, #041049);
+    background: none;
+    filter: drop-shadow(0 0 6px rgb(0 255 251 / 0.9));
+  }
+
+  @media (max-width: 767px) {
+    .is-pixel .filter-tabs__tab {
+      width: calc((100vw - var(--gutter) * 2 - 36px) / 4);
+      max-width: 136px;
+      font-size: 13px;
+    }
+
+    .is-pixel .filter-tabs__tab.is-ja {
+      font-size: 15px;
+    }
   }
 
   @media (max-width: 767px) {

@@ -10,6 +10,7 @@ const topic: Topic = {
   category: "news",
   thumbnail: null,
   excerpt: null,
+  pickup: false,
   publishedDate: "2026-09-20",
   externalLink: null,
 };

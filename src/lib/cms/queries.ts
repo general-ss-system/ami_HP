@@ -206,9 +206,14 @@ export function isTopicCategory(value: string | undefined): value is TopicCatego
   return (TOPIC_CATEGORIES as readonly string[]).includes(value ?? "");
 }
 
+/** TOPICS 一覧の「Pick UP!」に並べる上限。 */
+const PICKUP_LIMIT = 5;
+
 export interface TopicsArchiveData {
   siteInfo: SiteInfo | null;
   topics: Topic[];
+  /** 「Pick UP!」（一覧の 1 ページ目・分類なしのときだけ取得する。新しい順） */
+  pickups: Topic[];
   category: TopicCategory | null;
   page: number;
   totalPages: number;
@@ -221,7 +226,8 @@ export async function getTopicsArchive(
   report: CmsErrorReporter = reportCmsError,
 ): Promise<TopicsArchiveData | null> {
   const { category, page } = options;
-  const [siteInfo, list] = await Promise.all([
+  const showPickups = category === null && page === 1;
+  const [siteInfo, list, pickups] = await Promise.all([
     getSiteInfo(client, report),
     safely(
       "ami_topics",
@@ -235,10 +241,23 @@ export async function getTopicsArchive(
         }),
       report,
     ),
+    showPickups
+      ? safely(
+          "ami_topics (pickup)",
+          [],
+          async () =>
+            collect(
+              (await client.getCollection("ami_topics", { sort: "-published_date", limit: PICKUP_LIMIT, filter: { pickup: "true" } })).data,
+              mapTopic,
+              report,
+            ),
+          report,
+        )
+      : Promise.resolve([]),
   ]);
   const totalPages = list?.meta.totalPages ?? 1;
   if (page > 1 && page > totalPages) return null;
-  return { siteInfo, topics: list ? collect(list.data, mapTopic, report) : [], category, page, totalPages };
+  return { siteInfo, topics: list ? collect(list.data, mapTopic, report) : [], pickups, category, page, totalPages };
 }
 
 export interface TopicDetailData {

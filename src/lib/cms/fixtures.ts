@@ -35,6 +35,8 @@ const ul = (...items: string[]): Lex => ({
   children: items.map((t, i) => ({ type: "listitem", value: i + 1, children: [text(t)], version: 1 })),
   version: 1,
 });
+/** 段落の中の改行（Lexical の linebreak）で区切った行。 */
+const lines = (...rows: string[]): Lex => p(...rows.flatMap((r, i) => (i === 0 ? [text(r)] : [{ type: "linebreak", version: 1 }, text(r)])));
 const img = (m: DeliveryMedia): Lex => ({ type: "image", media: m, version: 1 });
 const rich = (...children: Lex[]) => ({ root: { type: "root", children, direction: "ltr", format: "", indent: 0, version: 1 } });
 
@@ -121,7 +123,35 @@ const topicBody = rich(
 const topicExcerpt = "当事者だから分かる潜在ニーズを言語化し、共感を設計。企画から撮影・編集・分析まで一気通貫で。";
 const topicThumb = media("fx-topic-thumb", "topic-sample.jpg", 640, 961, "ハートのキーホルダーを手にするメンバー");
 
+/** デザイン（TOPICS 詳細）の記事。Pick UP! にも出す。 */
+const brandMovieBody = rich(
+  h("h2", "トキメキは、つくれる。"),
+  p(text("このたび、私たちの新しいブランドムービー「トキメキは、つくれる。」を公開しました。")),
+  lines("日々の暮らしの中にある、ふと心が動く瞬間。", "誰かとの出会いや、新しいものとの出会い。", "そんな小さな「トキメキ」を、私たちはもっと自由につくっていきたい。"),
+  p(text("今回のブランドムービーでは、何気ない日常の中に生まれる感情の変化を切り取りながら、私たちが大切にしている「新しい価値を生み出すこと」を表現しています。")),
+  h("h3", "ブランドムービーについて"),
+  img(media("fx-topic-movie-img", "topic-sample.jpg", 640, 961, "ブランドムービーの一場面")),
+  p(text("映像では、さまざまなシーンを通して「日常の中にある小さな変化」を描いています。")),
+  lines("何気ない瞬間が少し特別に見えたり、", "新しいアイデアが誰かの行動を変えたり。"),
+  lines("「こんなものがあったら面白い」", "「やってみたい」", "「なんだかワクワクする」"),
+  p(text("そんな気持ちが生まれるきっかけを、映像ならではの表現で届けています。")),
+  p(text("ぜひ、音や映像の細かな表現にも注目しながらご覧ください。")),
+  h("h3", "これからも、新しいトキメキを。"),
+  p(text("私たちはこれからも、既存の価値にとらわれず、新しいアイデアや表現を通して、世の中に新しい体験を届けていきます。")),
+  p(text("一人ひとりの「やってみたい」という気持ちを大切にしながら、まだ見たことのない「トキメキ」を、これからもつくっていきます。")),
+  p(text("ぜひブランドムービーをご覧ください。そして、私たちのこれからの挑戦にもご期待ください。")),
+);
+
 export const fixtureTopics: DeliveryEntry[] = [
+  entry("fx-topic-0", "brand-movie", {
+    title: "新ブランドムービー「トキメキは、つくれる。」を公開しました",
+    category: "news",
+    thumbnail: topicThumb,
+    excerpt: "新しいブランドムービーを公開しました。\n日常の中にある「ちょっとしたトキメキ」を、\n私たちらしいクリエイティブで表現しています。",
+    published_date: "2026-09-24",
+    body: brandMovieBody,
+    pickup: true,
+  }),
   entry("fx-topic-1", "sample-news", {
     title: "タイトル",
     category: "news",
@@ -137,6 +167,7 @@ export const fixtureTopics: DeliveryEntry[] = [
     excerpt: topicExcerpt,
     published_date: "2026-09-18",
     body: topicBody,
+    pickup: true,
   }),
   entry("fx-topic-3", "sample-column", {
     title: "タイトル",
@@ -145,6 +176,7 @@ export const fixtureTopics: DeliveryEntry[] = [
     excerpt: topicExcerpt,
     published_date: "2026-09-15",
     body: topicBody,
+    pickup: true,
   }),
   entry("fx-topic-4", "sample-sns-2", {
     title: "商品開発事業",

@@ -86,6 +86,8 @@ export const AmiTopicContentSchema = z.object({
   body: optionalRichText,
   /** 設定されていればカードから直接この URL を開く（詳細ページは使わない）。 */
   external_url: optionalLink,
+  /** TOPICS 一覧の「Pick UP!」に出す（boolean・indexed）。 */
+  pickup: z.boolean().nullable().optional(),
 });
 
 // ---------------------------------------------------------------------------
