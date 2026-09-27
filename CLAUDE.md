@@ -50,6 +50,10 @@ scripts/         素材の変換
 - デザインは PC 1280px のみ。各セクションは `.stage`（最大 1280px、container-type: inline-size）の中に組む。
 - 装飾は `Decor` に PC デザイン上の座標 `pc={[x, y, 幅]}` を渡す。`.stage` の幅に比例して動く（cqw）。
   スマホは `sp={[x, y, 幅]}`（375px 基準）か `sp={false}`（出さない）。
+- **`.stage` に左右の padding を付けない。** cqw は container の内容の幅が基準なので、左右に余白があると
+  `Decor` の位置や cqw の余白が 1200/1280 にずれる。左右の余白（`var(--gutter)`）は中身の要素に付ける。
+- 下層ページのデザイン（service / member / topics / contact）は `design/`（SVG と要素ごとの CSV）。
+  ドット絵のタイトルなどの部品は `scripts/design-extract.mjs` でデザインの SVG から取り出す（`design/README.md`）。
 - ブレークポイント: スマホ 〜767px / タブレット 〜1023px（ヘッダーはメニューボタン）/ PC 1024px〜。
 - **サイト内リンク・パスは `withBase()` を通す**（GitHub Pages のプレビューは `/ami_HP/` の下に置かれる）。
   フォント・背景画像など CSS から参照するファイルは `public/` ではなく `src/assets/` に置き、相対パスで参照する。
