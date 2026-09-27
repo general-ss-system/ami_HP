@@ -132,8 +132,8 @@ describe("下層ページ", () => {
       ...base,
       content: {
         ...base.content,
-        instagram: { label: "@a", href: "javascript:alert(1)", target: "_blank" },
-        x: { label: "  ", href: "https://x.com/a", target: "_blank" },
+        instagram_url: { label: "@a", href: "javascript:alert(1)", target: "_blank" },
+        x_url: { label: "  ", href: "https://x.com/a", target: "_blank" },
       },
     });
     expect(r.ok && r.value.sns.map((s) => s.service)).toEqual(["TikTok"]);

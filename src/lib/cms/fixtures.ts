@@ -133,9 +133,9 @@ const serviceRef = (slug: "product-development" | "sns-marketing") => ({
 });
 const mediaAccount = { instagram: "@ricoyamada", x: "@ricoyamada", tiktok: "@ricoyamada" };
 const snsLinks = {
-  instagram: { label: mediaAccount.instagram, href: "https://www.instagram.com/", target: "_blank" },
-  x: { label: mediaAccount.x, href: "https://x.com/", target: "_blank" },
-  tiktok: { label: mediaAccount.tiktok, href: "https://www.tiktok.com/", target: "_blank" },
+  instagram_url: { label: mediaAccount.instagram, href: "https://www.instagram.com/", target: "_blank" },
+  x_url: { label: mediaAccount.x, href: "https://x.com/", target: "_blank" },
+  tiktok_url: { label: mediaAccount.tiktok, href: "https://www.tiktok.com/", target: "_blank" },
 };
 const tieUpPricing = ["タイアップ投稿|150,000円〜 / 1本|※企画、制作、投稿、分析レポートを含む。", "納期目安|ヒアリングから1ヶ月後ごろ"].join("\n");
 const reels = (prefix: string) => [
@@ -369,9 +369,9 @@ export const fixtureMembers: DeliveryEntry[] = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((
     height: "165cm",
     mbti: "ENFP",
     personal_color: "ブルベ夏",
-    instagram: { label: "@ricoyamada", href: "https://www.instagram.com/", target: "_blank" },
-    x: { label: "@ricoyamada", href: "https://x.com/", target: "_blank" },
-    tiktok: { label: "@ricoyamada", href: "https://www.tiktok.com/", target: "_blank" },
+    instagram_url: { label: "@ricoyamada", href: "https://www.instagram.com/", target: "_blank" },
+    x_url: { label: "@ricoyamada", href: "https://x.com/", target: "_blank" },
+    tiktok_url: { label: "@ricoyamada", href: "https://www.tiktok.com/", target: "_blank" },
     photos: memberPhotos,
   }),
 );

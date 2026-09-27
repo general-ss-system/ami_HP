@@ -101,9 +101,9 @@ export const AmiServiceCaseContentSchema = z.object({
   body: optionalRichText,
   /** 実績などの小見出しと文章（rich_text の h3 ごとに区切り、1 つ目は全幅、2 つ目からは 2 列） */
   points: optionalRichText,
-  instagram: optionalLink,
-  x: optionalLink,
-  tiktok: optionalLink,
+  instagram_url: optionalLink,
+  x_url: optionalLink,
+  tiktok_url: optionalLink,
   /** 料金の表。1 行に「項目|値|注記」（注記は省略可） */
   pricing: optionalText,
   gallery: z.array(DeliveryMediaSchema).nullable().optional(),
@@ -150,9 +150,9 @@ export const MemberContentSchema = z.object({
   mbti: optionalText,
   personal_color: optionalText,
   /** SNS。label にアカウント名（例: @ricoyamada）、href に URL */
-  instagram: optionalLink,
-  x: optionalLink,
-  tiktok: optionalLink,
+  instagram_url: optionalLink,
+  x_url: optionalLink,
+  tiktok_url: optionalLink,
   /** プロフィール写真（証明写真のように 2×2 で並べる。最大 4 枚） */
   photos: z.array(DeliveryMediaSchema).nullable().optional(),
 });

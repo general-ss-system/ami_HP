@@ -140,12 +140,12 @@ export function mapService(entry: DeliveryEntry, report?: RichTextReporter): Map
 }
 
 /** Instagram / X / TikTok の link を、表示する SNS の一覧にする（http(s) の URL とアカウント名があるものだけ）。 */
-function toSns(links: Partial<Record<"instagram" | "x" | "tiktok", z.infer<typeof CmsLinkSchema> | null | undefined>>): MemberSns[] {
+function toSns(links: Partial<Record<"instagram_url" | "x_url" | "tiktok_url", z.infer<typeof CmsLinkSchema> | null | undefined>>): MemberSns[] {
   return (
     [
-      ["Instagram", links.instagram],
-      ["X", links.x],
-      ["TikTok", links.tiktok],
+      ["Instagram", links.instagram_url],
+      ["X", links.x_url],
+      ["TikTok", links.tiktok_url],
     ] as const
   ).flatMap(([service, link]) => {
     const target = link ? sanitizeHref(link.href) : null;

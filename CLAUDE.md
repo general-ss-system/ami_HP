@@ -99,7 +99,9 @@ pnpm が PATH に無い環境では `corepack pnpm <コマンド>` で動かす�
 
 - `CMS_MODE=fixture`（既定）: 仮データで表示する。CMS が無くても制作できる。
 - `CMS_MODE=live`: `CMS_BASE_URL` / `CMS_SITE_KEY` / `CMS_DELIVERY_KEY` で Delivery API から取得する。
-  ローカルの CMS は、CMS リポジトリで `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap` を実行すると、公開キーを含めて用意される。
+  ローカルの CMS は、CMS リポジトリで `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap -- --site ami` を実行すると、公開キーを含めて用意される。
+  そのあとこのリポジトリで `pnpm seed:cms -- --token <ログインURLの token>` を実行すると、ami のモデル・フォームを有効にして、全ページの仮データを登録する。
+  （dev:bootstrap を実行するたびに公開キーが発行し直されるので、`.dev.vars` の `CMS_DELIVERY_KEY` も差し替える。ログインの token は 1 回しか使えない）
 
 ## 7. Astro のドキュメント
 

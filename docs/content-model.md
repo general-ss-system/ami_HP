@@ -73,7 +73,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 
 デザインが無いため、トップのデザインに合わせてこのリポジトリで組んだ。モデルは CMS の汎用モデル
 （`site_info` / `about` / `contact_page` / `members`）の key をそのまま使い、案件モデルには本文などを足した。
-**CMS 側（`packages/content-schema`）にまだ無い項目は、CMS 側に足してから live で使う。**
+CMS 側の定義（`packages/content-schema`）は 2026-09-27 にこのサイトの key に合わせた（下の「CMS の定義との対応」）。
 
 | ページ | URL | 使うデータ |
 |---|---|---|
@@ -154,14 +154,14 @@ CMS の管理画面の「プレビュー」から、公開前の内容を本番�
 Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVGYjY`）の下層ページ（service / member / topics / topics-2 / contact）に合わせて作り直した。
 デザインの SVG と、要素ごとの CSV は `design/`（README を参照）。
 
-**次の項目・モデルはサイト側だけに足してある。live で使う前に、CMS 側（`packages/content-schema`）にも同じ key で足す。**
+次の項目・モデルを足した（CMS 側の定義にも同じ key で入っている。CMS の commit `a5564da`）。
 
 | モデル | key | 型 | 使い方 |
 |---|---|---|---|
 | `ami_topics` | pickup | boolean（indexed） | TOPICS 一覧の「Pick UP!」に出す（新しい順に 5 件まで） |
 | `members` | birthday | date | MEMBER のプロフィール（1998/06/12 の形で出す） |
 | `members` | hometown / height / mbti / personal_color | short_text | 同上（出身・身長・MBTI・パーソナルカラー） |
-| `members` | instagram / x / tiktok | link | label にアカウント名（@…）、href に URL。http(s) の URL だけ出す |
+| `members` | instagram_url / x_url / tiktok_url | link | label にアカウント名（@…）、href に URL。http(s) の URL だけ出す |
 | `members` | photos | media_list（最大 4） | 証明写真の台紙に 2×2 で並べる |
 | `ami_services` | title_en | short_text | 英語の添え書き（Product development など） |
 | `ami_services` | photo | media | SERVICE ページの写真（横長 393:298） |
@@ -171,7 +171,7 @@ Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVG
 | 〃 | label / title（必須） | short_text | 小見出し（コスメブランド / 自社メディア …）と名前 |
 | 〃 | main_image | media | あると「商品」の並び（写真が左・下に写真の一覧 5 枚）、無いと「メディア」の並び（写真が右に 2×2、1 枚なら大きく） |
 | 〃 | body / points | rich_text | 本文と、実績など（points は h3 ごとに区切り、✦ の小見出しにする。1 つ目は全幅、2 つ目から 2 列） |
-| 〃 | instagram / x / tiktok | link | members と同じ |
+| 〃 | instagram_url / x_url / tiktok_url | link | members と同じ |
 | 〃 | pricing | long_text | 料金の表。1 行に「項目\|値\|注記」（注記は省略可） |
 | 〃 | gallery | media_list | 写真 |
 | 〃 | sort_order | number（indexed） | 昇順 |
@@ -182,13 +182,25 @@ Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVG
 - SERVICE の事業の並びは `ami_services.sort_order`（トップの Our Business と同じ）。デザインでは商品開発が 01。
 - ヘッダーのナビは 4 項目のまま（service / contact のデザインには CONTACT があるが、topics / member のデザインには無い）。
 
+## CMS の定義との対応（2026-09-27）
+
+CMS の `projects/ami.ts` は初期の試作（`apps/ami-hp-main`）に合わせた key だったため、このサイトの key に揃えた
+（`ami_home` v2: hero_images / statement_* / contact_body、`ami_services` v2: link / title_en / photo / accent、
+`ami_topics` v2: pickup、`members` v2: プロフィール、新規 `ami_service_page` / `ami_service_cases`、preset "ami" に works / recruit / job_positions / faq）。
+SNS の key は、CMS が 1 文字の key（x）を許さないため `instagram_url` / `x_url` / `tiktok_url`（site_info と同じ形）にした。
+
+ローカルの CMS で確かめたこと（`pnpm seed:cms` で仮データを全ページ分登録 → `CMS_MODE=live`）:
+
+- 全ページが CMS のデータ・画像で表示される（仮データの画像は使われない）。CMS の検証で落ちる項目は無い
+- 管理画面の API で SERVICE の案内文を書き換えて公開すると、次のリクエストでページに出る
+- CMS 側の backend のテストのうち 3 件（ログインが要る HTTP のテスト）は、この変更の前から失敗している
+
 ## 見出し画像の修正（2026-09-27）
 
 素材の Topics の英字見出しが「Tpics」（o が無い）だったため、p の丸い部分を o として T と p の間に足し、ステッカーを横に伸ばした（幅 433 → 523px、表示幅 212 → 256px）。
 
 ## 未決
 
-- CMS_MODE=live での表示・管理画面からの反映は、2026-09-27 の点検では未確認（CMS リポジトリに未コミットの作業があり、依存の入れ直しを止めたため）。
 
 - 会社情報・代表メッセージ・個人情報の取り扱いの実際の文言（仮データは「〇〇（仮）」）。
 - お問い合わせの通知先（CMS の管理画面で設定）。
