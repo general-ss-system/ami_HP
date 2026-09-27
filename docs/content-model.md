@@ -88,6 +88,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | PRIVACY POLICY | `/privacy` | `contact_page.privacy_note`（CONTACT のフォームに出す文章と同じ）。フッターからリンク |
 | WORKS 一覧 | `/works`、`/works/page/{n}`、`/works/tag/{branding|web|graphic|movie}` | `works`（CMS の汎用モデル。12 件ずつ・公開日の新しい順） |
 | WORKS 詳細 | `/works/{slug}` | `works`（概要・本文・ギャラリー・外部リンク） |
+| sitemap.xml / robots.txt | `/sitemap.xml`、`/robots.txt` | 固定のページ（トップ・フッターのナビ）＋ `ami_topics`（外部リンクの記事を除く）・`works` の詳細（`src/lib/sitemap.ts`）。GitHub Pages のプレビューの robots.txt はすべて拒否 |
 | 404 | — | — |
 
 ### 追加・利用する項目
