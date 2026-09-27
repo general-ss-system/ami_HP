@@ -17,6 +17,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: "TOPICS", href: "/topics" },
 ];
 
+/** site_info を取得できないときだけ使うサイト名（ロゴの読み上げと同じ）。 */
+export const SITE_NAME = "合同会社ami";
+
 export const CONTACT_HREF = "/contact";
 export const PRIVACY_HREF = "/privacy";
 

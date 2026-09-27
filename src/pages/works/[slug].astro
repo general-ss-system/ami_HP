@@ -13,7 +13,7 @@ import RichText from "../../components/ui/RichText.astro";
 import { getCmsClient } from "../../lib/cms/env";
 import { getAllWorks, getWorkDetail } from "../../lib/cms/queries";
 import { isEmptyRichText } from "../../lib/cms/richtext";
-import { pageDescription, pageTitle } from "../../lib/seo";
+import { pageDescription, pageOgImage, pageTitle } from "../../lib/seo";
 import { WORK_TAG_LABEL, formatWorkDate, worksListHref } from "../../lib/works";
 import planetBunnyPurple from "../../assets/decor/planet-bunny-purple.webp";
 import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
@@ -33,9 +33,10 @@ const summaryLines = work.summary ? work.summary.replace(/\r\n?/g, "\n").split("
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, work.title)}
   description={pageDescription(siteInfo, work.summary?.replace(/\s+/g, " "))}
-  ogImage={work.thumbnail ? new URL(work.thumbnail.url, Astro.site).toString() : undefined}
+  ogImage={pageOgImage(Astro.site, siteInfo, work.thumbnail)}
   heading="Works"
   headingSub="実績"
   headingIsTitle={false}

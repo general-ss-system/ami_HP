@@ -27,6 +27,7 @@ const leadLines = about?.lead ? about.lead.replace(/\r\n?/g, "\n").split("\n") :
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, "About")}
   description={pageDescription(siteInfo, about?.lead)}
   heading="About"

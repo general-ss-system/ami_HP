@@ -128,6 +128,10 @@ export const WorkContentSchema = z.object({
 export const SiteInfoContentSchema = z.object({
   company_name: z.string().min(1),
   address: optionalText,
+  phone: optionalText,
+  email: optionalText,
+  instagram_url: optionalLink,
+  x_url: optionalLink,
   default_title: optionalText,
   /** 例: `%s | 合同会社ami` */
   title_template: optionalText,

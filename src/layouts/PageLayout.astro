@@ -8,6 +8,8 @@ import SiteHeader from "../components/layout/SiteHeader.astro";
 import SiteFooter from "../components/layout/SiteFooter.astro";
 import Decor from "../components/ui/Decor.astro";
 import PageHeading from "../components/ui/PageHeading.astro";
+import type { SiteInfo } from "../lib/cms/types";
+import { pageOgImage } from "../lib/seo";
 import { withBase } from "../lib/url";
 import sparkleCluster from "../assets/decor/sparkle-cluster.webp";
 import sparkleGold from "../assets/decor/sparkle-gold.webp";
@@ -23,8 +25,11 @@ export interface Crumb {
 interface Props {
   title: string;
   description?: string;
+  /** OGP 画像の絶対URL。未指定なら site_info の既定の画像 */
   ogImage?: string;
   noindex?: boolean;
+  /** OGP 画像の既定値とフッターの SNS に使う。取得できなければ null */
+  siteInfo?: SiteInfo | null;
   /** 英字の見出し */
   heading: string;
   /** 日本語の添え書き */
@@ -35,11 +40,11 @@ interface Props {
   headingIsTitle?: boolean;
 }
 
-const { title, description, ogImage, noindex, heading, headingSub, crumbs, headingIsTitle = true } = Astro.props;
+const { title, description, ogImage, noindex, heading, headingSub, crumbs, headingIsTitle = true, siteInfo } = Astro.props;
 const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
 ---
 
-<BaseLayout title={title} description={description} ogImage={ogImage} noindex={noindex}>
+<BaseLayout title={title} description={description} ogImage={ogImage ?? pageOgImage(Astro.site, siteInfo)} noindex={noindex}>
   <SiteHeader />
   <div class="page">
     <main>
@@ -68,7 +73,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
 
       <slot />
     </main>
-    <SiteFooter />
+    <SiteFooter siteInfo={siteInfo} />
   </div>
 </BaseLayout>
 

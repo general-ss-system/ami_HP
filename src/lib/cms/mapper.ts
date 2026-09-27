@@ -22,7 +22,7 @@ import {
   WorkContentSchema,
   type CmsLinkSchema,
 } from "./schemas";
-import { toRichText, type RichTextReporter } from "./richtext";
+import { sanitizeHref, toRichText, type RichTextReporter } from "./richtext";
 import type {
   AboutContent,
   ContactPageContent,
@@ -174,6 +174,12 @@ export function mapMember(entry: DeliveryEntry): MapResult<Member> {
   };
 }
 
+/** 外部サイトへのリンク（http(s) のみ）。それ以外の形は出さない。 */
+function externalUrl(link: z.infer<typeof CmsLinkSchema> | null | undefined): string | null {
+  const target = link ? sanitizeHref(link.href) : null;
+  return target?.external ? target.href : null;
+}
+
 export function mapSiteInfo(entry: DeliveryEntry): MapResult<SiteInfo> {
   const r = parseContent("site_info", entry, SiteInfoContentSchema);
   if (!r.ok) return r;
@@ -183,6 +189,10 @@ export function mapSiteInfo(entry: DeliveryEntry): MapResult<SiteInfo> {
     value: {
       companyName: c.company_name,
       address: c.address ?? null,
+      phone: c.phone ?? null,
+      email: c.email ?? null,
+      instagramUrl: externalUrl(c.instagram_url),
+      xUrl: externalUrl(c.x_url),
       defaultTitle: c.default_title ?? null,
       titleTemplate: c.title_template ?? null,
       defaultDescription: c.default_description ?? null,

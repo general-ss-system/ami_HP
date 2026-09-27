@@ -13,7 +13,7 @@ import Decor from "../../components/ui/Decor.astro";
 import { getCmsClient } from "../../lib/cms/env";
 import { getAllTopics, getTopicDetail } from "../../lib/cms/queries";
 import { isEmptyRichText } from "../../lib/cms/richtext";
-import { pageDescription, pageTitle } from "../../lib/seo";
+import { pageDescription, pageOgImage, pageTitle } from "../../lib/seo";
 import { TOPIC_CATEGORY_LABEL, formatTopicDate, topicsListHref } from "../../lib/topics";
 import sparkleGold from "../../assets/decor/sparkle-gold.webp";
 import planetRinged from "../../assets/decor/planet-ringed.webp";
@@ -33,9 +33,10 @@ const label = TOPIC_CATEGORY_LABEL[topic.category];
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, topic.title)}
   description={pageDescription(siteInfo, topic.excerpt)}
-  ogImage={topic.thumbnail ? new URL(topic.thumbnail.url, Astro.site).toString() : undefined}
+  ogImage={pageOgImage(Astro.site, siteInfo, topic.thumbnail)}
   heading="Topics"
   headingSub="お知らせ・SNS・コラム"
   headingIsTitle={false}

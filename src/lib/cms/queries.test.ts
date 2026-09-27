@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CmsClient } from "./client";
 import { createFixtureClient } from "./fixture-client";
-import { fixtureHome } from "./fixtures";
-import { toStatementLines } from "./mapper";
+import { fixtureHome, fixtureSiteInfo } from "./fixtures";
+import { mapSiteInfo, toStatementLines } from "./mapper";
+import type { SiteInfo } from "./types";
 import {
   getAboutPageData,
   getAllTopics,
@@ -19,7 +20,7 @@ import {
   getWorkDetail,
   getWorksArchive,
 } from "./queries";
-import { pageTitle } from "../seo";
+import { pageOgImage, pageTitle } from "../seo";
 
 describe("toStatementLines", () => {
   it("強調語句を含む行を分割する", () => {
@@ -182,6 +183,36 @@ describe("下層ページ", () => {
     const data = await getPrivacyPageData(client, report);
     expect(data.privacyNote).toEqual([]);
     expect(report).toHaveBeenCalled();
+  });
+});
+
+describe("site_info", () => {
+  it("トップページでも取得し、連絡先と SNS の URL を持つ", async () => {
+    const { siteInfo } = await getTopPageData(createFixtureClient());
+    expect(siteInfo?.defaultTitle).toBeTruthy();
+    expect(siteInfo?.phone).toBeTruthy();
+    expect(siteInfo?.instagramUrl).toMatch(/^https:\/\//);
+  });
+
+  it("SNS の URL は http(s) だけを通す", () => {
+    const r = mapSiteInfo({
+      ...fixtureSiteInfo,
+      content: {
+        ...fixtureSiteInfo.content,
+        instagram_url: { label: "Instagram", href: "javascript:alert(1)", target: "_blank" },
+        x_url: { label: "X", href: "/about", target: "_self" },
+      },
+    });
+    expect(r.ok && r.value.instagramUrl).toBeNull();
+    expect(r.ok && r.value.xUrl).toBeNull();
+  });
+
+  it("OGP 画像はページの画像 → site_info の既定の画像の順に使う", () => {
+    const site = new URL("https://example.com");
+    const info = { defaultOgImage: { url: "/og.png", alt: null, width: 1200, height: 630 } } as SiteInfo;
+    expect(pageOgImage(site, info)).toBe("https://example.com/og.png");
+    expect(pageOgImage(site, info, { url: "https://cdn.example.com/a.jpg", alt: null, width: 1, height: 1 })).toBe("https://cdn.example.com/a.jpg");
+    expect(pageOgImage(site, null)).toBeUndefined();
   });
 });
 

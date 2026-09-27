@@ -19,6 +19,8 @@ const rows = [
   { label: "設立", value: about?.established ?? null },
   { label: "資本金", value: about?.capital ?? null },
   { label: "所在地", value: siteInfo?.address ?? null },
+  { label: "電話番号", value: siteInfo?.phone ?? null },
+  { label: "メール", value: siteInfo?.email ?? null },
   { label: "事業内容", value: about?.businessSummary ?? null },
 ]
   .filter((row): row is { label: string; value: string } => Boolean(row.value?.trim()))

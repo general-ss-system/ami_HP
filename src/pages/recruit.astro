@@ -25,6 +25,7 @@ const { siteInfo, recruit, positions } = await getRecruitPageData(getCmsClient(A
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, "Recruit")}
   description={pageDescription(siteInfo, recruit?.messageTitle)}
   heading="Recruit"

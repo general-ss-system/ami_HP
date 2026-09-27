@@ -104,6 +104,11 @@ export interface WorkDetail extends Work {
 export interface SiteInfo {
   companyName: string;
   address: string | null;
+  phone: string | null;
+  email: string | null;
+  /** SNS のアカウント（https の URL のみ。それ以外は null）。 */
+  instagramUrl: string | null;
+  xUrl: string | null;
   defaultTitle: string | null;
   titleTemplate: string | null;
   defaultDescription: string | null;
@@ -176,6 +181,7 @@ export interface ContactForm {
 
 /** トップページに必要なデータ一式。取得・検証に失敗したセクションは null / 空配列になる。 */
 export interface TopPageData {
+  siteInfo: SiteInfo | null;
   home: HomeContent | null;
   services: Service[];
   topics: Topic[];

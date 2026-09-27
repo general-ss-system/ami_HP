@@ -43,6 +43,7 @@ const leadLines = contactPage?.lead ? contactPage.lead.replace(/\r\n?/g, "\n").s
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, "Contact")}
   description={pageDescription(siteInfo, contactPage?.lead?.replace(/\s+/g, " "))}
   heading="Contact"

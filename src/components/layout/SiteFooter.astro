@@ -1,13 +1,25 @@
 ---
 /**
  * フッター。地球のドット絵の上にロゴとナビを重ねる。
+ * SNS のリンクは site_info（CMS）に URL があるものだけを出す。
  */
+import type { SiteInfo } from "../../lib/cms/types";
 import LocalImage from "../ui/LocalImage.astro";
 import { FOOTER_ITEMS } from "../../config/site";
 import { withBase } from "../../lib/url";
 import earth from "../../assets/illustrations/earth.webp";
 import Logo from "./Logo.astro";
 import NavMark from "../ui/NavMark.astro";
+
+interface Props {
+  siteInfo?: SiteInfo | null;
+}
+
+const { siteInfo } = Astro.props;
+const sns = [
+  { label: "Instagram", href: siteInfo?.instagramUrl ?? null },
+  { label: "X", href: siteInfo?.xUrl ?? null },
+].filter((item): item is { label: string; href: string } => item.href !== null);
 ---
 
 <footer class="site-footer">
@@ -30,6 +42,20 @@ import NavMark from "../ui/NavMark.astro";
         }
       </ul>
     </nav>
+    {
+      sns.length > 0 && (
+        <ul class="site-footer__sns" aria-label="公式 SNS">
+          {sns.map((item) => (
+            <li>
+              <a class="site-footer__sns-link" href={item.href} target="_blank" rel="noopener noreferrer">
+                {item.label}
+                <span class="visually-hidden">（新しいタブで開く）</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
   </div>
 </footer>
 
@@ -90,6 +116,38 @@ import NavMark from "../ui/NavMark.astro";
   .site-footer__link:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
+  }
+
+  .site-footer__sns {
+    display: flex;
+    flex-basis: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .site-footer__sns-link {
+    display: block;
+    padding: 6px 16px;
+    font-family: var(--font-pixel);
+    font-size: 15px;
+    line-height: 1;
+    text-decoration: none;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .site-footer__sns-link:hover {
+    color: var(--color-border);
+    background: #fff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer__sns-link {
+      transition: none;
+    }
   }
 
   @media (max-width: 767px) {

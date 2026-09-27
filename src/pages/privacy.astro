@@ -17,6 +17,7 @@ const { siteInfo, privacyNote } = await getPrivacyPageData(getCmsClient(Astro.lo
 ---
 
 <PageLayout
+  siteInfo={siteInfo}
   title={pageTitle(siteInfo, "Privacy Policy")}
   description={pageDescription(siteInfo)}
   heading="Privacy Policy"

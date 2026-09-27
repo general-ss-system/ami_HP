@@ -197,6 +197,10 @@ export const fixtureMembers: DeliveryEntry[] = [1, 2, 3, 4, 5, 6].map((n) =>
 export const fixtureSiteInfo: DeliveryEntry = entry("fx-site-info", null, {
   company_name: "合同会社ami",
   address: "東京都〇〇区〇〇 0-0-0（仮）",
+  phone: "03-0000-0000（仮）",
+  email: "info@example.com（仮）",
+  instagram_url: { label: "Instagram", href: "https://www.instagram.com/", target: "_blank" },
+  x_url: { label: "X", href: "https://x.com/", target: "_blank" },
   default_title: "合同会社ami",
   title_template: "%s | 合同会社ami",
   default_description: "「トキメキの発生点」を生み出す Z世代インフルエンサー・クリエイター集団。",

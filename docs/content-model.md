@@ -99,7 +99,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | `ami_topics` | external_url | link | 設定するとカードから直接この URL を開く |
 | `members` | profile | long_text | MEMBER の紹介文（改行あり） |
 | `works` | title（必須）/ client_name / summary / published_date / tags（multi_select）/ thumbnail / gallery / body / external_url | | CMS の汎用モデルそのまま。タグの表示名は `src/lib/works.ts`（CMS の選択肢の label と同じ） |
-| `site_info` | company_name（必須）/ address / default_title / title_template / default_description / default_og_image | | 会社概要の表、下層ページの `<title>`（`title_template` の `%s` にページ名） |
+| `site_info` | company_name（必須）/ address / phone / email / instagram_url / x_url / default_title / title_template / default_description / default_og_image | | 会社概要の表（電話番号・メールも）、フッターの SNS（http(s) の URL だけ）、トップの `<title>`・description（`default_*`）、下層ページの `<title>`（`title_template` の `%s` にページ名）、OGP 画像の既定値（記事・実績はサムネイルを優先） |
 | `about` | lead / body（rich_text）/ main_image / representative / established / capital / business_summary | | ABOUT のメッセージと会社概要の表。空の行は出さない |
 | `contact_page` | lead / privacy_note（rich_text）/ consent_label | | CONTACT の案内文・個人情報の取り扱い・同意チェックの文言 |
 
@@ -150,6 +150,5 @@ CMS の管理画面の「プレビュー」から、公開前の内容を本番�
 
 ## 未決
 
-- トップの title / description はまだコードの仮の値（`src/pages/index.astro` の TODO）。下層ページは `site_info` から解決している。
 - 会社情報・代表メッセージ・個人情報の取り扱いの実際の文言（仮データは「〇〇（仮）」）。
 - お問い合わせの通知先（CMS の管理画面で設定）。

@@ -75,17 +75,10 @@ async function safely<T>(label: string, fallback: T, run: () => Promise<T>, repo
 }
 
 export async function getTopPageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<TopPageData> {
-  const home = await safely(
-    "ami_home",
-    null,
-    async () => {
-      const r = mapHome(await client.getSingleton("ami_home"));
-      if (r.ok) return r.value;
-      report("entry failed validation", r.error);
-      return null;
-    },
-    report,
-  );
+  const [siteInfo, home] = await Promise.all([
+    getSiteInfo(client, report),
+    loadSingleton(client, "ami_home", mapHome, report),
+  ]);
 
   const topicsLimit = home?.topicsLimit;
 
@@ -115,7 +108,7 @@ export async function getTopPageData(client: CmsClient, report: CmsErrorReporter
     ),
   ]);
 
-  return { home, services, topics, members };
+  return { siteInfo, home, services, topics, members };
 }
 
 // ---------------------------------------------------------------------------
