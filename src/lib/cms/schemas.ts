@@ -190,7 +190,17 @@ export const JobPositionContentSchema = z.object({
   is_open: z.boolean().nullable().optional(),
 });
 
-export type AmiHomeContent =z.infer<typeof AmiHomeContentSchema>;
+// ---------------------------------------------------------------------------
+// faq（collection、CMS の汎用モデル）: よくある質問
+// ---------------------------------------------------------------------------
+
+export const FaqContentSchema = z.object({
+  question: z.string().min(1),
+  answer: RichTextSchema,
+  sort_order: z.number().int().nullable().optional(),
+});
+
+export type AmiHomeContent = z.infer<typeof AmiHomeContentSchema>;
 export type AmiServiceContent = z.infer<typeof AmiServiceContentSchema>;
 export type AmiTopicContent = z.infer<typeof AmiTopicContentSchema>;
 export type MemberContent = z.infer<typeof MemberContentSchema>;

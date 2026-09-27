@@ -9,6 +9,7 @@ import {
   getContactPageData,
   getMemberPageData,
   getPrivacyPageData,
+  getFaqPageData,
   getRecruitPageData,
   getServicePageData,
   getTopicDetail,
@@ -159,6 +160,15 @@ describe("下層ページ", () => {
     expect(data.recruit).toBeNull();
     expect(data.positions).toHaveLength(2);
     expect(report).toHaveBeenCalled();
+  });
+
+  it("FAQ: 表示順に並べ、回答を持つ", async () => {
+    const report = vi.fn();
+    const data = await getFaqPageData(createFixtureClient(), report);
+    expect(report).not.toHaveBeenCalled();
+    expect(data.faqs.length).toBeGreaterThan(0);
+    expect(data.faqs[0]?.question).toContain("相談");
+    expect(data.faqs.every((f) => f.answer.length > 0)).toBe(true);
   });
 
   it("PRIVACY POLICY: contact_page の個人情報の取り扱いを本文にする", async () => {

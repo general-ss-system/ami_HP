@@ -10,6 +10,7 @@ import type { DeliveryEntry } from "./contracts";
 import {
   mapAbout,
   mapContactPage,
+  mapFaq,
   mapHome,
   mapJobPosition,
   mapMember,
@@ -28,6 +29,7 @@ import type {
   AboutContent,
   ContactForm,
   ContactPageContent,
+  Faq,
   HomeContent,
   JobPosition,
   Member,
@@ -319,6 +321,33 @@ export async function getPrivacyPageData(client: CmsClient, report: CmsErrorRepo
     loadSingleton(client, "contact_page", (e) => mapContactPage(e, report), report),
   ]);
   return { siteInfo, privacyNote: contactPage?.privacyNote ?? [] };
+}
+
+// ---------------------------------------------------------------------------
+// FAQ
+// ---------------------------------------------------------------------------
+
+/** FAQ ページに並べる上限。 */
+const FAQ_LIMIT = 100;
+
+export interface FaqPageData {
+  siteInfo: SiteInfo | null;
+  /** 表示順（sort_order の昇順）。 */
+  faqs: Faq[];
+}
+
+export async function getFaqPageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<FaqPageData> {
+  const [siteInfo, faqs] = await Promise.all([
+    getSiteInfo(client, report),
+    safely(
+      "faq",
+      [],
+      async () =>
+        collect((await client.getCollection("faq", { sort: "sort_order", limit: FAQ_LIMIT })).data, (e) => mapFaq(e, report), report),
+      report,
+    ),
+  ]);
+  return { siteInfo, faqs };
 }
 
 // ---------------------------------------------------------------------------

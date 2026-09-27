@@ -82,11 +82,12 @@ describe("resolvePreviewPath", () => {
     expect(resolvePreviewPath("recruit", null)).toBe("/recruit");
     expect(resolvePreviewPath("job_positions", "j1")).toBe("/recruit#j1");
     expect(resolvePreviewPath("job_positions", null)).toBe("/recruit");
+    expect(resolvePreviewPath("faq", null)).toBe("/faq");
   });
 
   it("slug が無ければ一覧、ページの無いモデルは null", () => {
     expect(resolvePreviewPath("ami_topics", null)).toBe("/topics");
-    expect(resolvePreviewPath("faq", "x")).toBeNull();
+    expect(resolvePreviewPath("news", "x")).toBeNull();
   });
 });
 

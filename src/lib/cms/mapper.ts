@@ -13,6 +13,7 @@ import {
   AmiServiceContentSchema,
   AmiTopicContentSchema,
   ContactPageContentSchema,
+  FaqContentSchema,
   JobPositionContentSchema,
   MemberContentSchema,
   RecruitContentSchema,
@@ -25,6 +26,7 @@ import { toRichText, type RichTextReporter } from "./richtext";
 import type {
   AboutContent,
   ContactPageContent,
+  Faq,
   HomeContent,
   JobPosition,
   Link,
@@ -251,6 +253,19 @@ export function mapJobPosition(entry: DeliveryEntry, report?: RichTextReporter):
       summary: c.summary ?? null,
       description: toRichText(c.description, richTextReporter(report, "job_positions", entry, "description")),
       isOpen: c.is_open !== false,
+    },
+  };
+}
+
+export function mapFaq(entry: DeliveryEntry, report?: RichTextReporter): MapResult<Faq> {
+  const r = parseContent("faq", entry, FaqContentSchema);
+  if (!r.ok) return r;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      question: r.value.question,
+      answer: toRichText(r.value.answer, richTextReporter(report, "faq", entry, "answer")),
     },
   };
 }

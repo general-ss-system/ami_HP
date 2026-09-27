@@ -38,6 +38,7 @@ const COLLECTION_PATHS: Record<string, string> = {
   members: "/member",
   works: "/works",
   job_positions: "/recruit",
+  faq: "/faq",
 };
 
 /**

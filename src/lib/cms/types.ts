@@ -147,7 +147,13 @@ export interface JobPosition {
   isOpen: boolean;
 }
 
-export type FormFieldType ="text" | "textarea" | "email" | "tel" | "url" | "number" | "date" | "select" | "checkboxes" | "checkbox";
+export interface Faq {
+  id: string;
+  question: string;
+  answer: RtBlock[];
+}
+
+export type FormFieldType = "text" | "textarea" | "email" | "tel" | "url" | "number" | "date" | "select" | "checkboxes" | "checkbox";
 
 export interface FormField {
   key: string;

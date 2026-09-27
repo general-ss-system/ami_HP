@@ -8,6 +8,7 @@ import {
   fixtureAbout,
   fixtureContactForm,
   fixtureContactPage,
+  fixtureFaqs,
   fixtureHome,
   fixtureJobPositions,
   fixtureMembers,
@@ -31,6 +32,7 @@ const collections: Record<string, DeliveryEntry[]> = {
   members: fixtureMembers,
   works: fixtureWorks,
   job_positions: fixtureJobPositions,
+  faq: fixtureFaqs,
 };
 
 /** Delivery API の filter と同じ判定（multi_select は「いずれかに一致」）。 */
