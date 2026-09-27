@@ -67,8 +67,8 @@ const label = TOPIC_CATEGORY_LABEL[topic.category];
       {!isEmptyRichText(topic.body) ? <RichText blocks={topic.body} class="article__body" /> : topic.excerpt && <p class="article__body">{topic.excerpt}</p>}
     </article>
 
-    <Decor src={planetRinged} pc={[1160, 200, 84]} sp={false} float delay={0.8} />
-    <Decor src={rocket} pc={[-10, 590, 130]} sp={false} float delay={1.6} />
+    <Decor src={planetRinged} pc={[1160, 200, 84]} sp={false} front float delay={0.8} />
+    <Decor src={rocket} pc={[-10, 590, 130]} sp={false} front float delay={1.6} />
   </div>
 </PageLayout>
 
@@ -87,7 +87,7 @@ const label = TOPIC_CATEGORY_LABEL[topic.category];
     z-index: var(--z-content);
     max-width: 1100px;
     margin-inline: auto;
-    padding: calc(91 / 12.8 * 1cqw) calc(74 / 12.8 * 1cqw) calc(160 / 12.8 * 1cqw) calc(76 / 12.8 * 1cqw);
+    padding: calc(91 / 12.8 * 1cqw) calc(74 / 12.8 * 1cqw) calc(215 / 12.8 * 1cqw) calc(76 / 12.8 * 1cqw);
     color: #1b1c22;
     background: #f6fdff;
     border-block: 6px solid var(--accent);

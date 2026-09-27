@@ -120,14 +120,14 @@ const crumbs = [
     padding-top: clamp(48px, calc(96 / 12.8 * 1vw), 96px);
   }
 
-  /* カード 305 × 3 列、列の間 42.5・行の間 56.6（テープの分を含めて 64） */
+  /* カード 305 × 3 列、列の間 42.5・行の送り 486.3（カードの高さ 440 を引いて 46） */
   .topics-archive__list {
     position: relative;
     z-index: var(--z-content);
     display: grid;
     grid-template-columns: repeat(3, 305px);
     justify-content: center;
-    gap: 64px 42.5px;
+    gap: 46px 42.5px;
     margin-top: 87px;
   }
 

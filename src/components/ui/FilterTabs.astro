@@ -137,6 +137,10 @@ const { tabs, label, latin = false, variant = "default" } = Astro.props;
   }
 
   @media (max-width: 767px) {
+    .is-pixel ul {
+      gap: 12px;
+    }
+
     .is-pixel .filter-tabs__tab {
       width: calc((100vw - var(--gutter) * 2 - 36px) / 4);
       max-width: 136px;
