@@ -322,3 +322,63 @@ export const fixtureWorks: DeliveryEntry[] = [
     thumbnail: media("fx-work-5-thumb", "business-sns.png", 483, 900, "SNS の投稿画面を表示したスマートフォン"),
   }),
 ];
+
+// ---------------------------------------------------------------------------
+// RECRUIT（CMS の汎用モデル recruit / job_positions）。内容は仮
+// ---------------------------------------------------------------------------
+
+export const fixtureRecruit: DeliveryEntry = entry("fx-recruit", null, {
+  message_title: "いっしょに「トキメキ」をつくる仲間を探しています。",
+  message_body: rich(
+    p(text("ここに採用メッセージが入ります（以下は仮の文章です）。")),
+    p(text("amiは、Z世代のインフルエンサー・クリエイターが集まるチームです。"), text("好きなものを、好きなだけ語れること", 1), text("がいちばんの才能だと考えています。")),
+    p(text("経験の有無は問いません。あなたの「好き」を、次のトキメキにしてみませんか。")),
+  ),
+  main_image: media("fx-recruit-img", "hero-3.jpg", 640, 820, "頬杖をつくメンバー"),
+  gallery: [
+    media("fx-recruit-g1", "hero-1.jpg", 840, 1092, "撮影の合間のようす"),
+    media("fx-recruit-g2", "hero-2.jpg", 720, 951, "屋外での撮影"),
+    media("fx-recruit-g3", "topic-sample.jpg", 640, 961, "商品を手にするメンバー"),
+  ],
+});
+
+function job(n: number, slug: string, content: Record<string, unknown>): DeliveryEntry {
+  const at = `2026-09-${String(20 - n).padStart(2, "0")}T00:00:00.000Z`;
+  return { id: `fx-job-${n}`, slug, content, publishedAt: at, updatedAt: at };
+}
+
+export const fixtureJobPositions: DeliveryEntry[] = [
+  job(1, "sns-planner", {
+    title: "SNSプランナー（仮）",
+    employment_type: "full_time",
+    location: "東京（リモート可）",
+    summary: "企業アカウントの企画から撮影・分析までを担当します。",
+    description: rich(
+      h("h3", "仕事内容"),
+      ul("SNS アカウントの企画・投稿の設計", "撮影・編集のディレクション", "投稿の反応の分析と改善の提案"),
+      h("h3", "求める人物像"),
+      p(text("SNS が好きで、流行りのものを自分の言葉で説明できる方。")),
+    ),
+    is_open: true,
+  }),
+  job(2, "creator-intern", {
+    title: "クリエイター（インターン）（仮）",
+    employment_type: "intern",
+    location: "東京",
+    summary: "ショート動画の撮影・編集を、メンバーと一緒に進めます。",
+    description: rich(
+      h("h3", "仕事内容"),
+      ul("ショート動画の撮影・編集", "企画会議への参加"),
+      h("h3", "応募の条件"),
+      p(text("週 2 日以上、3 か月以上続けられる方。")),
+    ),
+    is_open: true,
+  }),
+  job(3, "designer", {
+    title: "グラフィックデザイナー（仮）",
+    employment_type: "contract",
+    summary: "募集を締め切った職種の例（ページには出ない）。",
+    description: rich(p(text("募集は終了しました。"))),
+    is_open: false,
+  }),
+];

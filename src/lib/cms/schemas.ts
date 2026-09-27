@@ -161,7 +161,36 @@ export const ContactPageContentSchema = z.object({
   consent_label: optionalText,
 });
 
-export type AmiHomeContent = z.infer<typeof AmiHomeContentSchema>;
+// ---------------------------------------------------------------------------
+// recruit（singleton、CMS の汎用モデル）: RECRUIT ページ
+// ---------------------------------------------------------------------------
+
+export const RecruitContentSchema = z.object({
+  message_title: z.string().min(1),
+  message_body: optionalRichText,
+  main_image: optionalMedia,
+  /** 職場写真（最大 12 枚）。 */
+  gallery: z.array(DeliveryMediaSchema).nullable().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// job_positions（collection、CMS の汎用モデル）: 募集職種
+// ---------------------------------------------------------------------------
+
+/** 雇用形態の値（CMS の job_positions.employment_type の選択肢）。表示名は lib/recruit.ts。 */
+export const EMPLOYMENT_TYPES = ["full_time", "contract", "part_time", "intern"] as const;
+
+export const JobPositionContentSchema = z.object({
+  title: z.string().min(1),
+  employment_type: z.enum(EMPLOYMENT_TYPES),
+  location: optionalText,
+  summary: optionalText,
+  description: RichTextSchema,
+  /** false なら募集を締め切った職種（出さない）。未入力は募集中として扱う。 */
+  is_open: z.boolean().nullable().optional(),
+});
+
+export type AmiHomeContent =z.infer<typeof AmiHomeContentSchema>;
 export type AmiServiceContent = z.infer<typeof AmiServiceContentSchema>;
 export type AmiTopicContent = z.infer<typeof AmiTopicContentSchema>;
 export type MemberContent = z.infer<typeof MemberContentSchema>;

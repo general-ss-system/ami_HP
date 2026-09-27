@@ -9,7 +9,9 @@ import {
   fixtureContactForm,
   fixtureContactPage,
   fixtureHome,
+  fixtureJobPositions,
   fixtureMembers,
+  fixtureRecruit,
   fixtureServices,
   fixtureSiteInfo,
   fixtureTopics,
@@ -21,12 +23,14 @@ const singletons: Record<string, DeliveryEntry> = {
   site_info: fixtureSiteInfo,
   about: fixtureAbout,
   contact_page: fixtureContactPage,
+  recruit: fixtureRecruit,
 };
 const collections: Record<string, DeliveryEntry[]> = {
   ami_services: fixtureServices,
   ami_topics: fixtureTopics,
   members: fixtureMembers,
   works: fixtureWorks,
+  job_positions: fixtureJobPositions,
 };
 
 /** Delivery API の filter と同じ判定（multi_select は「いずれかに一致」）。 */

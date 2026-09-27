@@ -79,6 +79,9 @@ describe("resolvePreviewPath", () => {
     expect(resolvePreviewPath("works", "w1")).toBe("/works/w1");
     expect(resolvePreviewPath("ami_services", "sns")).toBe("/service#sns");
     expect(resolvePreviewPath("members", "m1")).toBe("/member#m1");
+    expect(resolvePreviewPath("recruit", null)).toBe("/recruit");
+    expect(resolvePreviewPath("job_positions", "j1")).toBe("/recruit#j1");
+    expect(resolvePreviewPath("job_positions", null)).toBe("/recruit");
   });
 
   it("slug が無ければ一覧、ページの無いモデルは null", () => {

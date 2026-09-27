@@ -126,7 +126,28 @@ export interface ContactPageContent {
   consentLabel: string | null;
 }
 
-export type FormFieldType = "text" | "textarea" | "email" | "tel" | "url" | "number" | "date" | "select" | "checkboxes" | "checkbox";
+export interface RecruitContent {
+  messageTitle: string;
+  messageBody: RtBlock[];
+  mainImage: Media | null;
+  gallery: Media[];
+}
+
+export type EmploymentType = "full_time" | "contract" | "part_time" | "intern";
+
+export interface JobPosition {
+  id: string;
+  /** RECRUIT ページのアンカー（#slug）に使う。 */
+  slug: string | null;
+  title: string;
+  employmentType: EmploymentType;
+  location: string | null;
+  summary: string | null;
+  description: RtBlock[];
+  isOpen: boolean;
+}
+
+export type FormFieldType ="text" | "textarea" | "email" | "tel" | "url" | "number" | "date" | "select" | "checkboxes" | "checkbox";
 
 export interface FormField {
   key: string;

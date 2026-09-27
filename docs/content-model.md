@@ -83,6 +83,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | TOPICS 一覧 | `/topics`、`/topics/page/{n}`、`/topics/category/{news|sns|column}` | `ami_topics`（12 件ずつ） |
 | TOPICS 詳細 | `/topics/{slug}` | `ami_topics`（`body`・`external_url` を追加）。`external_url` がある記事は詳細を作らずカードから直接開く |
 | CONTACT | `/contact` | `contact_page`、フォーム `ami_contact`（Form API の定義） |
+| RECRUIT | `/recruit`（各職種は `#slug`） | `recruit`（メッセージ・職場写真）、`job_positions`（`is_open` が false の職種は出さない）。応募は CONTACT へ |
 | PRIVACY POLICY | `/privacy` | `contact_page.privacy_note`（CONTACT のフォームに出す文章と同じ）。フッターからリンク |
 | WORKS 一覧 | `/works`、`/works/page/{n}`、`/works/tag/{branding|web|graphic|movie}` | `works`（CMS の汎用モデル。12 件ずつ・公開日の新しい順） |
 | WORKS 詳細 | `/works/{slug}` | `works`（概要・本文・ギャラリー・外部リンク） |
@@ -120,6 +121,12 @@ rich_text は `src/lib/cms/richtext.ts` で許可したノードだけを描画�
 `works` は CMS の汎用モデルだが、ami のひな形（`preset: "ami"`）には入っていない。live で使う前に、
 制作側（platform_admin）がサイトで `works` を有効にする（`POST /api/v1/admin/sites/{siteId}/models`）。
 ヘッダーのナビはデザインの 4 項目のままにし、WORKS へはフッター・SERVICE ページからリンクする。
+
+## RECRUIT を CMS で使えるようにする
+
+`recruit` / `job_positions` も CMS の汎用モデルで、ami のひな形には入っていない。live で使う前に、WORKS と同じく
+制作側がサイトで有効にする。有効でない間は、RECRUIT ページはメッセージを出さず「現在、募集している職種はありません。」と出す。
+フッターからリンクする（ヘッダーのナビには足さない）。
 
 ## 下書きプレビュー（ADR-028 / CMS docs/04 §19）
 

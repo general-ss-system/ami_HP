@@ -26,6 +26,7 @@ export const PRIVACY_HREF = "/privacy";
 export const FOOTER_ITEMS: readonly NavItem[] = [
   ...NAV_ITEMS,
   { label: "WORKS", href: "/works" },
+  { label: "RECRUIT", href: "/recruit" },
   { label: "CONTACT", href: CONTACT_HREF },
   { label: "PRIVACY POLICY", href: PRIVACY_HREF },
 ];

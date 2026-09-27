@@ -28,6 +28,7 @@ const SINGLETON_PATHS: Record<string, string> = {
   site_info: "/",
   about: "/about",
   contact_page: "/contact",
+  recruit: "/recruit",
 };
 
 /** 一覧ページ（slug が無いときの行き先）。 */
@@ -36,6 +37,7 @@ const COLLECTION_PATHS: Record<string, string> = {
   ami_services: "/service",
   members: "/member",
   works: "/works",
+  job_positions: "/recruit",
 };
 
 /**

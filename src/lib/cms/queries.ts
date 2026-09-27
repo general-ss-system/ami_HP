@@ -11,7 +11,9 @@ import {
   mapAbout,
   mapContactPage,
   mapHome,
+  mapJobPosition,
   mapMember,
+  mapRecruit,
   mapService,
   mapSiteInfo,
   mapTopic,
@@ -27,7 +29,9 @@ import type {
   ContactForm,
   ContactPageContent,
   HomeContent,
+  JobPosition,
   Member,
+  RecruitContent,
   RtBlock,
   Service,
   SiteInfo,
@@ -315,6 +319,39 @@ export async function getPrivacyPageData(client: CmsClient, report: CmsErrorRepo
     loadSingleton(client, "contact_page", (e) => mapContactPage(e, report), report),
   ]);
   return { siteInfo, privacyNote: contactPage?.privacyNote ?? [] };
+}
+
+// ---------------------------------------------------------------------------
+// RECRUIT
+// ---------------------------------------------------------------------------
+
+/** RECRUIT ページに並べる職種の上限。 */
+const JOB_POSITIONS_LIMIT = 50;
+
+export interface RecruitPageData {
+  siteInfo: SiteInfo | null;
+  recruit: RecruitContent | null;
+  /** 募集中の職種（is_open が false のものは除く）。新しい順。 */
+  positions: JobPosition[];
+}
+
+export async function getRecruitPageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<RecruitPageData> {
+  const [siteInfo, recruit, positions] = await Promise.all([
+    getSiteInfo(client, report),
+    loadSingleton(client, "recruit", (e) => mapRecruit(e, report), report),
+    safely(
+      "job_positions",
+      [],
+      async () =>
+        collect(
+          (await client.getCollection("job_positions", { sort: "-publishedAt", limit: JOB_POSITIONS_LIMIT })).data,
+          (e) => mapJobPosition(e, report),
+          report,
+        ),
+      report,
+    ),
+  ]);
+  return { siteInfo, recruit, positions: positions.filter((p) => p.isOpen) };
 }
 
 // ---------------------------------------------------------------------------

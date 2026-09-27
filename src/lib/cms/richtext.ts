@@ -108,6 +108,8 @@ export function entryPath(ref: DeliveryEntryRef): string | null {
       return withBase(`/member#${slug}`);
     case "works":
       return withBase(`/works/${slug}`);
+    case "job_positions":
+      return withBase(`/recruit#${slug}`);
     default:
       return null;
   }

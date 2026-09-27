@@ -9,6 +9,7 @@ import {
   getContactPageData,
   getMemberPageData,
   getPrivacyPageData,
+  getRecruitPageData,
   getServicePageData,
   getTopicDetail,
   getTopicsArchive,
@@ -135,6 +136,28 @@ describe("下層ページ", () => {
     const client: CmsClient = { ...createFixtureClient(), getForm: () => Promise.reject(new Error("down")) };
     const data = await getContactPageData(client, report);
     expect(data.form).toBeNull();
+    expect(report).toHaveBeenCalled();
+  });
+
+  it("RECRUIT: メッセージ・職場写真と、募集中の職種だけを新しい順に返す", async () => {
+    const report = vi.fn();
+    const data = await getRecruitPageData(createFixtureClient(), report);
+    expect(report).not.toHaveBeenCalled();
+    expect(data.recruit?.messageTitle).toBeTruthy();
+    expect(data.recruit?.gallery.length).toBeGreaterThan(0);
+    expect(data.positions.map((p) => p.slug)).toEqual(["sns-planner", "creator-intern"]);
+    expect(data.positions[0]?.description.length).toBeGreaterThan(0);
+  });
+
+  it("RECRUIT: recruit を取れなくても職種は出す", async () => {
+    const report = vi.fn();
+    const client: CmsClient = { ...createFixtureClient(), getSingleton: async (key) => {
+      if (key === "recruit") throw new Error("model not enabled");
+      return createFixtureClient().getSingleton(key);
+    } };
+    const data = await getRecruitPageData(client, report);
+    expect(data.recruit).toBeNull();
+    expect(data.positions).toHaveLength(2);
     expect(report).toHaveBeenCalled();
   });
 

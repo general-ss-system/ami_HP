@@ -13,7 +13,9 @@ import {
   AmiServiceContentSchema,
   AmiTopicContentSchema,
   ContactPageContentSchema,
+  JobPositionContentSchema,
   MemberContentSchema,
+  RecruitContentSchema,
   SiteInfoContentSchema,
   WORK_TAGS,
   WorkContentSchema,
@@ -24,9 +26,11 @@ import type {
   AboutContent,
   ContactPageContent,
   HomeContent,
+  JobPosition,
   Link,
   Media,
   Member,
+  RecruitContent,
   Service,
   SiteInfo,
   StatementLine,
@@ -213,6 +217,40 @@ export function mapContactPage(entry: DeliveryEntry, report?: RichTextReporter):
       lead: c.lead ?? null,
       privacyNote: toRichText(c.privacy_note, richTextReporter(report, "contact_page", entry, "privacy_note")),
       consentLabel: c.consent_label ?? null,
+    },
+  };
+}
+
+export function mapRecruit(entry: DeliveryEntry, report?: RichTextReporter): MapResult<RecruitContent> {
+  const r = parseContent("recruit", entry, RecruitContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      messageTitle: c.message_title,
+      messageBody: toRichText(c.message_body, richTextReporter(report, "recruit", entry, "message_body")),
+      mainImage: toMedia(c.main_image),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
+    },
+  };
+}
+
+export function mapJobPosition(entry: DeliveryEntry, report?: RichTextReporter): MapResult<JobPosition> {
+  const r = parseContent("job_positions", entry, JobPositionContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      employmentType: c.employment_type,
+      location: c.location ?? null,
+      summary: c.summary ?? null,
+      description: toRichText(c.description, richTextReporter(report, "job_positions", entry, "description")),
+      isOpen: c.is_open !== false,
     },
   };
 }
