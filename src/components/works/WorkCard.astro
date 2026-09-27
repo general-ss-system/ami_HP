@@ -32,10 +32,14 @@ const Title = `h${headingLevel}` as "h2" | "h3";
         )
       }
       <Title class="work-card__title">{work.title}</Title>
-      <p class="work-card__meta">
-        {work.clientName && <span>{work.clientName}</span>}
-        {work.publishedDate && <time datetime={work.publishedDate}>{formatWorkDate(work.publishedDate)}</time>}
-      </p>
+      {
+        (work.clientName || work.publishedDate) && (
+          <p class="work-card__meta">
+            {work.clientName && <span>{work.clientName}</span>}
+            {work.publishedDate && <time datetime={work.publishedDate}>{formatWorkDate(work.publishedDate)}</time>}
+          </p>
+        )
+      }
     </div>
   </a>
 </article>

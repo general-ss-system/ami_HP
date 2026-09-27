@@ -54,6 +54,7 @@ scripts/         素材の変換
 - **サイト内リンク・パスは `withBase()` を通す**（GitHub Pages のプレビューは `/ami_HP/` の下に置かれる）。
   フォント・背景画像など CSS から参照するファイルは `public/` ではなく `src/assets/` に置き、相対パスで参照する。
 - 手元の画像は `LocalImage`、CMS の画像は `CmsImage` で出す（astro:assets の `<Image>` は使わない）。
+  どちらも `alt=""`（CMS の alt が空）のときは `aria-hidden="true"` を自動で付ける。装飾の画像は `alt=""` で渡す。
 - **SSR のため、`src/assets` の画像は実行時に変換されない。** 素材は WebP・表示サイズの 2 倍程度にしてから置く
   （`pnpm assets:webp`）。
 
@@ -77,7 +78,18 @@ pnpm build        # 本番ビルド
 pnpm preview      # ビルド結果を workerd で確認
 ```
 
-変更後は `pnpm check` → `pnpm test` → `pnpm build` を通してから完了とする。
+変更後は `pnpm check` → `pnpm test` → `pnpm build` を通してから完了とする（GitHub Pages のプレビューに関わる変更は `pnpm build:pages` も）。
+
+pnpm が PATH に無い環境では `corepack pnpm <コマンド>` で動かす（`build:pages` は astro を Node で直接起動するので、そのままで動く）。
+
+### 公開前の点検（2026-09-27 に実施）
+
+- `pnpm build:pages` の `dist/` を走査して、画像の width/height・装飾の alt/aria-hidden・h1 が 1 つ・見出しの飛ばし・
+  サイト内リンクと画像の `/ami_HP/` 付きを確かめる（Git Bash では引数の `/ami_HP/` が Windows のパスに変換されるので `MSYS_NO_PATHCONV=1` を付ける）。
+- CMS の任意項目が空のときの確認は、仮データから必須の項目以外を消してビルドし、空の要素や `undefined` が出ないことを見る。
+- 幅 375 / 820 / 1440 で全ページに横スクロールが出ないこと（Topics の流れる帯・カードの横スクロールは意図どおり）。
+- 動きは global.css の `prefers-reduced-motion` で一括で止め、ヒーローの写真の入れ替え（JS）も同じ設定で止める。
+- Figma MCP は View 席だと呼び出し回数の上限がある。上限に達するとデザインとの突き合わせができない。
 
 ## 6. CMS とのつなぎ方
 
