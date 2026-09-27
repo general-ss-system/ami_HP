@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CmsClient } from "./client";
 import { createFixtureClient } from "./fixture-client";
-import { fixtureHome, fixtureSiteInfo } from "./fixtures";
-import { mapSiteInfo, toStatementLines } from "./mapper";
+import { fixtureHome, fixtureMembers, fixtureSiteInfo } from "./fixtures";
+import { mapMember, mapSiteInfo, toStatementLines } from "./mapper";
 import type { SiteInfo } from "./types";
 import {
   getAboutPageData,
@@ -102,10 +102,26 @@ describe("下層ページ", () => {
     expect(services[0]?.body.some((b) => b.kind === "list")).toBe(true);
   });
 
-  it("MEMBER: 紹介文を持つ", async () => {
+  it("MEMBER: 紹介文とプロフィール（生年月日・SNS・写真）を持つ", async () => {
     const { members } = await getMemberPageData(createFixtureClient());
-    expect(members).toHaveLength(6);
-    expect(members[0]?.profile).toContain("紹介文");
+    expect(members).toHaveLength(9);
+    expect(members[0]?.profile).toBeTruthy();
+    expect(members[0]?.birthday).toBe("1998-06-12");
+    expect(members[0]?.sns.map((s) => s.service)).toEqual(["Instagram", "X", "TikTok"]);
+    expect(members[0]?.photos).toHaveLength(4);
+  });
+
+  it("MEMBER: SNS は http(s) の URL とアカウント名があるものだけを出す", () => {
+    const base = fixtureMembers[0]!;
+    const r = mapMember({
+      ...base,
+      content: {
+        ...base.content,
+        instagram: { label: "@a", href: "javascript:alert(1)", target: "_blank" },
+        x: { label: "  ", href: "https://x.com/a", target: "_blank" },
+      },
+    });
+    expect(r.ok && r.value.sns.map((s) => s.service)).toEqual(["TikTok"]);
   });
 
   it("TOPICS 一覧: 分類で絞り込み、範囲外のページは null", async () => {

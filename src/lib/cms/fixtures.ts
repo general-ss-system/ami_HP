@@ -212,13 +212,31 @@ export const fixtureTopics: DeliveryEntry[] = [
   }),
 ];
 
-export const fixtureMembers: DeliveryEntry[] = [1, 2, 3, 4, 5, 6].map((n) =>
+const memberPhotos = [
+  media("fx-member-photo-1", "hero-1.jpg", 840, 1092, "プロフィール写真（正面）"),
+  media("fx-member-photo-2", "hero-2.jpg", 720, 951, "プロフィール写真（屋外）"),
+  media("fx-member-photo-3", "hero-3.jpg", 640, 820, "プロフィール写真（頬杖）"),
+  media("fx-member-photo-4", "topic-sample.jpg", 640, 961, "プロフィール写真（キーホルダーを手に）"),
+];
+
+/** MEMBER（9 人）。ドット絵のアイコンは 6 種類を繰り返す。プロフィールはデザインの見本の値（仮） */
+export const fixtureMembers: DeliveryEntry[] = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) =>
   entry(`fx-member-${n}`, `member-${n}`, {
-    name: "ここにお名前",
+    name: n === 1 ? "山田 莉子" : "ここにお名前",
     role: "CEO / Influencer",
-    portrait: media(`fx-member-${n}-img`, `member-${n}.png`, 480, 480, null),
-    profile: "ここに紹介文が入ります。\n得意なことや、活動しているジャンルなどを 2〜3 行で紹介します。",
+    portrait: media(`fx-member-${((n - 1) % 6) + 1}-img`, `member-${((n - 1) % 6) + 1}.png`, 480, 480, null),
+    profile:
+      "学生時代からSNSを中心に発信活動をスタートし、現在はモデル・俳優として活動。自然体で親しみやすいキャラクターを活かし、広告や映像作品、SNSコンテンツなど幅広いジャンルで活躍している。今後さらなる活動の幅を広げることが期待される注目の若手タレント。",
     sort_order: n,
+    birthday: "1998-06-12",
+    hometown: "東京都",
+    height: "165cm",
+    mbti: "ENFP",
+    personal_color: "ブルベ夏",
+    instagram: { label: "@ricoyamada", href: "https://www.instagram.com/", target: "_blank" },
+    x: { label: "@ricoyamada", href: "https://x.com/", target: "_blank" },
+    tiktok: { label: "@ricoyamada", href: "https://www.tiktok.com/", target: "_blank" },
+    photos: memberPhotos,
   }),
 );
 

@@ -1,24 +1,45 @@
 ---
 /**
- * MEMBER。メンバー（members）全員を、アイコン・名前・役職・紹介文で並べる。PC 3 列 / スマホ 1 列。
+ * MEMBER（Figma: member）。ドット絵のアイコンを 3 列で並べ、選んだメンバーのプロフィールを下のパネルに出す。
+ * アイコンは #slug へのリンク。JS があるときは選んだ 1 人だけを出し、無いときは全員のパネルを並べる。
+ * トップの Member の「View more」・下書きプレビューは /member#slug で開く（その人を選んだ状態にする）。
+ * 位置・大きさはデザインの値（幅 1280 基準。design/csv/member.csv）。
  */
 import PageLayout from "../layouts/PageLayout.astro";
-import ContactCta from "../components/sections/ContactCta.astro";
 import CmsImage from "../components/ui/CmsImage.astro";
 import Decor from "../components/ui/Decor.astro";
-import { CONTACT_HREF } from "../config/site";
+import LocalImage from "../components/ui/LocalImage.astro";
 import { getCmsClient } from "../lib/cms/env";
 import { getMemberPageData } from "../lib/cms/queries";
+import type { Member } from "../lib/cms/types";
 import { pageDescription, pageTitle } from "../lib/seo";
-import { withBase } from "../lib/url";
-import planetBunnyPurple from "../assets/decor/planet-bunny-purple.webp";
-import rocketCat from "../assets/decor/rocket-cat.webp";
+import title from "../assets/headings/title-member.webp";
+import marker from "../assets/icons/marker-down.webp";
+import photoSheet from "../assets/decor/photo-sheet.webp";
+import asteroid from "../assets/decor/asteroid.webp";
+import planetoid from "../assets/decor/planetoid.webp";
+import planetRinged from "../assets/decor/planet-ringed.webp";
+import sparkleGold from "../assets/decor/sparkle-gold.webp";
 import sparkleBlue from "../assets/decor/sparkle-blue.webp";
+import sparkleViolet from "../assets/decor/sparkle-violet.webp";
 import moonBunny from "../assets/decor/moon-bunny.webp";
 
 const { siteInfo, members } = await getMemberPageData(getCmsClient(Astro.locals));
 
+const anchor = (m: Member) => m.slug ?? m.id;
 const toLines = (text: string) => text.replace(/\r\n?/g, "\n").split("\n");
+/** "1998-06-12" → "1998/06/12"（形が違えばそのまま） */
+const formatBirthday = (d: string) => d.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$1/$2/$3");
+
+/** 項目名と、デザインでの列の幅（次の項目の左端までが幅 + 34） */
+const facts = (m: Member) =>
+  [
+    { label: "Date of Birth", width: 104, value: m.birthday ? formatBirthday(m.birthday) : null },
+    { label: "Hometown", width: 80, value: m.hometown },
+    { label: "Height", width: 49, value: m.height },
+    { label: "MBTI", width: 35, value: m.mbti },
+    { label: "Personal Color", width: 108, value: m.personalColor },
+  ].filter((f): f is { label: string; width: number; value: string } => Boolean(f.value?.trim()));
 ---
 
 <PageLayout
@@ -28,132 +49,486 @@ const toLines = (text: string) => text.replace(/\r\n?/g, "\n").split("\n");
   heading="Member"
   headingSub="メンバー"
   crumbs={[{ label: "MEMBER" }]}
+  hero="title"
+  titleImage={title}
+  titleBox={{ width: 522, top: 205 }}
+  heroHeight={420}
 >
-  <section class="member-list" aria-label="メンバー一覧">
-    <div class="stage member-list__stage">
-      {
-        members.length > 0 ? (
-          <ul class="member-list__grid">
-            {members.map((member) => (
-              <li class="member" id={member.slug ?? member.id}>
-                <div class="member__portrait">{member.portrait && <CmsImage media={member.portrait} />}</div>
-                <div class="member__text">
-                  <h2 class="member__name">{member.name}</h2>
-                  {member.role && <p class="member__role">{member.role}</p>}
-                  {member.profile && (
-                    <p class="member__profile">
-                      {toLines(member.profile).map((line, i) => (
-                        <>
-                          {i > 0 && <br />}
-                          {line}
-                        </>
-                      ))}
+  <Fragment slot="hero-decor">
+    <Decor src={asteroid} pc={[182, 101, 126]} sp={[12, 70, 56]} float delay={0.3} eager />
+    <Decor src={sparkleGold} pc={[62, 153, 60]} sp={false} twinkle delay={0.9} eager />
+    <Decor src={planetRinged} pc={[67, 256, 148.8]} sp={false} rotate={-16.6} float delay={1.4} eager />
+    <Decor src={sparkleBlue} pc={[280, 265, 99]} sp={false} twinkle delay={0.5} eager />
+    <Decor src={sparkleGold} pc={[632, 121, 28]} sp={false} twinkle delay={1.8} eager />
+    <Decor src={sparkleViolet} pc={[864, 145, 56]} sp={false} twinkle delay={1.1} eager />
+    <Decor src={planetoid} pc={[920, 202, 190]} sp={[296, 60, 70]} float delay={0.8} eager />
+    <Decor src={sparkleBlue} pc={[1080, 131, 118]} sp={false} twinkle delay={0.2} eager />
+    <Decor src={sparkleGold} pc={[1169, 354, 60]} sp={false} twinkle delay={1.3} eager />
+  </Fragment>
+
+  {
+    members.length > 0 ? (
+      <div class="members-page" data-members>
+        <section class="member-grid" aria-label="メンバー一覧">
+          <div class="stage member-grid__stage">
+            <ul class="member-grid__list">
+              {members.map((member) => (
+                <li class="member-grid__item">
+                  <a class="member-grid__link" href={`#${anchor(member)}`} data-member-link={anchor(member)}>
+                    <LocalImage src={marker} alt="" class="member-grid__marker" />
+                    <span class="member-grid__portrait">{member.portrait && <CmsImage media={member.portrait} />}</span>
+                    <span class="member-grid__name">{member.name}</span>
+                    {member.role && <span class="member-grid__role">{member.role}</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <Decor src={moonBunny} pc={[80, 505, 137]} sp={false} float delay={1.1} />
+          </div>
+        </section>
+
+        <div class="stage member-details__stage">
+          {members.map((member) => {
+            const rows = facts(member);
+            return (
+              <section class="member-detail" id={anchor(member)} data-member-panel={anchor(member)} aria-labelledby={`member-${member.id}`}>
+                <div class="member-detail__inner">
+                  <div class:list={["member-detail__sheet", member.photos.length === 0 && "is-empty"]}>
+                    <LocalImage src={photoSheet} alt="" class="member-detail__sheet-bg" />
+                    {member.photos.map((photo, i) => (
+                      <span class={`member-detail__photo is-${i + 1}`}>
+                        <CmsImage media={photo} photo />
+                      </span>
+                    ))}
+                  </div>
+
+                  <div class="member-detail__info">
+                    <p class="member-detail__label" aria-hidden="true">
+                      name
                     </p>
-                  )}
+                    <h2 class="member-detail__name" id={`member-${member.id}`}>
+                      {member.name}
+                      {member.role && <span class="visually-hidden">（{member.role}）</span>}
+                    </h2>
+
+                    {rows.length > 0 && (
+                      <dl class="member-detail__facts">
+                        {rows.map((row) => (
+                          <div style={{ "--col-w": `${row.width}px` }}>
+                            <dt class="member-detail__label">{row.label}</dt>
+                            <dd>{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+
+                    {member.sns.length > 0 && (
+                      <div class="member-detail__block">
+                        <h3 class="member-detail__label">SNS</h3>
+                        <dl class="member-detail__sns">
+                          {member.sns.map((sns) => (
+                            <div>
+                              <dt>{sns.service}</dt>
+                              <dd>
+                                <a href={sns.href} target="_blank" rel="noopener noreferrer">
+                                  {sns.account}
+                                  <span class="visually-hidden">（{sns.service}・新しいタブで開く）</span>
+                                </a>
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    )}
+
+                    {member.profile && (
+                      <div class="member-detail__block">
+                        <h3 class="member-detail__label">Profile</h3>
+                        <p class="member-detail__profile">
+                          {toLines(member.profile).map((line, i) => (
+                            <>
+                              {i > 0 && <br />}
+                              {line}
+                            </>
+                          ))}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="member-list__empty">メンバーの情報は準備中です。</p>
-        )
-      }
-
-      <Decor src={planetBunnyPurple} pc={[1130, 1020, 130]} sp={false} float delay={0.5} />
-      <Decor src={rocketCat} pc={[-30, 900, 180]} sp={false} float delay={1.4} />
-      <Decor src={moonBunny} pc={[20, 160, 120]} sp={false} float delay={2.1} />
-      <Decor src={sparkleBlue} pc={[1180, 1100, 70]} sp={false} twinkle delay={0.9} />
-    </div>
-  </section>
-
-  <ContactCta body={null} href={withBase(CONTACT_HREF)} />
+              </section>
+            );
+          })}
+        </div>
+      </div>
+    ) : (
+      <div class="stage">
+        <p class="member-empty">メンバーの情報は準備中です。</p>
+      </div>
+    )
+  }
 </PageLayout>
 
+<script>
+  // 選んだメンバーのパネルだけを出す（#slug で開いたときはその人、無ければ先頭）
+  for (const root of document.querySelectorAll<HTMLElement>("[data-members]")) {
+    const links = [...root.querySelectorAll<HTMLAnchorElement>("[data-member-link]")];
+    const panels = [...root.querySelectorAll<HTMLElement>("[data-member-panel]")];
+    if (panels.length === 0) continue;
+    root.classList.add("is-enhanced");
+
+    const select = (key: string, focusPanel: boolean) => {
+      const target = panels.find((p) => p.dataset.memberPanel === key) ?? panels[0]!;
+      for (const p of panels) p.hidden = p !== target;
+      for (const a of links) {
+        const on = a.dataset.memberLink === target.dataset.memberPanel;
+        a.toggleAttribute("aria-current", on);
+        if (on) a.setAttribute("aria-current", "true");
+      }
+      if (focusPanel) target.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    };
+
+    for (const a of links) {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const key = a.dataset.memberLink!;
+        history.replaceState(null, "", `#${key}`);
+        select(key, true);
+      });
+    }
+    select(decodeURIComponent(location.hash.slice(1)), location.hash.length > 1);
+  }
+</script>
+
 <style>
-  .member-list__stage {
-    padding: 0 var(--gutter) clamp(40px, 6.25vw, 80px);
+  /*
+   * アイコン 231×218（角丸 10.8・白の線 2.4）を x=246.2 / 524.5 / 802.9、y=474.7 から 378.6 ごとに並べる。
+   * 選んだ人は 10.5 上に浮かせ、上に ▽（31×22）を出す。パネルは y=1623.5（帯）から。
+   */
+  .member-grid__stage {
+    padding: calc(54.7 / 12.8 * 1cqw) var(--gutter) 0;
   }
 
-  .member-list__grid {
+  .member-grid__list {
     position: relative;
     z-index: var(--z-content);
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 300px));
+    grid-template-columns: repeat(3, 231px);
     justify-content: center;
-    gap: 64px clamp(32px, 4.7vw, 60px);
+    gap: 90px 47.3px;
   }
 
-  .member {
+  .member-grid__link {
+    position: relative;
     display: flex;
     flex-direction: column;
-    scroll-margin-top: calc(var(--header-height) + 24px);
-  }
-
-  .member__portrait {
-    aspect-ratio: 231 / 218;
-    overflow: hidden;
-    border: 2.4px solid #fff;
-    border-radius: 12px;
-    background: rgb(255 255 255 / 0.2);
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
     transition: translate var(--duration-base) var(--ease-out);
   }
 
-  .member:hover .member__portrait {
-    translate: 0 -4px;
+  .member-grid__portrait {
+    display: block;
+    width: 100%;
+    aspect-ratio: 231 / 218.2;
+    overflow: hidden;
+    border: 2.4px solid #fff;
+    border-radius: 10.8px;
+    background: rgb(255 255 255 / 0.2);
   }
 
-  .member__portrait :global(img) {
+  .member-grid__portrait :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .member__text {
-    margin-top: 20px;
-    text-align: center;
-    /* 背景が明るくなるページ下部でも読めるように（トップの本文と同じ影） */
-    text-shadow: 1px 2px 0 rgb(4 16 74 / 0.4);
+  .member-grid__name {
+    margin-top: 22px;
+    font-size: 18px;
+    line-height: 1;
   }
 
-  .member__name {
-    font-size: clamp(17px, 1.56vw, 20px);
-    font-weight: 400;
-    line-height: 1.4;
-  }
-
-  .member__role {
-    margin-top: 8px;
+  .member-grid__role {
+    margin-top: 12px;
     font-size: 13px;
-    line-height: 1.4;
-    color: var(--color-accent-bright);
+    line-height: 1;
+    color: #ededed;
   }
 
-  .member__profile {
-    margin-top: 16px;
-    padding-top: 16px;
-    font-size: 14px;
-    line-height: 1.9;
-    text-align: left;
-    color: var(--color-text-muted);
-    border-top: 2px dashed rgb(255 255 255 / 0.3);
+  .member-grid__link :global(.member-grid__marker) {
+    position: absolute;
+    top: -39px;
+    left: 50%;
+    width: 31px;
+    height: auto;
+    translate: -50% 0;
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-out);
   }
 
-  .member-list__empty {
+  .member-grid__link:hover,
+  .member-grid__link[aria-current] {
+    translate: 0 -10.5px;
+  }
+
+  .member-grid__link[aria-current] :global(.member-grid__marker) {
+    opacity: 1;
+  }
+
+  /* ---- プロフィールのパネル（TOPICS の記事と同じ枠。x=90・幅 1100） ---- */
+  .member-details__stage {
+    display: grid;
+    gap: 80px;
+    padding: calc(123 / 12.8 * 1cqw) var(--gutter) clamp(120px, calc(240 / 12.8 * 1vw), 240px);
+  }
+
+  .member-detail {
     position: relative;
     z-index: var(--z-content);
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+    padding: calc(79 / 12.8 * 1cqw) var(--gutter) calc(77 / 12.8 * 1cqw);
+    color: #1b1c22;
+    background: #f6fdff;
+    border-block: 6px solid #00c0e8;
+    scroll-margin-top: calc(var(--header-height) + 24px);
+  }
+
+  .member-detail::before,
+  .member-detail::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: calc(999 / 1100 * 100%);
+    height: 8px;
+    background: #00c0e8;
+    translate: -50% 0;
+  }
+
+  .member-detail::before {
+    top: -8.5px;
+  }
+
+  .member-detail::after {
+    bottom: -8.5px;
+  }
+
+  .member-detail[hidden] {
+    display: none;
+  }
+
+  /* 写真の台紙 283 と情報の列（x=538 から）。全体 836 を中央に */
+  .member-detail__inner {
+    display: grid;
+    grid-template-columns: 283px minmax(0, 1fr);
+    gap: 37px;
+    max-width: 836px;
+    margin-inline: auto;
+    /* デザインでは中心が 4px 左（218〜1054） */
+    translate: -4px 0;
+  }
+
+  .member-detail__sheet {
+    position: relative;
+    align-self: start;
+    width: 283px;
+    margin-top: calc(18 / 12.8 * 1cqw);
+    line-height: 0;
+  }
+
+  .member-detail__sheet :global(.member-detail__sheet-bg) {
+    width: 100%;
+    height: auto;
+  }
+
+  /* 写真 107.4×131.9。台紙（283×389）の中の位置 */
+  .member-detail__photo {
+    position: absolute;
+    width: calc(107.4 / 283 * 100%);
+    aspect-ratio: 107.4 / 131.9;
+    overflow: hidden;
+  }
+
+  .member-detail__photo.is-1,
+  .member-detail__photo.is-3 {
+    left: calc(26.8 / 283 * 100%);
+  }
+
+  .member-detail__photo.is-2,
+  .member-detail__photo.is-4 {
+    left: calc(150.1 / 283 * 100%);
+  }
+
+  .member-detail__photo.is-1,
+  .member-detail__photo.is-2 {
+    top: calc(41.4 / 389 * 100%);
+  }
+
+  .member-detail__photo.is-3,
+  .member-detail__photo.is-4 {
+    top: calc(212.2 / 389 * 100%);
+  }
+
+  .member-detail__photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .member-detail__label {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    color: #00c0e8;
+  }
+
+  .member-detail__name {
+    margin-top: 12px;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+  }
+
+  /* Date of Birth / Hometown / Height / MBTI / Personal Color を横に並べる（列の左端は 538 / 676 / 790 / 873 / 942） */
+  .member-detail__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 34px;
+    margin-top: 36px;
+  }
+
+  /* 値と SNS は幅の狭いドットの書体（英数字）。日本語は本文の書体になる */
+  .member-detail dd {
+    margin: 0;
+  }
+
+  .member-detail__facts > div {
+    min-width: var(--col-w);
+  }
+
+  /* PC はデザインどおり 1 行（値が少し長くても折り返さない） */
+  @media (min-width: 768px) {
+    .member-detail__facts {
+      flex-wrap: nowrap;
+    }
+  }
+
+  .member-detail__facts dd {
+    margin-top: 12px;
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .member-detail__block {
+    margin-top: 36px;
+  }
+
+  .member-detail__sns {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .member-detail__sns div {
+    display: grid;
+    grid-template-columns: 98px auto;
+    justify-content: start;
+    align-items: baseline;
+  }
+
+  .member-detail__sns dt,
+  .member-detail__sns dd {
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    line-height: 1.4;
+  }
+
+  .member-detail__sns a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+
+  .member-detail__sns a:hover {
+    color: #00addc;
+  }
+
+  .member-detail__profile {
+    max-width: 516px;
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.73;
+  }
+
+  .member-empty {
+    position: relative;
+    z-index: var(--z-content);
+    padding-block: 80px 160px;
     text-align: center;
   }
 
   @media (max-width: 1023px) {
-    .member-list__grid {
-      grid-template-columns: repeat(2, minmax(0, 300px));
+    .member-grid__list {
+      grid-template-columns: repeat(3, minmax(0, 200px));
+      gap: 56px 24px;
     }
   }
 
-  @media (max-width: 599px) {
-    .member-list__grid {
-      grid-template-columns: minmax(0, 320px);
-      gap: 48px;
+  @media (max-width: 767px) {
+    .member-grid__list {
+      grid-template-columns: repeat(2, minmax(0, 160px));
+      gap: 40px 20px;
+    }
+
+    .member-grid__name {
+      margin-top: 16px;
+      font-size: 15px;
+    }
+
+    .member-grid__role {
+      font-size: 12px;
+    }
+
+    .member-details__stage {
+      padding-top: 72px;
+    }
+
+    .member-detail {
+      padding: 40px 20px 48px;
+    }
+
+    .member-detail__inner {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .member-detail__sheet {
+      width: min(283px, 100%);
+      margin: 0 auto;
+    }
+
+    .member-detail__facts {
+      gap: 16px 24px;
+    }
+
+    .member-detail__facts dd,
+    .member-detail__sns dt,
+    .member-detail__sns dd {
+      font-size: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .member-grid__link,
+    .member-grid__link :global(.member-grid__marker) {
+      transition: none;
     }
   }
 </style>

@@ -171,6 +171,23 @@ export function mapMember(entry: DeliveryEntry): MapResult<Member> {
       role: c.role ?? null,
       portrait: toMedia(c.portrait),
       profile: c.profile ?? null,
+      birthday: c.birthday ?? null,
+      hometown: c.hometown ?? null,
+      height: c.height ?? null,
+      mbti: c.mbti ?? null,
+      personalColor: c.personal_color ?? null,
+      sns: (
+        [
+          ["Instagram", c.instagram],
+          ["X", c.x],
+          ["TikTok", c.tiktok],
+        ] as const
+      ).flatMap(([service, link]) => {
+        // 外部サイト（http(s)）の URL だけを出す
+        const target = link ? sanitizeHref(link.href) : null;
+        return link && target?.external && link.label.trim() ? [{ service, account: link.label.trim(), href: target.href }] : [];
+      }),
+      photos: (c.photos ?? []).slice(0, 4).map((m) => toMedia(m)!),
     },
   };
 }

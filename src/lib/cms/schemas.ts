@@ -101,6 +101,20 @@ export const MemberContentSchema = z.object({
   /** MEMBER ページの紹介文（改行あり）。 */
   profile: optionalText,
   sort_order: z.number().int().nullable().optional(),
+  // ---- MEMBER ページのプロフィール（2026-09-27 追加。CMS の members にも足す） ----
+  /** 生年月日（date: YYYY-MM-DD） */
+  birthday: optionalText,
+  hometown: optionalText,
+  /** 身長（例: 165cm） */
+  height: optionalText,
+  mbti: optionalText,
+  personal_color: optionalText,
+  /** SNS。label にアカウント名（例: @ricoyamada）、href に URL */
+  instagram: optionalLink,
+  x: optionalLink,
+  tiktok: optionalLink,
+  /** プロフィール写真（証明写真のように 2×2 で並べる。最大 4 枚） */
+  photos: z.array(DeliveryMediaSchema).nullable().optional(),
 });
 
 // ---------------------------------------------------------------------------

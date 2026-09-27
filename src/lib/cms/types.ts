@@ -75,6 +75,13 @@ export interface TopicDetail extends Topic {
   body: RtBlock[];
 }
 
+export interface MemberSns {
+  service: "Instagram" | "X" | "TikTok";
+  /** アカウント名（CMS の link の label） */
+  account: string;
+  href: string;
+}
+
 export interface Member {
   id: string;
   slug: string | null;
@@ -82,6 +89,15 @@ export interface Member {
   role: string | null;
   portrait: Media | null;
   profile: string | null;
+  /** YYYY-MM-DD */
+  birthday: string | null;
+  hometown: string | null;
+  height: string | null;
+  mbti: string | null;
+  personalColor: string | null;
+  sns: MemberSns[];
+  /** 最大 4 枚 */
+  photos: Media[];
 }
 
 export type WorkTag = "branding" | "web" | "graphic" | "movie";
