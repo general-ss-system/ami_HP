@@ -83,6 +83,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | TOPICS 一覧 | `/topics`、`/topics/page/{n}`、`/topics/category/{news|sns|column}` | `ami_topics`（12 件ずつ） |
 | TOPICS 詳細 | `/topics/{slug}` | `ami_topics`（`body`・`external_url` を追加）。`external_url` がある記事は詳細を作らずカードから直接開く |
 | CONTACT | `/contact` | `contact_page`、フォーム `ami_contact`（Form API の定義） |
+| PRIVACY POLICY | `/privacy` | `contact_page.privacy_note`（CONTACT のフォームに出す文章と同じ）。フッターからリンク |
 | WORKS 一覧 | `/works`、`/works/page/{n}`、`/works/tag/{branding|web|graphic|movie}` | `works`（CMS の汎用モデル。12 件ずつ・公開日の新しい順） |
 | WORKS 詳細 | `/works/{slug}` | `works`（概要・本文・ギャラリー・外部リンク） |
 | 404 | — | — |

@@ -28,6 +28,7 @@ import type {
   ContactPageContent,
   HomeContent,
   Member,
+  RtBlock,
   Service,
   SiteInfo,
   Topic,
@@ -299,6 +300,21 @@ export async function getContactPageData(client: CmsClient, report: CmsErrorRepo
     safely<ContactForm | null>("form " + CONTACT_FORM_KEY, null, () => client.getForm(CONTACT_FORM_KEY), report),
   ]);
   return { siteInfo, contactPage, form };
+}
+
+export interface PrivacyPageData {
+  siteInfo: SiteInfo | null;
+  /** contact_page.privacy_note（CONTACT のフォームに出す文章と同じもの）。空なら []。 */
+  privacyNote: RtBlock[];
+}
+
+/** プライバシーポリシー。本文は CONTACT と同じ contact_page.privacy_note を使う。 */
+export async function getPrivacyPageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<PrivacyPageData> {
+  const [siteInfo, contactPage] = await Promise.all([
+    getSiteInfo(client, report),
+    loadSingleton(client, "contact_page", (e) => mapContactPage(e, report), report),
+  ]);
+  return { siteInfo, privacyNote: contactPage?.privacyNote ?? [] };
 }
 
 // ---------------------------------------------------------------------------

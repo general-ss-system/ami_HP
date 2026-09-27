@@ -1,0 +1,51 @@
+---
+/**
+ * プライバシーポリシー。本文は CONTACT のフォームに出す文章と同じ contact_page.privacy_note（CMS）。
+ * 本文が空なら、準備中である旨だけを出す。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import Decor from "../components/ui/Decor.astro";
+import Panel from "../components/ui/Panel.astro";
+import RichText from "../components/ui/RichText.astro";
+import { getCmsClient } from "../lib/cms/env";
+import { getPrivacyPageData } from "../lib/cms/queries";
+import { pageDescription, pageTitle } from "../lib/seo";
+import planetoid from "../assets/decor/planetoid.webp";
+import sparkleViolet from "../assets/decor/sparkle-violet.webp";
+
+const { siteInfo, privacyNote } = await getPrivacyPageData(getCmsClient(Astro.locals));
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, "Privacy Policy")}
+  description={pageDescription(siteInfo)}
+  heading="Privacy Policy"
+  headingSub="プライバシーポリシー"
+  crumbs={[{ label: "PRIVACY POLICY" }]}
+>
+  <section class="privacy" aria-label="プライバシーポリシー">
+    <div class="stage privacy__stage">
+      <Panel as="article" class="privacy__panel">
+        {privacyNote.length > 0 ? <RichText blocks={privacyNote} /> : <p class="privacy__empty">プライバシーポリシーは準備中です。</p>}
+      </Panel>
+
+      <Decor src={planetoid} pc={[60, 120, 110]} sp={false} float delay={0.7} />
+      <Decor src={sparkleViolet} pc={[1150, 360, 60]} sp={false} twinkle delay={1.2} />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .privacy__stage {
+    padding: 0 var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .privacy__stage :global(.privacy__panel) {
+    max-width: 820px;
+    margin-inline: auto;
+  }
+
+  .privacy__empty {
+    text-align: center;
+  }
+</style>

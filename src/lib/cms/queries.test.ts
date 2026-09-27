@@ -8,6 +8,7 @@ import {
   getAllTopics,
   getContactPageData,
   getMemberPageData,
+  getPrivacyPageData,
   getServicePageData,
   getTopicDetail,
   getTopicsArchive,
@@ -134,6 +135,19 @@ describe("下層ページ", () => {
     const client: CmsClient = { ...createFixtureClient(), getForm: () => Promise.reject(new Error("down")) };
     const data = await getContactPageData(client, report);
     expect(data.form).toBeNull();
+    expect(report).toHaveBeenCalled();
+  });
+
+  it("PRIVACY POLICY: contact_page の個人情報の取り扱いを本文にする", async () => {
+    const data = await getPrivacyPageData(createFixtureClient());
+    expect(data.privacyNote.length).toBeGreaterThan(0);
+  });
+
+  it("PRIVACY POLICY: contact_page を取れなければ本文は空にして報告する", async () => {
+    const report = vi.fn();
+    const client: CmsClient = { ...createFixtureClient(), getSingleton: () => Promise.reject(new Error("down")) };
+    const data = await getPrivacyPageData(client, report);
+    expect(data.privacyNote).toEqual([]);
     expect(report).toHaveBeenCalled();
   });
 });
