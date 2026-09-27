@@ -52,6 +52,8 @@ interface Props {
   titleBox?: { width: number; top: number };
   /** 見出しの帯の高さ（デザイン上の px。hero="title" のとき。次の要素の位置を合わせる） */
   heroHeight?: number;
+  /** スマホでの見出しの帯の最低の高さ（px）。地球などの絵を下に置くページで使う */
+  heroMinHeightSp?: number;
 }
 
 const {
@@ -68,6 +70,7 @@ const {
   titleImage,
   titleBox,
   heroHeight,
+  heroMinHeightSp,
 } = Astro.props;
 const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
 ---
@@ -104,7 +107,12 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
       }
       {
         hero === "title" && titleImage && (
-          <header class="page-hero is-title" style={{ "--hero-h": heroHeight ?? 420, "--title-w": titleBox?.width ?? 460, "--title-top": titleBox?.top ?? 200 }}>
+          <header class="page-hero is-title" style={{
+            "--hero-h": heroHeight ?? 420,
+            "--title-w": titleBox?.width ?? 460,
+            "--title-top": titleBox?.top ?? 200,
+            ...(heroMinHeightSp ? { "--hero-min-sp": `${heroMinHeightSp}px` } : {}),
+          }}>
             <div class="stage page-hero__stage">
               <nav class="page-hero__crumbs visually-hidden" aria-label="パンくずリスト">
                 <ol>
@@ -175,7 +183,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
   .page-hero.is-title .page-hero__stage {
     /* 自分自身の高さには cqw が使えないため、幅との比で決める（スマホでは最低限の高さを確保） */
     aspect-ratio: 1280 / var(--hero-h);
-    min-height: calc(var(--header-height) + 32px + var(--title-w) * 0.55px * 0.3 + 48px);
+    min-height: var(--hero-min-sp, calc(var(--header-height) + 32px + var(--title-w) * 0.55px * 0.3 + 48px));
     padding: 0;
   }
 

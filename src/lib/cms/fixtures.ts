@@ -272,10 +272,7 @@ export const fixtureAbout: DeliveryEntry = entry("fx-about", null, {
 });
 
 export const fixtureContactPage: DeliveryEntry = entry("fx-contact-page", null, {
-  lead: [
-    "商品開発、SNSマーケティング、クリエイティブ制作など、",
-    "まだアイデアが固まっていない段階でもお気軽にご相談ください。",
-  ].join("\n"),
+  lead: ["商品開発、SNSマーケティング、", "クリエイティブ制作など、", "まだアイデアが固まっていない段階でも", "お気軽にご相談ください。"].join("\n"),
   privacy_note: rich(
     p(text("ここに個人情報の取り扱いについての文章が入ります（以下は仮の文章です）。")),
     p(text("合同会社ami（以下「当社」）は、お預かりする個人情報を適切に取り扱うため、以下のとおり定めます。")),
@@ -290,7 +287,7 @@ export const fixtureContactPage: DeliveryEntry = entry("fx-contact-page", null, 
     h("h2", "5. お問い合わせ窓口"),
     p(text("個人情報の取り扱いに関するお問い合わせは、お問い合わせフォームよりご連絡ください。")),
   ),
-  consent_label: "個人情報の取り扱いに同意する",
+  consent_label: "プライバシーポリシーに同意する",
 });
 
 /** Form API の応答（GET /api/v1/forms/{siteKey}/ami_contact）と同じ形。定義は CMS の ami_contact に合わせる。 */
@@ -301,9 +298,9 @@ export const fixtureContactForm: PublicFormResponse["form"] = {
   consentRequired: true,
   consentTextVersion: "fixture",
   fields: [
-    { key: "name", label: "お名前", type: "text", required: true, helpText: null, options: null, maxLength: 100 },
-    { key: "company", label: "会社名", type: "text", required: false, helpText: null, options: null, maxLength: 100 },
-    { key: "email", label: "メールアドレス", type: "email", required: true, helpText: null, options: null, maxLength: null },
+    { key: "name", label: "お名前", type: "text", required: true, helpText: "例）山田太郎", options: null, maxLength: 100 },
+    { key: "company", label: "会社名", type: "text", required: false, helpText: "例）株式会社〇〇", options: null, maxLength: 100 },
+    { key: "email", label: "メールアドレス", type: "email", required: true, helpText: "例）example@mail.com", options: null, maxLength: null },
     { key: "message", label: "お問い合わせ内容", type: "textarea", required: true, helpText: null, options: null, maxLength: 2000 },
   ],
 };

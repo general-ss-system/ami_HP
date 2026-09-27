@@ -1,7 +1,11 @@
 ---
 /**
  * 会社概要の表。会社名・所在地は site_info、代表・設立・資本金・事業内容は about（CMS）。
- * 値が空の行は出さない。項目名と並び順はコードで持つ。
+ * 値が空の行は出さない。項目名と並び順はコードで管理する。
+ *
+ * variant:
+ *   panel … 白い面に入れる（ABOUT）
+ *   lines … 罫線だけの表（Figma: contact の会社概要。項目名は水色で右寄せ、行の間に淡い線）
  */
 import type { AboutContent, SiteInfo } from "../../lib/cms/types";
 import Panel from "../ui/Panel.astro";
@@ -9,27 +13,30 @@ import Panel from "../ui/Panel.astro";
 interface Props {
   siteInfo: SiteInfo | null;
   about: AboutContent | null;
+  variant?: "panel" | "lines";
 }
 
-const { siteInfo, about } = Astro.props;
+const { siteInfo, about, variant = "panel" } = Astro.props;
 
 const rows = [
   { label: "会社名", value: siteInfo?.companyName ?? null },
   { label: "代表", value: about?.representative ?? null },
+  { label: "所在地", value: siteInfo?.address ?? null },
   { label: "設立", value: about?.established ?? null },
   { label: "資本金", value: about?.capital ?? null },
-  { label: "所在地", value: siteInfo?.address ?? null },
+  { label: "事業内容", value: about?.businessSummary ?? null },
   { label: "電話番号", value: siteInfo?.phone ?? null },
   { label: "メール", value: siteInfo?.email ?? null },
-  { label: "事業内容", value: about?.businessSummary ?? null },
 ]
   .filter((row): row is { label: string; value: string } => Boolean(row.value?.trim()))
   .map((row) => ({ ...row, lines: row.value.replace(/\r\n?/g, "\n").split("\n") }));
+
+const Wrapper = variant === "panel" ? Panel : "div";
 ---
 
 {
   rows.length > 0 && (
-    <Panel class="company-profile">
+    <Wrapper class:list={["company-profile", `is-${variant}`]}>
       <dl class="company-profile__list">
         {rows.map((row) => (
           <div class="company-profile__row">
@@ -45,7 +52,7 @@ const rows = [
           </div>
         ))}
       </dl>
-    </Panel>
+    </Wrapper>
   )
 }
 
@@ -88,11 +95,57 @@ const rows = [
     font-size: 15px;
   }
 
+  /* ---- lines（Figma: contact。表の幅 601、項目名の右端 616、値は 726 から、行の高さ 72〜78） ---- */
+  .is-lines .company-profile__row {
+    grid-template-columns: 77px 1fr;
+    gap: 110px;
+    align-items: baseline;
+    padding: 24px 0 26px;
+    font-size: 16px;
+    line-height: 1.5;
+    border-bottom: 1.66px solid rgb(152 201 214 / 0.36);
+  }
+
+  .is-lines .company-profile__row:first-child {
+    padding-top: 24px;
+  }
+
+  .is-lines .company-profile__row:last-child {
+    padding-bottom: 26px;
+    border-bottom: 0;
+  }
+
+  .is-lines .company-profile__row dt {
+    display: block;
+    font-size: 15px;
+    text-align: right;
+    color: #02b7e9;
+  }
+
+  .is-lines .company-profile__row dt::before {
+    content: none;
+  }
+
+  .is-lines .company-profile__row dd {
+    margin: 0;
+    color: #1b1c22;
+  }
+
   @media (max-width: 767px) {
     .company-profile__row {
       grid-template-columns: 1fr;
       gap: 4px;
       padding-block: 16px;
+    }
+
+    .is-lines .company-profile__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding: 16px 4px;
+    }
+
+    .is-lines .company-profile__row dt {
+      text-align: left;
     }
   }
 </style>

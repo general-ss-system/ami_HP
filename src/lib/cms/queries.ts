@@ -307,17 +307,20 @@ export async function getAllTopics(client: CmsClient, report: CmsErrorReporter =
 export interface ContactPageData {
   siteInfo: SiteInfo | null;
   contactPage: ContactPageContent | null;
+  /** 会社概要（代表・設立・資本金・事業内容） */
+  about: AboutContent | null;
   /** 取得できなければ null（フォームを出さない）。 */
   form: ContactForm | null;
 }
 
 export async function getContactPageData(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<ContactPageData> {
-  const [siteInfo, contactPage, form] = await Promise.all([
+  const [siteInfo, contactPage, about, form] = await Promise.all([
     getSiteInfo(client, report),
     loadSingleton(client, "contact_page", (e) => mapContactPage(e, report), report),
+    loadSingleton(client, "about", (e) => mapAbout(e, report), report),
     safely<ContactForm | null>("form " + CONTACT_FORM_KEY, null, () => client.getForm(CONTACT_FORM_KEY), report),
   ]);
-  return { siteInfo, contactPage, form };
+  return { siteInfo, contactPage, about, form };
 }
 
 export interface PrivacyPageData {

@@ -7,22 +7,35 @@
  * - ボット対策（Turnstile）は確認画面で行う。サイトキーは PUBLIC_TURNSTILE_SITE_KEY。
  * - endpoint が null（CMS_MODE=fixture）のときは送信せずに完了まで進める（プレビュー用）。
  * - 送信処理は lib/cms/form-submit.ts。ここは画面の切り替えと表示だけを持つ。
+ * - 見た目は Figma（contact）: 白い台紙に、項目名・入力欄（919×45）・入力例（CMS の helpText）。
+ *   同意文の「プライバシーポリシー」はプライバシーポリシーのページへのリンクにする。
  */
-import type { ContactForm, FormField, RtBlock } from "../../lib/cms/types";
-import RichText from "../ui/RichText.astro";
+import type { ContactForm, FormField } from "../../lib/cms/types";
 
 interface Props {
   form: ContactForm;
   /** 画面に出す入力欄（form.fields のうち、このサイトで扱える型のもの） */
   fields: FormField[];
   consentLabel: string | null;
-  privacyNote: RtBlock[];
+  /** 同意文の中の「プライバシーポリシー」のリンク先 */
+  privacyHref: string;
   endpoint: string | null;
   turnstileSiteKey: string | null;
   topHref: string;
 }
 
-const { form, fields, consentLabel, privacyNote, endpoint, turnstileSiteKey, topHref } = Astro.props;
+const { form, fields, consentLabel, privacyHref, endpoint, turnstileSiteKey, topHref } = Astro.props;
+
+/** 入力欄の中の薄い文字（デザインの文言。項目名から作る） */
+const placeholder = (field: FormField) => (field.type === "textarea" ? "ご自由にご記入ください" : `${field.label}をご入力ください`);
+
+// 同意文のうち「プライバシーポリシー」の部分をリンクにする（無ければ文の後ろにリンクを添える）
+const POLICY = "プライバシーポリシー";
+const consentParts = consentLabel
+  ? consentLabel.includes(POLICY)
+    ? { before: consentLabel.slice(0, consentLabel.indexOf(POLICY)), after: consentLabel.slice(consentLabel.indexOf(POLICY) + POLICY.length), inline: true }
+    : { before: consentLabel, after: "", inline: false }
+  : null;
 
 const autocomplete: Record<string, string> = {
   name: "name",
@@ -47,12 +60,6 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
   data-consent-version={form.consentTextVersion ?? ""}
   data-fields={JSON.stringify(fields)}
 >
-  <ol class="contact-form__steps" aria-label="お問い合わせの流れ">
-    <li data-step-mark="input" aria-current="step"><span>1</span>入力</li>
-    <li data-step-mark="confirm"><span>2</span>確認</li>
-    <li data-step-mark="done"><span>3</span>完了</li>
-  </ol>
-
   {
     !endpoint && (
       <p class="contact-form__demo" role="note">
@@ -78,15 +85,14 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
             <div class="contact-form__field" data-field={field.key}>
               <label class="contact-form__label" for={id}>
                 {field.label}
-                <span class:list={["contact-form__badge", field.required ? "is-required" : "is-optional"]}>
-                  {field.required ? "必須" : "任意"}
-                </span>
+                {field.required && <span class="visually-hidden">（必須）</span>}
               </label>
               {field.type === "textarea" ? (
                 <textarea
                   id={id}
                   name={field.key}
-                  rows="8"
+                  rows="3"
+                  placeholder={placeholder(field)}
                   required={field.required}
                   maxlength={field.maxLength ?? undefined}
                   aria-describedby={describedBy}
@@ -106,6 +112,7 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
                   required={field.required}
                   maxlength={field.maxLength ?? undefined}
                   autocomplete={autocomplete[field.key]}
+                  placeholder={placeholder(field)}
                   inputmode={field.type === "email" ? "email" : undefined}
                   aria-describedby={describedBy}
                 />
@@ -123,30 +130,31 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
     </div>
 
     {
-      privacyNote.length > 0 && (
-        <section class="contact-form__privacy" aria-labelledby="cf-privacy-title" tabindex="0">
-          <h2 class="contact-form__privacy-title" id="cf-privacy-title">
-            個人情報の取り扱い
-          </h2>
-          <RichText blocks={privacyNote} />
-        </section>
-      )
-    }
-
-    {
-      form.consentRequired && consentLabel && (
+      form.consentRequired && consentParts && (
         <div class="contact-form__consent" data-field="consent">
-          <label>
-            <input type="checkbox" name="consent" aria-describedby="cf-consent-error" />
-            <span>{consentLabel}</span>
+          <input id="cf-consent" type="checkbox" name="consent" aria-describedby="cf-consent-error" />
+          <label for="cf-consent">
+            {consentParts.before}
+            {consentParts.inline && (
+              <a href={privacyHref} target="_blank" rel="noopener">
+                {POLICY}
+                <span class="visually-hidden">（新しいタブで開く）</span>
+              </a>
+            )}
+            {consentParts.after}
           </label>
+          {!consentParts.inline && (
+            <a class="contact-form__policy" href={privacyHref} target="_blank" rel="noopener">
+              {POLICY}を読む<span class="visually-hidden">（新しいタブで開く）</span>
+            </a>
+          )}
           <p class="contact-form__error" id="cf-consent-error" data-error="consent"></p>
         </div>
       )
     }
 
     <div class="contact-form__actions">
-      <button class="contact-form__button is-primary" type="submit">入力内容を確認する</button>
+      <button class="contact-form__button is-primary" type="submit">入力内容を確認する<span class="contact-form__arrow" aria-hidden="true"></span></button>
     </div>
   </form>
 
@@ -171,7 +179,7 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
     <div class="contact-form__actions">
       <button class="contact-form__button is-secondary" type="button" data-action="back">修正する</button>
       <button class="contact-form__button is-primary" type="button" data-action="send">
-        <span data-send-label>送信する</span>
+        <span data-send-label>送信する</span><span class="contact-form__arrow" aria-hidden="true"></span>
       </button>
     </div>
   </div>
@@ -412,59 +420,25 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
 </script>
 
 <style>
+  /* Figma（contact）: フォームは本文の書体ではなく、読みやすいゴシック体 */
   .contact-form {
+    --cf-accent: #00c0e8;
+    --cf-line: #e5e7eb;
+    --cf-muted: #9ca3af;
+    font-family: "Hiragino Sans", "Noto Sans JP", "BIZ UDPGothic", "Yu Gothic", sans-serif;
+    color: #111;
     scroll-margin-top: calc(var(--header-height) + 24px);
   }
 
-  /* ---- 流れ（1 入力 / 2 確認 / 3 完了） ---- */
-  .contact-form__steps {
-    display: flex;
-    justify-content: center;
-    gap: clamp(8px, 2vw, 24px);
-    margin-bottom: 40px;
-    font-size: 14px;
-  }
-
-  .contact-form__steps li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: rgb(27 28 34 / 0.45);
-  }
-
-  .contact-form__steps li + li::before {
-    content: "";
-    width: clamp(16px, 4vw, 48px);
-    border-top: 2px dashed currentColor;
-    margin-right: clamp(0px, 1vw, 12px);
-  }
-
-  .contact-form__steps span {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    font-family: var(--font-pixel);
-    color: #fff;
-    background: rgb(27 28 34 / 0.3);
-  }
-
-  .contact-form__steps [aria-current="step"] {
-    color: var(--color-text);
-  }
-
-  .contact-form__steps [aria-current="step"] span {
-    background: var(--color-bg-3);
-  }
-
   .contact-form__demo {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     padding: 10px 16px;
     font-size: 13px;
     text-align: center;
-    color: var(--color-bg-2);
-    background: rgb(0 192 232 / 0.12);
-    border: 2px dashed var(--color-accent);
+    color: #036f8a;
+    background: rgb(0 192 232 / 0.08);
+    border: 1px dashed var(--cf-accent);
+    border-radius: 4px;
   }
 
   .contact-form__alert {
@@ -473,70 +447,64 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
     font-size: 14px;
     color: #a61b1b;
     background: #fdecec;
-    border: 2px solid #d63636;
+    border: 1px solid #d63636;
+    border-radius: 4px;
   }
 
   .contact-form__alert[hidden] {
     display: none;
   }
 
-  /* ---- 入力欄 ---- */
+  /* ---- 入力欄（項目の送り 128: 項目名 → 8 → 入力欄 45 → 10 → 入力例 → 27） ---- */
   .contact-form__fields {
     display: grid;
-    gap: 28px;
+    gap: 27px;
   }
 
   .contact-form__label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: block;
     margin-bottom: 8px;
     font-size: 15px;
-  }
-
-  .contact-form__badge {
-    padding: 1px 8px;
-    font-size: 11px;
-    line-height: 1.8;
-    color: #fff;
-  }
-
-  .contact-form__badge.is-required {
-    background: #d63636;
-  }
-
-  .contact-form__badge.is-optional {
-    background: #8a8b93;
+    font-weight: 700;
+    line-height: 1.4;
   }
 
   .contact-form input:not([type="checkbox"]),
   .contact-form textarea,
   .contact-form select {
     width: 100%;
-    padding: 12px 14px;
+    height: 45px;
+    padding: 0 15px;
     font: inherit;
     font-size: 16px; /* iOS で拡大されないように 16px 以上 */
     line-height: 1.6;
-    color: var(--color-text);
+    color: #111;
     background: #fff;
-    border: 2px solid var(--color-border);
-    border-radius: 0;
+    border: 1px solid var(--cf-line);
+    border-radius: 3.5px;
     transition:
       border-color var(--duration-base) var(--ease-out),
       box-shadow var(--duration-base) var(--ease-out);
   }
 
   .contact-form textarea {
+    height: 90px;
+    min-height: 90px;
+    padding-block: 12px;
     resize: vertical;
-    min-height: 180px;
+  }
+
+  .contact-form ::placeholder {
+    font-size: 14px;
+    color: #b8bcc3;
   }
 
   .contact-form input:focus-visible,
   .contact-form textarea:focus-visible,
   .contact-form select:focus-visible {
     outline: none;
-    border-color: var(--color-bg-3);
-    box-shadow: 4px 4px 0 var(--color-accent-bright);
+    border-color: var(--cf-accent);
+    box-shadow: 0 0 0 3px rgb(0 192 232 / 0.25);
   }
 
   .contact-form [aria-invalid="true"] {
@@ -545,9 +513,10 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
   }
 
   .contact-form__help {
-    margin-top: 6px;
-    font-size: 13px;
-    color: rgb(27 28 34 / 0.7);
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--cf-muted);
   }
 
   .contact-form__error {
@@ -561,52 +530,45 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
 
   .contact-form__error:not(:empty)::before {
     content: "! ";
-    font-family: var(--font-pixel);
   }
 
-  /* ---- 個人情報の取り扱い・同意 ---- */
-  .contact-form__privacy {
-    max-height: 220px;
-    margin-top: 40px;
-    padding: 20px 24px;
-    overflow-y: auto;
-    background: #fff;
-    border: 2px solid rgb(27 28 34 / 0.2);
-  }
-
-  .contact-form__privacy-title {
-    margin-bottom: 12px;
-    font-size: 15px;
-    font-weight: 400;
-  }
-
-  .contact-form__privacy :global(.rich-text) {
-    font-size: 13px;
-    line-height: 1.9;
-  }
-
+  /* ---- 同意（チェック 24 と「プライバシーポリシーに同意する」を中央に） ---- */
   .contact-form__consent {
-    margin-top: 24px;
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 16px;
+    margin-top: 25px;
+    font-size: 14px;
   }
 
   .contact-form__consent label {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
     cursor: pointer;
   }
 
+  .contact-form__consent a {
+    color: var(--cf-accent);
+    text-underline-offset: 3px;
+  }
+
   .contact-form__consent input {
-    width: 22px;
-    height: 22px;
-    accent-color: var(--color-bg-3);
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    accent-color: var(--cf-accent);
+    cursor: pointer;
+  }
+
+  .contact-form__consent .contact-form__error {
+    flex-basis: 100%;
+    text-align: center;
   }
 
   /* ---- 確認 ---- */
   .contact-form__step-title {
-    font-size: clamp(20px, 1.9vw, 24px);
-    font-weight: 400;
+    font-size: clamp(18px, 1.72vw, 22px);
+    font-weight: 700;
     text-align: center;
   }
 
@@ -622,7 +584,7 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
 
   .contact-form__review {
     margin-top: 32px;
-    border-top: 2px dashed rgb(27 28 34 / 0.2);
+    border-top: 1px solid var(--cf-line);
   }
 
   .contact-form__review > div {
@@ -630,11 +592,11 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
     grid-template-columns: 180px 1fr;
     gap: 16px;
     padding: 18px 8px;
-    border-bottom: 2px dashed rgb(27 28 34 / 0.2);
+    border-bottom: 1px solid var(--cf-line);
   }
 
   .contact-form__review dt {
-    color: var(--color-bg-3);
+    font-weight: 700;
   }
 
   .contact-form__review dd {
@@ -644,7 +606,7 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
   }
 
   .contact-form__review dd.is-empty {
-    color: rgb(27 28 34 / 0.45);
+    color: var(--cf-muted);
   }
 
   .contact-form__turnstile {
@@ -671,27 +633,30 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
     line-height: 2.2;
   }
 
-  /* ---- ボタン ---- */
+  /* ---- ボタン（239×45・#00C0E8・右に矢印） ---- */
   .contact-form__actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 16px;
-    margin-top: 40px;
+    margin-top: 24px;
   }
 
   .contact-form__button {
-    display: grid;
-    place-items: center;
-    min-width: 220px;
-    height: 56px;
-    padding-inline: 28px;
-    font-size: 16px;
-    letter-spacing: 0.12em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 239px;
+    height: 45px;
+    padding-inline: 24px;
+    font: inherit;
+    font-size: 15px;
+    letter-spacing: 0.2em;
     text-decoration: none;
+    border-radius: 3.5px;
     cursor: pointer;
     transition:
-      translate var(--duration-base) var(--ease-out),
       filter var(--duration-base) var(--ease-out),
       background-color var(--duration-base) var(--ease-out),
       color var(--duration-base) var(--ease-out);
@@ -699,26 +664,47 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
 
   .contact-form__button.is-primary {
     color: #fff;
-    background: linear-gradient(90deg, #4758bd 0%, #6a5bd6 55%, #967adf 100%);
-    border: 2px solid var(--color-border);
-    border-radius: 999px;
-    box-shadow: 4px 4px 0 var(--color-border);
+    background: var(--cf-accent);
+    border: 1px solid var(--cf-accent);
   }
 
   .contact-form__button.is-primary:hover:not(:disabled) {
-    translate: 0 -2px;
-    filter: brightness(1.12);
+    filter: brightness(1.08);
   }
 
   .contact-form__button.is-secondary {
-    color: var(--color-text);
+    color: var(--cf-accent);
     background: #fff;
-    border: 2px solid #000;
+    border: 1px solid var(--cf-accent);
   }
 
   .contact-form__button.is-secondary:hover:not(:disabled) {
     color: #fff;
-    background: var(--color-bg-3);
+    background: var(--cf-accent);
+  }
+
+  /* 「——>」の細い矢印（32×4） */
+  .contact-form__arrow {
+    position: relative;
+    width: 32px;
+    height: 4px;
+    border-bottom: 1px solid currentColor;
+    transition: translate var(--duration-base) var(--ease-out);
+  }
+
+  .contact-form__arrow::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    width: 6px;
+    border-bottom: 1px solid currentColor;
+    rotate: 35deg;
+    transform-origin: right bottom;
+  }
+
+  .contact-form__button:hover:not(:disabled) .contact-form__arrow {
+    translate: 4px 0;
   }
 
   .contact-form__button:disabled {
@@ -734,10 +720,6 @@ const inputType: Partial<Record<FormField["type"], "email" | "tel" | "url" | "da
 
     .contact-form__button {
       width: 100%;
-    }
-
-    .contact-form__steps {
-      font-size: 13px;
     }
   }
 </style>
