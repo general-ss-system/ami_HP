@@ -82,6 +82,25 @@ export interface Member {
   profile: string | null;
 }
 
+export type WorkTag = "branding" | "web" | "graphic" | "movie";
+
+export interface Work {
+  id: string;
+  slug: string | null;
+  title: string;
+  clientName: string | null;
+  summary: string | null;
+  publishedDate: string | null;
+  tags: WorkTag[];
+  thumbnail: Media | null;
+}
+
+export interface WorkDetail extends Work {
+  gallery: Media[];
+  body: RtBlock[];
+  externalLink: Link | null;
+}
+
 export interface SiteInfo {
   companyName: string;
   address: string | null;

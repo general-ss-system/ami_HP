@@ -8,6 +8,7 @@ import ContactCta from "../components/sections/ContactCta.astro";
 import Decor from "../components/ui/Decor.astro";
 import RichText from "../components/ui/RichText.astro";
 import ServiceVisual from "../components/ui/ServiceVisual.astro";
+import ViewMore from "../components/ui/ViewMore.astro";
 import { CONTACT_HREF } from "../config/site";
 import { getCmsClient } from "../lib/cms/env";
 import { getServicePageData } from "../lib/cms/queries";
@@ -19,7 +20,7 @@ import planetBunnyBlue from "../assets/decor/planet-bunny-blue.webp";
 import sparkleViolet from "../assets/decor/sparkle-violet.webp";
 import rocketCat from "../assets/decor/rocket-cat.webp";
 
-const { siteInfo, services } = await getServicePageData(getCmsClient());
+const { siteInfo, services } = await getServicePageData(getCmsClient(Astro.locals));
 
 // 左右を交互に入れ替える飾り
 const DECOR = [
@@ -73,6 +74,11 @@ const DECOR = [
       </section>
     ))
   }
+
+  <div class="stage service-works">
+    <p class="service-works__text">これまでの取り組みは、実績のページでご紹介しています。</p>
+    <ViewMore link={{ label: "Works", href: withBase("/works"), external: false }} context="実績の一覧" align="start" />
+  </div>
 
   <ContactCta body={null} href={withBase(CONTACT_HREF)} />
 </PageLayout>
@@ -160,6 +166,21 @@ const DECOR = [
     margin-top: 32px;
     padding-top: 32px;
     border-top: 2px dashed rgb(255 255 255 / 0.3);
+  }
+
+  .service-works {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 24px;
+    padding: 0 var(--gutter);
+    text-shadow: 1px 2px 0 rgb(4 16 74 / 0.4);
+  }
+
+  .service-works__text {
+    position: relative;
+    z-index: var(--z-content);
   }
 
   @media (max-width: 767px) {

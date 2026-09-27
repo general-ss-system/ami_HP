@@ -25,7 +25,7 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const slug = Astro.params.slug;
-const data = slug ? await getTopicDetail(getCmsClient(), slug) : null;
+const data = slug ? await getTopicDetail(getCmsClient(Astro.locals), slug) : null;
 if (!data) return Astro.rewrite("/404");
 
 const { siteInfo, topic, recent } = data;

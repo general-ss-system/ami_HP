@@ -1,0 +1,83 @@
+---
+/**
+ * 下書きプレビュー中であることを画面上で分かるようにする（CMS docs/04 §19）。
+ * 「プレビューを終了」で Cookie を消して、同じページの公開中の表示に戻す。
+ */
+import { withBase } from "../../lib/url";
+
+const backTo = Astro.url.pathname + Astro.url.search;
+const exitHref = `${withBase("/api/preview-exit")}?to=${encodeURIComponent(backTo)}`;
+---
+
+<div class="preview-banner" role="status">
+  <span class="preview-banner__label">
+    <span class="preview-banner__badge">PREVIEW</span>
+    未公開の下書きを表示しています（このページは公開されていません）
+  </span>
+  <a class="preview-banner__exit" href={exitHref}>プレビューを終了</a>
+</div>
+
+<style>
+  /* ヘッダー（固定）の下に重ねて、常に見えるようにする */
+  .preview-banner {
+    position: fixed;
+    inset: var(--header-height) 0 auto;
+    min-height: var(--preview-banner-height);
+    z-index: calc(var(--z-header) + 1);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text);
+    background: repeating-linear-gradient(-45deg, #ffd84d 0 14px, #ffe27a 14px 28px);
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .preview-banner__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .preview-banner__badge {
+    padding: 0 8px;
+    font-family: var(--font-pixel);
+    color: #fff;
+    background: var(--color-text);
+  }
+
+  .preview-banner__exit {
+    padding: 2px 12px;
+    white-space: nowrap;
+    text-decoration: none;
+    background: #fff;
+    border: 2px solid var(--color-border);
+  }
+
+  .preview-banner__exit:hover {
+    color: #fff;
+    background: var(--color-text);
+  }
+</style>
+
+<style is:global>
+  /* バナーの分だけ、ページの先頭（見出し・パンくず）とアンカーの止まる位置を下げる */
+  :root {
+    --preview-banner-height: 44px;
+    scroll-padding-top: calc(var(--header-height) + var(--preview-banner-height));
+  }
+
+  body {
+    padding-top: var(--preview-banner-height);
+  }
+
+  @media (max-width: 767px) {
+    :root {
+      --preview-banner-height: 76px;
+    }
+  }
+</style>

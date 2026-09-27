@@ -1,0 +1,11 @@
+---
+/** WORKS 一覧（1 ページ目・すべてのタグ）。 */
+import WorksArchive from "../../components/works/WorksArchive.astro";
+import { getCmsClient } from "../../lib/cms/env";
+import { getWorksArchive } from "../../lib/cms/queries";
+
+const data = await getWorksArchive(getCmsClient(Astro.locals), { tag: null, page: 1 });
+if (!data) return Astro.rewrite("/404");
+---
+
+<WorksArchive data={data} />

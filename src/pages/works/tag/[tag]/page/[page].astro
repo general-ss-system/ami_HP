@@ -1,0 +1,29 @@
+---
+/** WORKS 一覧（タグごと・2 ページ目以降）。 */
+import type { GetStaticPaths } from "astro";
+import WorksArchive from "../../../../../components/works/WorksArchive.astro";
+import { getCmsClient } from "../../../../../lib/cms/env";
+import { getWorksArchive, isWorkTag } from "../../../../../lib/cms/queries";
+import { WORK_TAGS } from "../../../../../lib/cms/schemas";
+import { laterPages, parsePageParam } from "../../../../../lib/paging";
+import { worksListHref } from "../../../../../lib/works";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const client = getCmsClient();
+  const paths = [];
+  for (const tag of WORK_TAGS) {
+    const first = await getWorksArchive(client, { tag, page: 1 });
+    for (const page of laterPages(first?.totalPages ?? 1)) paths.push({ params: { tag, page: String(page) } });
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { tag } = Astro.params;
+if (isWorkTag(tag) && Astro.params.page === "1") return Astro.redirect(worksListHref(tag), 301);
+const page = parsePageParam(Astro.params.page);
+const data = isWorkTag(tag) && page ? await getWorksArchive(getCmsClient(Astro.locals), { tag, page }) : null;
+if (!data) return Astro.rewrite("/404");
+---
+
+<WorksArchive data={data} />

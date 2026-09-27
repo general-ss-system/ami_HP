@@ -18,3 +18,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
 ];
 
 export const CONTACT_HREF = "/contact";
+
+/**
+ * フッターのナビ。ヘッダー（デザインの 4 項目）に、デザインに無い下層ページを足したもの。
+ */
+export const FOOTER_ITEMS: readonly NavItem[] = [
+  ...NAV_ITEMS,
+  { label: "WORKS", href: "/works" },
+  { label: "CONTACT", href: CONTACT_HREF },
+];

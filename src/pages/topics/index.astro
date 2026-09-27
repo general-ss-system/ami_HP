@@ -4,7 +4,7 @@ import TopicsArchive from "../../components/topics/TopicsArchive.astro";
 import { getCmsClient } from "../../lib/cms/env";
 import { getTopicsArchive } from "../../lib/cms/queries";
 
-const data = await getTopicsArchive(getCmsClient(), { category: null, page: 1 });
+const data = await getTopicsArchive(getCmsClient(Astro.locals), { category: null, page: 1 });
 if (!data) return Astro.rewrite("/404");
 ---
 

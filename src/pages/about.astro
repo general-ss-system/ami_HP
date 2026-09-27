@@ -20,7 +20,7 @@ import rocket from "../assets/decor/rocket.webp";
 import sparkleBlue from "../assets/decor/sparkle-blue.webp";
 import planetBunnyBlue from "../assets/decor/planet-bunny-blue.webp";
 
-const { siteInfo, home, about } = await getAboutPageData(getCmsClient());
+const { siteInfo, home, about } = await getAboutPageData(getCmsClient(Astro.locals));
 
 const hasMessage = about && (about.lead || about.mainImage || !isEmptyRichText(about.body));
 const leadLines = about?.lead ? about.lead.replace(/\r\n?/g, "\n").split("\n") : [];

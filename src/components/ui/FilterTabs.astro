@@ -1,0 +1,94 @@
+---
+/**
+ * 一覧の絞り込みタブ（TOPICS の分類・WORKS のタグ）。選んでいるタブは aria-current="page"。
+ * 色は --tab-from / --tab-to（タブごとに style で渡せる）。
+ */
+
+export interface FilterTab {
+  key: string;
+  label: string;
+  href: string;
+  current: boolean;
+  /** 選んでいるときの地の色（グラデーション） */
+  from?: string;
+  to?: string;
+}
+
+interface Props {
+  tabs: FilterTab[];
+  label: string;
+  /** Krona One（Topics の分類名と同じ英字の書体）で表示する */
+  latin?: boolean;
+}
+
+const { tabs, label, latin = false } = Astro.props;
+---
+
+<nav class:list={["filter-tabs", latin && "is-latin"]} aria-label={label}>
+  <ul>
+    {
+      tabs.map((tab) => (
+        <li>
+          <a
+            class="filter-tabs__tab"
+            href={tab.href}
+            aria-current={tab.current ? "page" : undefined}
+            style={{ "--tab-from": tab.from ?? "var(--color-bg-2)", "--tab-to": tab.to ?? "var(--color-bg-3)" }}
+          >
+            {tab.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .filter-tabs ul {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .filter-tabs__tab {
+    display: grid;
+    place-items: center;
+    min-width: 120px;
+    height: 48px;
+    padding-inline: 20px;
+    font-size: 15px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      translate var(--duration-base) var(--ease-out);
+  }
+
+  .is-latin .filter-tabs__tab {
+    font-family: var(--font-label);
+  }
+
+  .filter-tabs__tab:hover {
+    translate: 0 -3px;
+  }
+
+  .filter-tabs__tab[aria-current="page"] {
+    color: #fff;
+    background: linear-gradient(90deg, var(--tab-from), var(--tab-to));
+    border-color: #fff;
+  }
+
+  @media (max-width: 767px) {
+    .filter-tabs__tab {
+      min-width: 0;
+      height: 42px;
+      padding-inline: 14px;
+      font-size: 13px;
+    }
+  }
+</style>

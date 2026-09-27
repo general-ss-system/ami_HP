@@ -243,3 +243,72 @@ export const fixtureContactForm: PublicFormResponse["form"] = {
     { key: "message", label: "お問い合わせ内容", type: "textarea", required: true, helpText: null, options: null, maxLength: 2000 },
   ],
 };
+
+// ---------------------------------------------------------------------------
+// WORKS（CMS の汎用モデル works）。内容は仮
+// ---------------------------------------------------------------------------
+
+const workBody = rich(
+  p(text("ここに実績の紹介文が入ります。"), text("どんな課題に、どう取り組んだか", 1), text("を書きます。")),
+  h("h2", "取り組んだこと"),
+  ul("ターゲットへのインタビューとコンセプト設計", "SNS での発信の企画・撮影・編集", "発売後の反応の分析と改善"),
+  h("h2", "結果"),
+  p(text("ここに成果が入ります（例: 投稿の保存数、販売数など）。")),
+);
+
+function work(n: number, content: Record<string, unknown>): DeliveryEntry {
+  return entry(`fx-work-${n}`, `sample-work-${n}`, { body: workBody, ...content });
+}
+
+export const fixtureWorks: DeliveryEntry[] = [
+  work(1, {
+    title: "コスメブランドの SNS プロモーション（仮）",
+    client_name: "株式会社〇〇（仮）",
+    summary: "Z世代向けの新商品の発売にあわせ、ショート動画とインフルエンサーの投稿を企画しました。",
+    published_date: "2026-09-10",
+    tags: ["movie", "branding"],
+    thumbnail: media("fx-work-1-thumb", "hero-1.jpg", 840, 1092, "新商品を手にするメンバー"),
+    gallery: [
+      media("fx-work-1-g1", "hero-1.jpg", 840, 1092, "撮影のようす"),
+      media("fx-work-1-g2", "hero-2.jpg", 720, 951, "屋外での撮影"),
+      media("fx-work-1-g3", "hero-3.jpg", 640, 820, "完成した投稿の一場面"),
+    ],
+    external_url: { label: "キャンペーンサイト", href: "https://www.example.com/", target: "_blank" },
+  }),
+  work(2, {
+    title: "オリジナルキーホルダーの商品開発（仮）",
+    client_name: "自社商品",
+    summary: "「持ち歩けるトキメキ」をテーマに、ハート型のキーホルダーを企画・デザインしました。",
+    published_date: "2026-08-28",
+    tags: ["graphic", "branding"],
+    thumbnail: media("fx-work-2-thumb", "topic-sample.jpg", 640, 961, "ハートのキーホルダーを手にするメンバー"),
+    gallery: [
+      media("fx-work-2-g1", "business-product.png", 368, 1000, "ハート型のキーホルダー"),
+      media("fx-work-2-g2", "topic-sample.jpg", 640, 961, "商品を手にするメンバー"),
+    ],
+  }),
+  work(3, {
+    title: "アパレルブランドの Web サイト制作（仮）",
+    client_name: "〇〇株式会社（仮）",
+    summary: "ブランドの世界観を伝える特設サイトを、撮影から制作まで担当しました。",
+    published_date: "2026-08-05",
+    tags: ["web"],
+    thumbnail: media("fx-work-3-thumb", "hero-2.jpg", 720, 951, "橋の上で振り返るメンバー"),
+  }),
+  work(4, {
+    title: "飲食店の SNS アカウント運用（仮）",
+    client_name: "〇〇カフェ（仮）",
+    summary: "毎週の投稿の企画・撮影と、フォロワーの反応の分析を続けています。",
+    published_date: "2026-07-20",
+    tags: ["movie"],
+    thumbnail: media("fx-work-4-thumb", "hero-3.jpg", 640, 820, "頬杖をつくメンバー"),
+  }),
+  work(5, {
+    title: "イベントのキービジュアル制作（仮）",
+    client_name: "〇〇実行委員会（仮）",
+    summary: "ドット絵のモチーフを使ったキービジュアルと告知用の画像を制作しました。",
+    published_date: "2026-06-30",
+    tags: ["graphic"],
+    thumbnail: media("fx-work-5-thumb", "business-sns.png", 483, 900, "SNS の投稿画面を表示したスマートフォン"),
+  }),
+];

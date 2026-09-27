@@ -1,0 +1,83 @@
+---
+/** 一覧のページ送り。ページが 1 つなら何も出さない。 */
+
+interface Props {
+  page: number;
+  totalPages: number;
+  /** ページ番号 → URL */
+  hrefFor: (page: number) => string;
+}
+
+const { page, totalPages, hrefFor } = Astro.props;
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+---
+
+{
+  totalPages > 1 && (
+    <nav class="pager" aria-label="ページ送り">
+      {page > 1 && (
+        <a class="pager__step" href={hrefFor(page - 1)} rel="prev">
+          <span aria-hidden="true">&lt;</span>
+          <span class="visually-hidden">前のページ</span>
+        </a>
+      )}
+      <ol>
+        {pages.map((n) => (
+          <li>
+            <a class="pager__page" href={hrefFor(n)} aria-current={n === page ? "page" : undefined}>
+              <span class="visually-hidden">ページ</span>
+              {n}
+            </a>
+          </li>
+        ))}
+      </ol>
+      {page < totalPages && (
+        <a class="pager__step" href={hrefFor(page + 1)} rel="next">
+          <span aria-hidden="true">&gt;</span>
+          <span class="visually-hidden">次のページ</span>
+        </a>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .pager {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: clamp(64px, 7.8vw, 100px);
+    font-family: var(--font-pixel);
+    font-size: 18px;
+  }
+
+  .pager ol {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pager__page,
+  .pager__step {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .pager__page:hover,
+  .pager__step:hover,
+  .pager__page[aria-current="page"] {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+</style>

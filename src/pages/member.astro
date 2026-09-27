@@ -16,7 +16,7 @@ import rocketCat from "../assets/decor/rocket-cat.webp";
 import sparkleBlue from "../assets/decor/sparkle-blue.webp";
 import moonBunny from "../assets/decor/moon-bunny.webp";
 
-const { siteInfo, members } = await getMemberPageData(getCmsClient());
+const { siteInfo, members } = await getMemberPageData(getCmsClient(Astro.locals));
 
 const toLines = (text: string) => text.replace(/\r\n?/g, "\n").split("\n");
 ---

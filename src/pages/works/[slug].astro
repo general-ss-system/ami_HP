@@ -1,0 +1,370 @@
+---
+/**
+ * WORKS 詳細。実績名を h1 にし、英字の「Works」は飾りの見出しにする。
+ * 概要・本文・ギャラリー・外部リンク（あれば「サイトを見る」）と、ほかの実績 3 件。
+ */
+import type { GetStaticPaths } from "astro";
+import PageLayout from "../../layouts/PageLayout.astro";
+import WorkCard from "../../components/works/WorkCard.astro";
+import CmsImage from "../../components/ui/CmsImage.astro";
+import Decor from "../../components/ui/Decor.astro";
+import Panel from "../../components/ui/Panel.astro";
+import RichText from "../../components/ui/RichText.astro";
+import { getCmsClient } from "../../lib/cms/env";
+import { getAllWorks, getWorkDetail } from "../../lib/cms/queries";
+import { isEmptyRichText } from "../../lib/cms/richtext";
+import { pageDescription, pageTitle } from "../../lib/seo";
+import { WORK_TAG_LABEL, formatWorkDate, worksListHref } from "../../lib/works";
+import planetBunnyPurple from "../../assets/decor/planet-bunny-purple.webp";
+import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const works = await getAllWorks(getCmsClient());
+  return works.filter((w) => w.slug).map((w) => ({ params: { slug: w.slug! } }));
+}) satisfies GetStaticPaths;
+
+const slug = Astro.params.slug;
+const data = slug ? await getWorkDetail(getCmsClient(Astro.locals), slug) : null;
+if (!data) return Astro.rewrite("/404");
+
+const { siteInfo, work, others } = data;
+const summaryLines = work.summary ? work.summary.replace(/\r\n?/g, "\n").split("\n") : [];
+---
+
+<PageLayout
+  title={pageTitle(siteInfo, work.title)}
+  description={pageDescription(siteInfo, work.summary?.replace(/\s+/g, " "))}
+  ogImage={work.thumbnail ? new URL(work.thumbnail.url, Astro.site).toString() : undefined}
+  heading="Works"
+  headingSub="実績"
+  headingIsTitle={false}
+  crumbs={[{ label: "WORKS", href: worksListHref(null) }, { label: work.title }]}
+>
+  <div class="stage work__stage">
+    <Panel as="article" class="work" aria-labelledby="work-title">
+      <header class="work__header">
+        {
+          work.tags.length > 0 && (
+            <ul class="work__tags" aria-label="タグ">
+              {work.tags.map((tag) => (
+                <li>
+                  <a href={worksListHref(tag)}>{WORK_TAG_LABEL[tag]}</a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        <h1 class="work__title" id="work-title">{work.title}</h1>
+        {
+          (work.clientName || work.publishedDate) && (
+            <dl class="work__meta">
+              {work.clientName && (
+                <div>
+                  <dt>クライアント</dt>
+                  <dd>{work.clientName}</dd>
+                </div>
+              )}
+              {work.publishedDate && (
+                <div>
+                  <dt>時期</dt>
+                  <dd>
+                    <time datetime={work.publishedDate}>{formatWorkDate(work.publishedDate)}</time>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )
+        }
+      </header>
+
+      {
+        work.thumbnail && (
+          <figure class="work__thumb">
+            <CmsImage media={work.thumbnail} photo loading="eager" />
+          </figure>
+        )
+      }
+
+      {
+        summaryLines.length > 0 && (
+          <p class="work__summary">
+            {summaryLines.map((line, i) => (
+              <>
+                {i > 0 && <br />}
+                {line}
+              </>
+            ))}
+          </p>
+        )
+      }
+
+      {!isEmptyRichText(work.body) && <RichText blocks={work.body} class="work__body" />}
+
+      {
+        work.gallery.length > 0 && (
+          <section class="work__gallery" aria-label="ギャラリー">
+            <ul>
+              {work.gallery.map((media) => (
+                <li>
+                  <CmsImage media={media} photo />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        work.externalLink && (
+          <p class="work__external">
+            <a
+              href={work.externalLink.href}
+              target={work.externalLink.external ? "_blank" : undefined}
+              rel={work.externalLink.external ? "noopener noreferrer" : undefined}
+            >
+              {work.externalLink.label}
+              <span aria-hidden="true"> ↗</span>
+              {work.externalLink.external && <span class="visually-hidden">（外部サイトが開きます）</span>}
+            </a>
+          </p>
+        )
+      }
+    </Panel>
+
+    <p class="work__back">
+      <a href={worksListHref(null)}>一覧へもどる</a>
+    </p>
+
+    <Decor src={planetBunnyPurple} pc={[20, 140, 150]} sp={false} float delay={0.7} />
+    <Decor src={sparkleBlue} pc={[1160, 520, 64]} sp={false} twinkle delay={1.4} />
+  </div>
+
+  {
+    others.length > 0 && (
+      <section class="others" aria-labelledby="others-title">
+        <div class="stage others__stage">
+          <h2 class="others__title" id="others-title">
+            <span class="others__title-en">Other Works</span>
+            <span class="others__title-ja">ほかの実績</span>
+          </h2>
+          <ul class="others__list">
+            {others.map((w) => (
+              <li>
+                <WorkCard work={w} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</PageLayout>
+
+<style>
+  .work__stage {
+    padding: 0 var(--gutter);
+  }
+
+  .work__stage :global(.work) {
+    max-width: 880px;
+    margin-inline: auto;
+  }
+
+  .work__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .work__tags a {
+    display: block;
+    padding: 2px 12px;
+    font-size: 12px;
+    text-decoration: none;
+    color: #fff;
+    background: var(--color-bg-3);
+    transition: background-color var(--duration-base) var(--ease-out);
+  }
+
+  .work__tags a:hover {
+    background: var(--color-bg-2);
+  }
+
+  .work__title {
+    margin-top: 16px;
+    font-size: clamp(22px, 2.34vw, 30px);
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .work__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+
+  .work__meta div {
+    display: flex;
+    gap: 12px;
+  }
+
+  .work__meta dt {
+    color: var(--color-bg-3);
+  }
+
+  .work__meta dd {
+    margin: 0;
+  }
+
+  .work__thumb {
+    margin-top: 32px;
+    overflow: hidden;
+    border: 2px solid var(--color-border);
+  }
+
+  .work__thumb :global(img) {
+    width: 100%;
+    max-height: 560px;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .work__summary {
+    margin-top: 32px;
+    padding: 20px 24px;
+    font-size: 16px;
+    line-height: 2;
+    background: #fff;
+    border-left: 6px solid var(--color-accent-bright);
+  }
+
+  .work__stage :global(.work__body) {
+    margin-top: 40px;
+  }
+
+  .work__gallery {
+    margin-top: 48px;
+  }
+
+  .work__gallery ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .work__gallery li {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 2px solid var(--color-border);
+    background: #fff;
+  }
+
+  .work__gallery :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .work__external {
+    display: flex;
+    justify-content: center;
+    margin-top: 48px;
+  }
+
+  .work__external a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 260px;
+    height: 56px;
+    padding-inline: 28px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(90deg, #4758bd 0%, #6a5bd6 55%, #967adf 100%);
+    border: 2px solid var(--color-border);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 var(--color-border);
+    transition:
+      translate var(--duration-base) var(--ease-out),
+      filter var(--duration-base) var(--ease-out);
+  }
+
+  .work__external a:hover {
+    translate: 0 -2px;
+    filter: brightness(1.12);
+  }
+
+  .work__back {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    margin-top: 56px;
+  }
+
+  .work__back a {
+    display: grid;
+    place-items: center;
+    width: 220px;
+    height: 60px;
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .work__back a:hover {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  .others__stage {
+    padding: clamp(80px, 10vw, 128px) var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .others__title {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    font-weight: 400;
+  }
+
+  .others__title-en {
+    font-family: var(--font-pixel);
+    font-size: clamp(28px, 2.8vw, 36px);
+    line-height: 1;
+  }
+
+  .others__title-ja {
+    font-size: var(--fs-sm);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .others__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 320px));
+    justify-content: center;
+    gap: 40px clamp(28px, 3.9vw, 50px);
+    margin-top: 56px;
+  }
+
+  @media (max-width: 767px) {
+    .others__list {
+      grid-template-columns: minmax(0, 340px);
+    }
+  }
+</style>

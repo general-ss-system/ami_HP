@@ -12,6 +12,9 @@ import {
   getTopicDetail,
   getTopicsArchive,
   getTopPageData,
+  getAllWorks,
+  getWorkDetail,
+  getWorksArchive,
 } from "./queries";
 import { pageTitle } from "../seo";
 
@@ -140,5 +143,38 @@ describe("pageTitle", () => {
     const { siteInfo } = await getAboutPageData(createFixtureClient());
     expect(pageTitle(siteInfo, "About")).toBe("About | 合同会社ami");
     expect(pageTitle(null, "About")).toBe("About");
+  });
+});
+
+describe("WORKS", () => {
+  it("一覧: 公開日の新しい順、タグ（いずれかに一致）で絞り込む", async () => {
+    const client = createFixtureClient();
+    const all = await getWorksArchive(client, { tag: null, page: 1 });
+    expect(all?.works.map((w) => w.publishedDate)).toEqual(["2026-09-10", "2026-08-28", "2026-08-05", "2026-07-20", "2026-06-30"]);
+    const branding = await getWorksArchive(client, { tag: "branding", page: 1 });
+    expect(branding?.works.map((w) => w.slug)).toEqual(["sample-work-1", "sample-work-2"]);
+    expect(await getWorksArchive(client, { tag: null, page: 2 })).toBeNull();
+    expect(await getAllWorks(client)).toHaveLength(5);
+  });
+
+  it("詳細: ギャラリー・本文・外部リンクと、ほかの実績 3 件", async () => {
+    const data = await getWorkDetail(createFixtureClient(), "sample-work-1");
+    expect(data?.work.gallery).toHaveLength(3);
+    expect(data?.work.body.length).toBeGreaterThan(0);
+    expect(data?.work.externalLink?.external).toBe(true);
+    expect(data?.others.map((w) => w.slug)).toEqual(["sample-work-2", "sample-work-3", "sample-work-4"]);
+    expect(await getWorkDetail(createFixtureClient(), "nope")).toBeNull();
+  });
+
+  it("選択肢に無いタグは読み飛ばす", async () => {
+    const base = createFixtureClient();
+    const client: CmsClient = {
+      ...base,
+      async getEntry(model, slug) {
+        const e = await base.getEntry(model, slug);
+        return e && { ...e, content: { ...e.content, tags: ["web", "unknown"] } };
+      },
+    };
+    expect((await getWorkDetail(client, "sample-work-1"))?.work.tags).toEqual(["web"]);
   });
 });

@@ -17,7 +17,7 @@ import astronautBunny from "../assets/decor/astronaut-bunny.webp";
 import planetRinged from "../assets/decor/planet-ringed.webp";
 import sparkleGold from "../assets/decor/sparkle-gold.webp";
 
-const { siteInfo, contactPage, form } = await getContactPageData(getCmsClient());
+const { siteInfo, contactPage, form } = await getContactPageData(getCmsClient(Astro.locals));
 
 // このサイトで入力欄を出せる型（値を文字列で送るもの）
 const SUPPORTED: FormField["type"][] = ["text", "textarea", "email", "tel", "url", "date", "select"];

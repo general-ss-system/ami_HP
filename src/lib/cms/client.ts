@@ -11,9 +11,13 @@ import {
   DeliveryDetailResponseSchema,
   DeliveryListResponseSchema,
   ErrorResponseSchema,
+  PREVIEW_TOKEN_HEADER,
+  PreviewDetailResponseSchema,
+  PreviewListResponseSchema,
   PublicFormResponseSchema,
   type DeliveryEntry,
   type DeliveryListResponse,
+  type PreviewEntry,
   type PublicFormResponse,
 } from "./contracts";
 
@@ -57,16 +61,36 @@ export interface CmsClient {
   getForm(formKey: string): Promise<PublicFormResponse["form"]>;
 }
 
-export function createCmsClient(config: CmsClientConfig): CmsClient {
-  const baseUrl = config.baseUrl.replace(/\/+$/, "");
-  const doFetch = config.fetch ?? fetch;
-  const root = `${baseUrl}/api/v1/delivery/${encodeURIComponent(config.siteKey)}`;
-  const formsRoot = `${baseUrl}/api/v1/forms/${encodeURIComponent(config.siteKey)}`;
+/**
+ * プレビューのトークンが無効・期限切れ（Preview API が 401）。
+ * ページの一部だけを欠けさせず、middleware で「管理画面からもう一度開いてください」と表示する。
+ */
+export class PreviewTokenError extends CmsError {
+  constructor(requestId: string | null = null) {
+    super("Preview token is invalid or expired", 401, "UNAUTHORIZED", requestId);
+    this.name = "PreviewTokenError";
+  }
+}
 
-  async function request<T extends z.ZodType>(url: string, schema: T, auth = true): Promise<z.infer<T>> {
+function listParams(query: ListQuery): string {
+  const params = new URLSearchParams();
+  if (query.page !== undefined) params.set("page", String(query.page));
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.sort !== undefined) params.set("sort", query.sort);
+  for (const [key, value] of Object.entries(query.filter ?? {})) {
+    params.set(`filter[${key}]`, value);
+  }
+  return params.size > 0 ? `?${params.toString()}` : "";
+}
+
+/** 認証・応答の検証・エラーの形をまとめた GET。 */
+function createRequester(config: CmsClientConfig, extraHeaders: Record<string, string> = {}) {
+  const doFetch = config.fetch ?? fetch;
+
+  return async function request<T extends z.ZodType>(url: string, schema: T, auth = true): Promise<z.infer<T>> {
     const res = await doFetch(url, {
       headers: auth
-        ? { Authorization: `${DELIVERY_AUTH_SCHEME} ${config.deliveryKey}`, Accept: "application/json" }
+        ? { Authorization: `${DELIVERY_AUTH_SCHEME} ${config.deliveryKey}`, Accept: "application/json", ...extraHeaders }
         : { Accept: "application/json" },
     });
 
@@ -87,7 +111,23 @@ export function createCmsClient(config: CmsClientConfig): CmsClient {
       throw new CmsError(`Unexpected response shape: ${parsed.error.message}`, res.status, "CONTRACT_MISMATCH");
     }
     return parsed.data;
+  };
+}
+
+async function nullIfNotFound<T>(run: () => Promise<T>): Promise<T | null> {
+  try {
+    return await run();
+  } catch (err) {
+    if (err instanceof CmsError && err.status === 404) return null;
+    throw err;
   }
+}
+
+export function createCmsClient(config: CmsClientConfig): CmsClient {
+  const baseUrl = config.baseUrl.replace(/\/+$/, "");
+  const root = `${baseUrl}/api/v1/delivery/${encodeURIComponent(config.siteKey)}`;
+  const formsRoot = `${baseUrl}/api/v1/forms/${encodeURIComponent(config.siteKey)}`;
+  const request = createRequester(config);
 
   return {
     async getSingleton(modelKey) {
@@ -96,33 +136,103 @@ export function createCmsClient(config: CmsClientConfig): CmsClient {
     },
 
     async getEntry(modelKey, slug) {
-      try {
+      return nullIfNotFound(async () => {
         const res = await request(
           `${root}/content/${encodeURIComponent(modelKey)}/${encodeURIComponent(slug)}`,
           DeliveryDetailResponseSchema,
         );
         return res.data;
-      } catch (err) {
-        if (err instanceof CmsError && err.status === 404) return null;
-        throw err;
-      }
+      });
     },
 
     async getCollection(modelKey, query = {}) {
-      const params = new URLSearchParams();
-      if (query.page !== undefined) params.set("page", String(query.page));
-      if (query.limit !== undefined) params.set("limit", String(query.limit));
-      if (query.sort !== undefined) params.set("sort", query.sort);
-      for (const [key, value] of Object.entries(query.filter ?? {})) {
-        params.set(`filter[${key}]`, value);
-      }
-      const qs = params.size > 0 ? `?${params.toString()}` : "";
-      return request(`${root}/content/${encodeURIComponent(modelKey)}${qs}`, DeliveryListResponseSchema);
+      return request(`${root}/content/${encodeURIComponent(modelKey)}${listParams(query)}`, DeliveryListResponseSchema);
     },
 
     async getForm(formKey) {
       const res = await request(`${formsRoot}/${encodeURIComponent(formKey)}`, PublicFormResponseSchema, false);
       return res.form;
     },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Preview API (ADR-028 / CMS docs/04 §19)
+// ---------------------------------------------------------------------------
+
+/**
+ * 下書きの 1 件を、Delivery の形に寄せる（mapper を共用するため）。
+ * 未公開の Entry は publishedAt が null なので、下書きの保存日時で代える（並び順を公開時に近づける）。
+ */
+export function previewToDeliveryEntry(entry: PreviewEntry): DeliveryEntry {
+  return {
+    id: entry.id,
+    slug: entry.slug,
+    content: entry.content,
+    publishedAt: entry.publishedAt ?? entry.updatedAt,
+    updatedAt: entry.updatedAt,
+  };
+}
+
+export interface PreviewCmsClient extends CmsClient {
+  readonly preview: true;
+  /** slug が変わった下書きでも開けるよう、ID で 1 件取得する。 */
+  getEntryById(modelKey: string, entryId: string): Promise<DeliveryEntry | null>;
+}
+
+/**
+ * 下書きを読むクライアント。公開キーとプレビューのトークンの両方を送る。
+ * 応答は Preview の契約（`preview: true`）で検証してから Delivery の形に寄せる。
+ * フォームの定義は公開中のもの（Form API）を読む。
+ */
+export function createPreviewClient(config: CmsClientConfig, token: string): PreviewCmsClient {
+  const baseUrl = config.baseUrl.replace(/\/+$/, "");
+  const root = `${baseUrl}/api/v1/preview/${encodeURIComponent(config.siteKey)}`;
+  const delivery = createCmsClient(config);
+  const raw = createRequester(config, { [PREVIEW_TOKEN_HEADER]: token });
+
+  const request: typeof raw = async (url, schema, auth) => {
+    try {
+      return await raw(url, schema, auth);
+    } catch (err) {
+      if (err instanceof CmsError && err.status === 401) throw new PreviewTokenError(err.requestId);
+      throw err;
+    }
+  };
+
+  return {
+    preview: true,
+
+    async getSingleton(modelKey) {
+      const res = await request(`${root}/singletons/${encodeURIComponent(modelKey)}`, PreviewDetailResponseSchema);
+      return previewToDeliveryEntry(res.data);
+    },
+
+    async getEntry(modelKey, slug) {
+      return nullIfNotFound(async () => {
+        const res = await request(
+          `${root}/content/${encodeURIComponent(modelKey)}/${encodeURIComponent(slug)}`,
+          PreviewDetailResponseSchema,
+        );
+        return previewToDeliveryEntry(res.data);
+      });
+    },
+
+    async getEntryById(modelKey, entryId) {
+      return nullIfNotFound(async () => {
+        const res = await request(
+          `${root}/entries/${encodeURIComponent(modelKey)}/${encodeURIComponent(entryId)}`,
+          PreviewDetailResponseSchema,
+        );
+        return previewToDeliveryEntry(res.data);
+      });
+    },
+
+    async getCollection(modelKey, query = {}) {
+      const res = await request(`${root}/content/${encodeURIComponent(modelKey)}${listParams(query)}`, PreviewListResponseSchema);
+      return { data: res.data.map(previewToDeliveryEntry), meta: res.meta };
+    },
+
+    getForm: (formKey) => delivery.getForm(formKey),
   };
 }

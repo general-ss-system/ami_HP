@@ -4,7 +4,8 @@ import type { GetStaticPaths } from "astro";
 import TopicsArchive from "../../../components/topics/TopicsArchive.astro";
 import { getCmsClient } from "../../../lib/cms/env";
 import { getTopicsArchive } from "../../../lib/cms/queries";
-import { laterPages, parsePageParam, topicsListHref } from "../../../lib/topics";
+import { laterPages, parsePageParam } from "../../../lib/paging";
+import { topicsListHref } from "../../../lib/topics";
 
 // GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
 export const getStaticPaths = (async () => {
@@ -14,7 +15,7 @@ export const getStaticPaths = (async () => {
 
 if (Astro.params.page === "1") return Astro.redirect(topicsListHref(null), 301);
 const page = parsePageParam(Astro.params.page);
-const data = page ? await getTopicsArchive(getCmsClient(), { category: null, page }) : null;
+const data = page ? await getTopicsArchive(getCmsClient(Astro.locals), { category: null, page }) : null;
 if (!data) return Astro.rewrite("/404");
 ---
 

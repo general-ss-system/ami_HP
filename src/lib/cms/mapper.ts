@@ -15,6 +15,8 @@ import {
   ContactPageContentSchema,
   MemberContentSchema,
   SiteInfoContentSchema,
+  WORK_TAGS,
+  WorkContentSchema,
   type CmsLinkSchema,
 } from "./schemas";
 import { toRichText, type RichTextReporter } from "./richtext";
@@ -30,6 +32,9 @@ import type {
   StatementLine,
   Topic,
   TopicDetail,
+  Work,
+  WorkDetail,
+  WorkTag,
 } from "./types";
 import { withBase } from "../url";
 
@@ -210,4 +215,38 @@ export function mapContactPage(entry: DeliveryEntry, report?: RichTextReporter):
       consentLabel: c.consent_label ?? null,
     },
   };
+}
+
+function isWorkTag(value: string): value is WorkTag {
+  return (WORK_TAGS as readonly string[]).includes(value);
+}
+
+export function mapWorkDetail(entry: DeliveryEntry, report?: RichTextReporter): MapResult<WorkDetail> {
+  const r = parseContent("works", entry, WorkContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      clientName: c.client_name ?? null,
+      summary: c.summary ?? null,
+      publishedDate: c.published_date ?? null,
+      tags: (c.tags ?? []).filter(isWorkTag),
+      thumbnail: toMedia(c.thumbnail),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
+      body: toRichText(c.body, richTextReporter(report, "works", entry, "body")),
+      externalLink: toLink(c.external_url),
+    },
+  };
+}
+
+/** 一覧のカード用（本文・ギャラリーは持たない）。 */
+export function mapWork(entry: DeliveryEntry): MapResult<Work> {
+  const r = mapWorkDetail(entry);
+  if (!r.ok) return r;
+  const { gallery: _gallery, body: _body, externalLink: _link, ...work } = r.value;
+  return { ok: true, value: work };
 }

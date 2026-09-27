@@ -102,6 +102,26 @@ export const MemberContentSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// works（collection、CMS の汎用モデル）: WORKS
+// ---------------------------------------------------------------------------
+
+/** タグの値（CMS の works.tags の選択肢）。表示名は lib/works.ts。 */
+export const WORK_TAGS = ["branding", "web", "graphic", "movie"] as const;
+
+export const WorkContentSchema = z.object({
+  title: z.string().min(1),
+  client_name: optionalText,
+  summary: optionalText,
+  published_date: optionalText,
+  /** 選択肢に無い値は mapper で読み飛ばす（CMS 側で選択肢が増えてもページを壊さない）。 */
+  tags: z.array(z.string()).nullable().optional(),
+  thumbnail: optionalMedia,
+  gallery: z.array(DeliveryMediaSchema).nullable().optional(),
+  body: optionalRichText,
+  external_url: optionalLink,
+});
+
+// ---------------------------------------------------------------------------
 // site_info（singleton、CMS の汎用モデル）: 会社名・SEO の既定値
 // ---------------------------------------------------------------------------
 
@@ -145,6 +165,7 @@ export type AmiHomeContent = z.infer<typeof AmiHomeContentSchema>;
 export type AmiServiceContent = z.infer<typeof AmiServiceContentSchema>;
 export type AmiTopicContent = z.infer<typeof AmiTopicContentSchema>;
 export type MemberContent = z.infer<typeof MemberContentSchema>;
+export type WorkContent = z.infer<typeof WorkContentSchema>;
 export type SiteInfoContent = z.infer<typeof SiteInfoContentSchema>;
 export type AboutContent = z.infer<typeof AboutContentSchema>;
 export type ContactPageContent = z.infer<typeof ContactPageContentSchema>;

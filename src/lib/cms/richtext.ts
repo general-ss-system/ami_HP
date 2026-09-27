@@ -106,6 +106,8 @@ export function entryPath(ref: DeliveryEntryRef): string | null {
       return withBase(`/service#${slug}`);
     case "members":
       return withBase(`/member#${slug}`);
+    case "works":
+      return withBase(`/works/${slug}`);
     default:
       return null;
   }

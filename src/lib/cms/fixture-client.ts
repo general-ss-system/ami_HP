@@ -13,6 +13,7 @@ import {
   fixtureServices,
   fixtureSiteInfo,
   fixtureTopics,
+  fixtureWorks,
 } from "./fixtures";
 
 const singletons: Record<string, DeliveryEntry> = {
@@ -25,7 +26,16 @@ const collections: Record<string, DeliveryEntry[]> = {
   ami_services: fixtureServices,
   ami_topics: fixtureTopics,
   members: fixtureMembers,
+  works: fixtureWorks,
 };
+
+/** Delivery API の filter と同じ判定（multi_select は「いずれかに一致」）。 */
+function matches(entry: DeliveryEntry, filter: Record<string, string> | undefined): boolean {
+  return Object.entries(filter ?? {}).every(([k, v]) => {
+    const value = entry.content[k];
+    return Array.isArray(value) ? value.map(String).includes(v) : String(value) === v;
+  });
+}
 
 function sortKey(entry: DeliveryEntry, key: string): string | number {
   if (key === "publishedAt" || key === "updatedAt") return entry[key];
@@ -34,9 +44,7 @@ function sortKey(entry: DeliveryEntry, key: string): string | number {
 }
 
 function applyQuery(entries: DeliveryEntry[], query: ListQuery): DeliveryEntry[] {
-  let result = entries.filter((e) =>
-    Object.entries(query.filter ?? {}).every(([k, v]) => String(e.content[k]) === v),
-  );
+  let result = entries.filter((e) => matches(e, query.filter));
   const sort = query.sort ?? "-publishedAt";
   const desc = sort.startsWith("-");
   const key = desc ? sort.slice(1) : sort;
@@ -66,9 +74,7 @@ export function createFixtureClient(): CmsClient {
       return fixtureContactForm;
     },
     async getCollection(modelKey, query = {}) {
-      const all = (collections[modelKey] ?? []).filter((e) =>
-        Object.entries(query.filter ?? {}).every(([k, v]) => String(e.content[k]) === v),
-      );
+      const all = (collections[modelKey] ?? []).filter((e) => matches(e, query.filter));
       const data = applyQuery(all, query);
       const limit = query.limit ?? 20;
       return {

@@ -3,7 +3,7 @@
  * フッター。地球のドット絵の上にロゴとナビを重ねる。
  */
 import LocalImage from "../ui/LocalImage.astro";
-import { NAV_ITEMS } from "../../config/site";
+import { FOOTER_ITEMS } from "../../config/site";
 import { withBase } from "../../lib/url";
 import earth from "../../assets/illustrations/earth.webp";
 import Logo from "./Logo.astro";
@@ -19,7 +19,7 @@ import NavMark from "../ui/NavMark.astro";
     <nav aria-label="フッターメニュー">
       <ul class="site-footer__list">
         {
-          NAV_ITEMS.map((item) => (
+          FOOTER_ITEMS.map((item) => (
             <li>
               <a class="site-footer__link" href={withBase(item.href)}>
                 <NavMark />

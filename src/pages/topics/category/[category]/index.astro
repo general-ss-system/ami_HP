@@ -10,7 +10,7 @@ import { TOPIC_CATEGORIES } from "../../../../lib/cms/schemas";
 export const getStaticPaths = (() => TOPIC_CATEGORIES.map((category) => ({ params: { category } }))) satisfies GetStaticPaths;
 
 const { category } = Astro.params;
-const data = isTopicCategory(category) ? await getTopicsArchive(getCmsClient(), { category, page: 1 }) : null;
+const data = isTopicCategory(category) ? await getTopicsArchive(getCmsClient(Astro.locals), { category, page: 1 }) : null;
 if (!data) return Astro.rewrite("/404");
 ---
 

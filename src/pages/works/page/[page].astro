@@ -1,0 +1,22 @@
+---
+/** WORKS 一覧（2 ページ目以降）。1 ページ目は /works に寄せる。 */
+import type { GetStaticPaths } from "astro";
+import WorksArchive from "../../../components/works/WorksArchive.astro";
+import { getCmsClient } from "../../../lib/cms/env";
+import { getWorksArchive } from "../../../lib/cms/queries";
+import { laterPages, parsePageParam } from "../../../lib/paging";
+import { worksListHref } from "../../../lib/works";
+
+// GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
+export const getStaticPaths = (async () => {
+  const first = await getWorksArchive(getCmsClient(), { tag: null, page: 1 });
+  return laterPages(first?.totalPages ?? 1).map((page) => ({ params: { page: String(page) } }));
+}) satisfies GetStaticPaths;
+
+if (Astro.params.page === "1") return Astro.redirect(worksListHref(null), 301);
+const page = parsePageParam(Astro.params.page);
+const data = page ? await getWorksArchive(getCmsClient(Astro.locals), { tag: null, page }) : null;
+if (!data) return Astro.rewrite("/404");
+---
+
+<WorksArchive data={data} />

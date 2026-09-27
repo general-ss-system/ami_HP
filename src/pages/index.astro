@@ -17,7 +17,7 @@ import { getCmsClient } from "../lib/cms/env";
 import { getTopPageData } from "../lib/cms/queries";
 import { withBase } from "../lib/url";
 
-const { home, services, topics, members } = await getTopPageData(getCmsClient());
+const { home, services, topics, members } = await getTopPageData(getCmsClient(Astro.locals));
 
 // TODO: SEO の値は site_info（CMS）から解決する。モデルが決まるまでの仮の値。
 const title = "合同会社ami";

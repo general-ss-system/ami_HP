@@ -83,6 +83,8 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | TOPICS 一覧 | `/topics`、`/topics/page/{n}`、`/topics/category/{news|sns|column}` | `ami_topics`（12 件ずつ） |
 | TOPICS 詳細 | `/topics/{slug}` | `ami_topics`（`body`・`external_url` を追加）。`external_url` がある記事は詳細を作らずカードから直接開く |
 | CONTACT | `/contact` | `contact_page`、フォーム `ami_contact`（Form API の定義） |
+| WORKS 一覧 | `/works`、`/works/page/{n}`、`/works/tag/{branding|web|graphic|movie}` | `works`（CMS の汎用モデル。12 件ずつ・公開日の新しい順） |
+| WORKS 詳細 | `/works/{slug}` | `works`（概要・本文・ギャラリー・外部リンク） |
 | 404 | — | — |
 
 ### 追加・利用する項目
@@ -93,6 +95,7 @@ slug あり。カードのリンク先は `/topics/{slug}`。
 | `ami_topics` | body | rich_text | 詳細の本文 |
 | `ami_topics` | external_url | link | 設定するとカードから直接この URL を開く |
 | `members` | profile | long_text | MEMBER の紹介文（改行あり） |
+| `works` | title（必須）/ client_name / summary / published_date / tags（multi_select）/ thumbnail / gallery / body / external_url | | CMS の汎用モデルそのまま。タグの表示名は `src/lib/works.ts`（CMS の選択肢の label と同じ） |
 | `site_info` | company_name（必須）/ address / default_title / title_template / default_description / default_og_image | | 会社概要の表、下層ページの `<title>`（`title_template` の `%s` にページ名） |
 | `about` | lead / body（rich_text）/ main_image / representative / established / capital / business_summary | | ABOUT のメッセージと会社概要の表。空の行は出さない |
 | `contact_page` | lead / privacy_note（rich_text）/ consent_label | | CONTACT の案内文・個人情報の取り扱い・同意チェックの文言 |
@@ -110,6 +113,31 @@ rich_text は `src/lib/cms/richtext.ts` で許可したノードだけを描画�
   CMS 側では、サイトの許可オリジン（`allowedOrigins`）に公開ドメインを登録する。
 - `CMS_MODE=fixture`（GitHub Pages のプレビューを含む）では送信せずに完了まで進める（画面に「プレビュー用」と出る）。
 - フォームを出せないとき（定義を取れない・受付停止中・同意文が空）は、受け付けていない旨だけを出し、エラーを記録する。
+
+## WORKS を CMS で使えるようにする
+
+`works` は CMS の汎用モデルだが、ami のひな形（`preset: "ami"`）には入っていない。live で使う前に、
+制作側（platform_admin）がサイトで `works` を有効にする（`POST /api/v1/admin/sites/{siteId}/models`）。
+ヘッダーのナビはデザインの 4 項目のままにし、WORKS へはフッター・SERVICE ページからリンクする。
+
+## 下書きプレビュー（ADR-028 / CMS docs/04 §19）
+
+CMS の管理画面の「プレビュー」から、公開前の内容を本番と同じ見た目で確認できる。
+
+1. 管理画面がサイト設定の「プレビュー用URL」を新しいタブで開く。登録する URL:
+   `https://<公開ドメイン>/api/preview?token={token}&model={model}&slug={slug}&entryId={entryId}`
+   （`PATCH /api/v1/admin/sites/{siteId}/preview-url`、platform_admin）
+2. `/api/preview`（`src/preview/enter.ts`）がトークンを Preview API で確かめ、httpOnly Cookie（1 時間）に移して該当ページへ送る。
+   行き先はモデルごとに `src/lib/cms/preview.ts` の `resolvePreviewPath` で決める（ページを増やしたら足す）。
+3. `src/middleware.ts` が Cookie を読み、ページは `getCmsClient(Astro.locals)` で Preview API（下書き）を読む。
+   応答は `private, no-store`・`noindex`。画面の上に「未公開の下書きを表示しています」の帯と「プレビューを終了」を出す。
+4. トークンが切れたら（Preview API が 401）Cookie を消し、管理画面から開き直すよう案内する。
+
+- `/api/preview`・`/api/preview-exit` は SSR のときだけ登録する（`astro.config.mjs`）。GitHub Pages のプレビュー（静的書き出し）には無い。
+- `CMS_MODE=fixture` ではプレビューできない（503 で案内する）。
+- `CMS_MODE` / `CMS_BASE_URL` / `CMS_SITE_KEY` / `PUBLIC_TURNSTILE_SITE_KEY` は**ビルド時に埋め込まれる**
+  （Cloudflare のアダプタは `wrangler.jsonc` の `vars` と `.dev.vars` から読む）。live に切り替えるときはビルドし直す。
+  `CMS_DELIVERY_KEY` だけは実行時に読む（`wrangler secret`）。
 
 ## 未決
 

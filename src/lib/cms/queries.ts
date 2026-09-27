@@ -5,7 +5,7 @@
  * 失敗は reportCmsError に送る（ページ全体は壊さない / CMS docs/04 §13）。
  */
 
-import type { CmsClient } from "./client";
+import { PreviewTokenError, type CmsClient } from "./client";
 import type { DeliveryEntry } from "./contracts";
 import {
   mapAbout,
@@ -16,10 +16,12 @@ import {
   mapSiteInfo,
   mapTopic,
   mapTopicDetail,
+  mapWork,
+  mapWorkDetail,
   type MapError,
   type MapResult,
 } from "./mapper";
-import { TOPIC_CATEGORIES } from "./schemas";
+import { TOPIC_CATEGORIES, WORK_TAGS } from "./schemas";
 import type {
   AboutContent,
   ContactForm,
@@ -32,6 +34,9 @@ import type {
   TopicCategory,
   TopicDetail,
   TopPageData,
+  Work,
+  WorkDetail,
+  WorkTag,
 } from "./types";
 
 export type CmsErrorReporter = (message: string, detail: unknown) => void;
@@ -55,6 +60,8 @@ async function safely<T>(label: string, fallback: T, run: () => Promise<T>, repo
   try {
     return await run();
   } catch (err) {
+    // プレビューの期限切れは一部を欠けさせずにページ全体で知らせる（middleware が表示する）
+    if (err instanceof PreviewTokenError) throw err;
     report(`failed to load ${label}`, err);
     return fallback;
   }
@@ -292,4 +299,91 @@ export async function getContactPageData(client: CmsClient, report: CmsErrorRepo
     safely<ContactForm | null>("form " + CONTACT_FORM_KEY, null, () => client.getForm(CONTACT_FORM_KEY), report),
   ]);
   return { siteInfo, contactPage, form };
+}
+
+// ---------------------------------------------------------------------------
+// WORKS
+// ---------------------------------------------------------------------------
+
+export const WORKS_PER_PAGE = 12;
+
+export function isWorkTag(value: string | undefined): value is WorkTag {
+  return (WORK_TAGS as readonly string[]).includes(value ?? "");
+}
+
+export interface WorksArchiveData {
+  siteInfo: SiteInfo | null;
+  works: Work[];
+  tag: WorkTag | null;
+  page: number;
+  totalPages: number;
+}
+
+/** WORKS 一覧（公開日の新しい順）。page が範囲外なら null（404 にする）。 */
+export async function getWorksArchive(
+  client: CmsClient,
+  options: { tag: WorkTag | null; page: number },
+  report: CmsErrorReporter = reportCmsError,
+): Promise<WorksArchiveData | null> {
+  const { tag, page } = options;
+  const [siteInfo, list] = await Promise.all([
+    getSiteInfo(client, report),
+    safely(
+      "works",
+      null,
+      () =>
+        client.getCollection("works", {
+          sort: "-published_date",
+          limit: WORKS_PER_PAGE,
+          page,
+          filter: tag ? { tags: tag } : undefined,
+        }),
+      report,
+    ),
+  ]);
+  const totalPages = list?.meta.totalPages ?? 1;
+  if (page > 1 && page > totalPages) return null;
+  return { siteInfo, works: list ? collect(list.data, mapWork, report) : [], tag, page, totalPages };
+}
+
+export interface WorkDetailData {
+  siteInfo: SiteInfo | null;
+  work: WorkDetail;
+  /** 下に並べるほかの実績（この実績を除く）。 */
+  others: Work[];
+}
+
+/** WORKS 詳細。無い・非公開なら null（404 にする）。 */
+export async function getWorkDetail(
+  client: CmsClient,
+  slug: string,
+  report: CmsErrorReporter = reportCmsError,
+): Promise<WorkDetailData | null> {
+  const entry = await client.getEntry("works", slug);
+  if (!entry) return null;
+  const r = mapWorkDetail(entry, report);
+  if (!r.ok) {
+    report("entry failed validation", r.error);
+    return null;
+  }
+  const [siteInfo, others] = await Promise.all([
+    getSiteInfo(client, report),
+    safely(
+      "works",
+      [],
+      async () => collect((await client.getCollection("works", { sort: "-published_date", limit: 4 })).data, mapWork, report),
+      report,
+    ),
+  ]);
+  return { siteInfo, work: r.value, others: others.filter((w) => w.id !== r.value.id).slice(0, 3) };
+}
+
+/** 静的書き出し（GitHub Pages のプレビュー）用: すべての実績。 */
+export async function getAllWorks(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<Work[]> {
+  const out: Work[] = [];
+  for (let page = 1; ; page++) {
+    const res = await client.getCollection("works", { sort: "-published_date", limit: 100, page });
+    out.push(...collect(res.data, mapWork, report));
+    if (page >= res.meta.totalPages) return out;
+  }
 }

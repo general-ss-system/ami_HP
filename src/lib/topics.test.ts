@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Topic } from "./cms/types";
-import { formatTopicDate, laterPages, parsePageParam, topicHref, topicsListHref } from "./topics";
+import { laterPages, parsePageParam } from "./paging";
+import { formatTopicDate, topicHref, topicsListHref } from "./topics";
 
 const topic: Topic = {
   id: "1",

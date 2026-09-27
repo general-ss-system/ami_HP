@@ -1,0 +1,133 @@
+---
+/**
+ * WORKS のカード。インスタントカメラの写真のような白い枠に、サムネイル・タグ・タイトル・クライアント名。
+ * Topics のカード（分類ごとの色の紙）と見分けがつくようにしている。
+ */
+import type { Work } from "../../lib/cms/types";
+import { WORK_TAG_LABEL, formatWorkDate, workHref } from "../../lib/works";
+import CmsImage from "../ui/CmsImage.astro";
+
+interface Props {
+  work: Work;
+  headingLevel?: 2 | 3;
+}
+
+const { work, headingLevel = 3 } = Astro.props;
+const Title = `h${headingLevel}` as "h2" | "h3";
+---
+
+<article class="work-card">
+  <a class="work-card__link" href={workHref(work)}>
+    <div class="work-card__thumb">
+      {work.thumbnail ? <CmsImage media={work.thumbnail} photo /> : <span class="work-card__no-image" aria-hidden="true">ami</span>}
+    </div>
+    <div class="work-card__body">
+      {
+        work.tags.length > 0 && (
+          <ul class="work-card__tags" aria-label="タグ">
+            {work.tags.map((tag) => (
+              <li>{WORK_TAG_LABEL[tag]}</li>
+            ))}
+          </ul>
+        )
+      }
+      <Title class="work-card__title">{work.title}</Title>
+      <p class="work-card__meta">
+        {work.clientName && <span>{work.clientName}</span>}
+        {work.publishedDate && <time datetime={work.publishedDate}>{formatWorkDate(work.publishedDate)}</time>}
+      </p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .work-card {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .work-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 14px 14px 20px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: #fff;
+    border: 2px solid var(--color-border);
+    box-shadow: 6px 6px 0 rgb(4 16 74 / 0.45);
+    transition:
+      translate var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  .work-card__link:hover {
+    translate: 0 -6px;
+    box-shadow: 8px 12px 0 rgb(4 16 74 / 0.45);
+  }
+
+  .work-card__thumb {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--color-bg-3), var(--color-bg-5));
+  }
+
+  .work-card__thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    transition: scale 0.6s var(--ease-out);
+  }
+
+  .work-card__link:hover .work-card__thumb :global(img) {
+    scale: 1.04;
+  }
+
+  .work-card__no-image {
+    font-family: var(--font-pixel);
+    font-size: 40px;
+    color: #fff;
+  }
+
+  .work-card__body {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .work-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .work-card__tags li {
+    padding: 0 8px;
+    font-size: 11px;
+    line-height: 20px;
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+
+  .work-card__title {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .work-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    font-size: 12px;
+    color: rgb(27 28 34 / 0.65);
+  }
+
+  .work-card__meta time {
+    font-family: var(--font-pixel);
+  }
+</style>
