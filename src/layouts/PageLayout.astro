@@ -80,7 +80,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
         hero === "sticker" && (
           <header class="page-hero">
             <div class="stage page-hero__stage">
-              <nav class:list={["page-hero__crumbs", hero === "title" && "visually-hidden"]} aria-label="パンくずリスト">
+              <nav class="page-hero__crumbs" aria-label="パンくずリスト">
                 <ol>
                   {
                     trail.map((crumb) => (
@@ -106,7 +106,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
         hero === "title" && titleImage && (
           <header class="page-hero is-title" style={{ "--hero-h": heroHeight ?? 420, "--title-w": titleBox?.width ?? 460, "--title-top": titleBox?.top ?? 200 }}>
             <div class="stage page-hero__stage">
-              <nav class:list={["page-hero__crumbs", hero === "title" && "visually-hidden"]} aria-label="パンくずリスト">
+              <nav class="page-hero__crumbs visually-hidden" aria-label="パンくずリスト">
                 <ol>
                   {
                     trail.map((crumb) => (
