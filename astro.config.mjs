@@ -8,6 +8,21 @@ import cloudflare from "@astrojs/cloudflare";
  */
 const isPagesPreview = process.env.PREVIEW_TARGET === "github-pages";
 
+/**
+ * CMS の下書きプレビューの入り口と終了（ADR-028）。サーバーで動く必要があるため、SSR のときだけ登録する。
+ * GitHub Pages のプレビュー（静的書き出し）には含めない。
+ */
+/** @type {import("astro").AstroIntegration} */
+const draftPreviewRoutes = {
+  name: "ami-draft-preview-routes",
+  hooks: {
+    "astro:config:setup": ({ injectRoute }) => {
+      injectRoute({ pattern: "/api/preview", entrypoint: new URL("./src/preview/enter.ts", import.meta.url), prerender: false });
+      injectRoute({ pattern: "/api/preview-exit", entrypoint: new URL("./src/preview/exit.ts", import.meta.url), prerender: false });
+    },
+  },
+};
+
 // https://astro.build/config
 export default defineConfig({
   // 本番ドメインが決まったら差し替える（canonical / OGP の絶対URLに使う）。
@@ -17,6 +32,8 @@ export default defineConfig({
   // 本番は CMS の更新をリクエスト時に反映するため SSR にする。
   // Frontend 側で2つ目のキャッシュ層（ISR 等）は持たない（CMS docs/04 §20, ADR-022）。
   output: isPagesPreview ? "static" : "server",
+
+  integrations: isPagesPreview ? [] : [draftPreviewRoutes],
 
   adapter: isPagesPreview
     ? undefined
@@ -50,6 +67,9 @@ export default defineConfig({
       CMS_SITE_KEY: envField.string({ context: "server", access: "public", optional: true }),
       // Delivery API の公開キー（ssdk_...）。リポジトリに置かない。
       CMS_DELIVERY_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      // お問い合わせフォームのボット対策（Cloudflare Turnstile）のサイトキー。公開してよい値。
+      // CMS の許可オリジンと同じホスト名で発行する（CMS docs/04 §21）。live で未設定なら送信できない。
+      PUBLIC_TURNSTILE_SITE_KEY: envField.string({ context: "client", access: "public", optional: true }),
     },
   },
 });

@@ -8,13 +8,45 @@
 import type { z } from "zod";
 import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 import {
+  AboutContentSchema,
   AmiHomeContentSchema,
+  AmiServiceCaseContentSchema,
   AmiServiceContentSchema,
+  AmiServicePageContentSchema,
   AmiTopicContentSchema,
+  ContactPageContentSchema,
+  FaqContentSchema,
+  JobPositionContentSchema,
   MemberContentSchema,
+  RecruitContentSchema,
+  SiteInfoContentSchema,
+  WORK_TAGS,
+  WorkContentSchema,
   type CmsLinkSchema,
 } from "./schemas";
-import type { HomeContent, Link, Media, Member, Service, StatementLine, Topic } from "./types";
+import { sanitizeHref, toRichText, type RichTextReporter } from "./richtext";
+import type {
+  AboutContent,
+  ContactPageContent,
+  Faq,
+  HomeContent,
+  JobPosition,
+  Link,
+  Media,
+  Member,
+  MemberSns,
+  PriceRow,
+  RecruitContent,
+  Service,
+  ServiceCase,
+  SiteInfo,
+  StatementLine,
+  Topic,
+  TopicDetail,
+  Work,
+  WorkDetail,
+  WorkTag,
+} from "./types";
 import { withBase } from "../url";
 
 export const DEFAULT_TOPICS_LIMIT = 4;
@@ -81,13 +113,80 @@ export function mapHome(entry: DeliveryEntry): MapResult<HomeContent> {
   };
 }
 
-export function mapService(entry: DeliveryEntry): MapResult<Service> {
+/** rich_text で飛ばしたノードを、どのエントリのどの項目か分かる形で報告する。 */
+function richTextReporter(report: RichTextReporter | undefined, model: string, entry: DeliveryEntry, field: string) {
+  return (message: string, detail: unknown) => report?.(message, { model, entryId: entry.id, field, detail });
+}
+
+export function mapService(entry: DeliveryEntry, report?: RichTextReporter): MapResult<Service> {
   const r = parseContent("ami_services", entry, AmiServiceContentSchema);
   if (!r.ok) return r;
   const c = r.value;
   return {
     ok: true,
-    value: { id: entry.id, title: c.title, summary: c.summary ?? null, image: toMedia(c.image), link: toLink(c.link) },
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      summary: c.summary ?? null,
+      image: toMedia(c.image),
+      link: toLink(c.link),
+      body: toRichText(c.body, richTextReporter(report, "ami_services", entry, "body")),
+      titleEn: c.title_en ?? null,
+      photo: toMedia(c.photo),
+      accent: c.accent ?? null,
+    },
+  };
+}
+
+/** Instagram / X / TikTok の link を、表示する SNS の一覧にする（http(s) の URL とアカウント名があるものだけ）。 */
+function toSns(links: Partial<Record<"instagram_url" | "x_url" | "tiktok_url", z.infer<typeof CmsLinkSchema> | null | undefined>>): MemberSns[] {
+  return (
+    [
+      ["Instagram", links.instagram_url],
+      ["X", links.x_url],
+      ["TikTok", links.tiktok_url],
+    ] as const
+  ).flatMap(([service, link]) => {
+    const target = link ? sanitizeHref(link.href) : null;
+    return link && target?.external && link.label.trim() ? [{ service, account: link.label.trim(), href: target.href }] : [];
+  });
+}
+
+/** 料金の表: 1 行に「項目|値|注記」。項目か値が空の行は読み飛ばす。 */
+export function parsePricing(text: string | null | undefined): PriceRow[] {
+  return (text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.split(/[|｜]/).map((s) => s.trim()))
+    .filter(([label, value]) => Boolean(label && value))
+    .map(([label, value, note]) => ({ label: label!, value: value!, note: note || null }));
+}
+
+export function mapServicePage(entry: DeliveryEntry): MapResult<{ lead: string | null }> {
+  const r = parseContent("ami_service_page", entry, AmiServicePageContentSchema);
+  if (!r.ok) return r;
+  return { ok: true, value: { lead: r.value.lead ?? null } };
+}
+
+export function mapServiceCase(entry: DeliveryEntry, report?: RichTextReporter): MapResult<ServiceCase> {
+  const r = parseContent("ami_service_cases", entry, AmiServiceCaseContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      serviceId: c.service?.id ?? null,
+      label: c.label ?? null,
+      title: c.title,
+      mainImage: toMedia(c.main_image),
+      body: toRichText(c.body, richTextReporter(report, "ami_service_cases", entry, "body")),
+      points: toRichText(c.points, richTextReporter(report, "ami_service_cases", entry, "points")),
+      sns: toSns(c),
+      pricing: parsePricing(c.pricing),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
+    },
   };
 }
 
@@ -105,8 +204,17 @@ export function mapTopic(entry: DeliveryEntry): MapResult<Topic> {
       thumbnail: toMedia(c.thumbnail),
       excerpt: c.excerpt ?? null,
       publishedDate: c.published_date,
+      externalLink: toLink(c.external_url),
+      pickup: c.pickup === true,
     },
   };
+}
+
+export function mapTopicDetail(entry: DeliveryEntry, report?: RichTextReporter): MapResult<TopicDetail> {
+  const r = mapTopic(entry);
+  if (!r.ok) return r;
+  const body = (entry.content as { body?: unknown }).body;
+  return { ok: true, value: { ...r.value, body: toRichText(body, richTextReporter(report, "ami_topics", entry, "body")) } };
 }
 
 export function mapMember(entry: DeliveryEntry): MapResult<Member> {
@@ -115,6 +223,160 @@ export function mapMember(entry: DeliveryEntry): MapResult<Member> {
   const c = r.value;
   return {
     ok: true,
-    value: { id: entry.id, name: c.name, role: c.role ?? null, portrait: toMedia(c.portrait) },
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      name: c.name,
+      role: c.role ?? null,
+      portrait: toMedia(c.portrait),
+      profile: c.profile ?? null,
+      birthday: c.birthday ?? null,
+      hometown: c.hometown ?? null,
+      height: c.height ?? null,
+      mbti: c.mbti ?? null,
+      personalColor: c.personal_color ?? null,
+      sns: toSns(c),
+      photos: (c.photos ?? []).slice(0, 4).map((m) => toMedia(m)!),
+    },
   };
+}
+
+/** 外部サイトへのリンク（http(s) のみ）。それ以外の形は出さない。 */
+function externalUrl(link: z.infer<typeof CmsLinkSchema> | null | undefined): string | null {
+  const target = link ? sanitizeHref(link.href) : null;
+  return target?.external ? target.href : null;
+}
+
+export function mapSiteInfo(entry: DeliveryEntry): MapResult<SiteInfo> {
+  const r = parseContent("site_info", entry, SiteInfoContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      companyName: c.company_name,
+      address: c.address ?? null,
+      phone: c.phone ?? null,
+      email: c.email ?? null,
+      instagramUrl: externalUrl(c.instagram_url),
+      xUrl: externalUrl(c.x_url),
+      defaultTitle: c.default_title ?? null,
+      titleTemplate: c.title_template ?? null,
+      defaultDescription: c.default_description ?? null,
+      defaultOgImage: toMedia(c.default_og_image),
+    },
+  };
+}
+
+export function mapAbout(entry: DeliveryEntry, report?: RichTextReporter): MapResult<AboutContent> {
+  const r = parseContent("about", entry, AboutContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      lead: c.lead ?? null,
+      body: toRichText(c.body, richTextReporter(report, "about", entry, "body")),
+      mainImage: toMedia(c.main_image),
+      representative: c.representative ?? null,
+      established: c.established ?? null,
+      capital: c.capital ?? null,
+      businessSummary: c.business_summary ?? null,
+    },
+  };
+}
+
+export function mapContactPage(entry: DeliveryEntry, report?: RichTextReporter): MapResult<ContactPageContent> {
+  const r = parseContent("contact_page", entry, ContactPageContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      lead: c.lead ?? null,
+      privacyNote: toRichText(c.privacy_note, richTextReporter(report, "contact_page", entry, "privacy_note")),
+      consentLabel: c.consent_label ?? null,
+    },
+  };
+}
+
+export function mapRecruit(entry: DeliveryEntry, report?: RichTextReporter): MapResult<RecruitContent> {
+  const r = parseContent("recruit", entry, RecruitContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      messageTitle: c.message_title,
+      messageBody: toRichText(c.message_body, richTextReporter(report, "recruit", entry, "message_body")),
+      mainImage: toMedia(c.main_image),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
+    },
+  };
+}
+
+export function mapJobPosition(entry: DeliveryEntry, report?: RichTextReporter): MapResult<JobPosition> {
+  const r = parseContent("job_positions", entry, JobPositionContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      employmentType: c.employment_type,
+      location: c.location ?? null,
+      summary: c.summary ?? null,
+      description: toRichText(c.description, richTextReporter(report, "job_positions", entry, "description")),
+      isOpen: c.is_open !== false,
+    },
+  };
+}
+
+export function mapFaq(entry: DeliveryEntry, report?: RichTextReporter): MapResult<Faq> {
+  const r = parseContent("faq", entry, FaqContentSchema);
+  if (!r.ok) return r;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      question: r.value.question,
+      answer: toRichText(r.value.answer, richTextReporter(report, "faq", entry, "answer")),
+    },
+  };
+}
+
+function isWorkTag(value: string): value is WorkTag {
+  return (WORK_TAGS as readonly string[]).includes(value);
+}
+
+export function mapWorkDetail(entry: DeliveryEntry, report?: RichTextReporter): MapResult<WorkDetail> {
+  const r = parseContent("works", entry, WorkContentSchema);
+  if (!r.ok) return r;
+  const c = r.value;
+  return {
+    ok: true,
+    value: {
+      id: entry.id,
+      slug: entry.slug,
+      title: c.title,
+      clientName: c.client_name ?? null,
+      summary: c.summary ?? null,
+      publishedDate: c.published_date ?? null,
+      tags: (c.tags ?? []).filter(isWorkTag),
+      thumbnail: toMedia(c.thumbnail),
+      gallery: (c.gallery ?? []).map((m) => toMedia(m)!),
+      body: toRichText(c.body, richTextReporter(report, "works", entry, "body")),
+      externalLink: toLink(c.external_url),
+    },
+  };
+}
+
+/** 一覧のカード用（本文・ギャラリーは持たない）。 */
+export function mapWork(entry: DeliveryEntry): MapResult<Work> {
+  const r = mapWorkDetail(entry);
+  if (!r.ok) return r;
+  const { gallery: _gallery, body: _body, externalLink: _link, ...work } = r.value;
+  return { ok: true, value: work };
 }

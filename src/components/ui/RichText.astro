@@ -1,0 +1,189 @@
+---
+/**
+ * CMS の rich_text を描画する（CMS docs/04 §17）。
+ * 変換（許可したノードだけ・リンクの検査）は lib/cms/richtext.ts で済ませてあり、ここは木をたどるだけ。
+ * HTML 文字列を差し込む書き方（set:html）はしない。
+ */
+import type { RtBlock } from "../../lib/cms/richtext";
+import CmsImage from "./CmsImage.astro";
+import RichInline from "./RichInline.astro";
+import RichList from "./RichList.astro";
+
+interface Props {
+  blocks: RtBlock[];
+  /** 暗い背景の上に置くとき */
+  tone?: "light" | "dark";
+  class?: string;
+}
+
+const { blocks, tone = "light", class: className } = Astro.props;
+---
+
+<div class:list={["rich-text", `is-${tone}`, className]}>
+  {
+    blocks.map((block) => {
+      switch (block.kind) {
+        case "paragraph":
+          return (
+            <p>
+              <RichInline nodes={block.children} />
+            </p>
+          );
+        case "heading": {
+          const Tag = `h${block.level}` as "h2" | "h3" | "h4";
+          return (
+            <Tag>
+              <RichInline nodes={block.children} />
+            </Tag>
+          );
+        }
+        case "quote":
+          return (
+            <blockquote>
+              <RichInline nodes={block.children} />
+            </blockquote>
+          );
+        case "code":
+          return (
+            <pre>
+              <code>{block.text}</code>
+            </pre>
+          );
+        case "list":
+          return <RichList list={block} />;
+        case "image":
+          return (
+            <figure>
+              <CmsImage media={block.media} photo />
+            </figure>
+          );
+        case "rule":
+          return <hr />;
+      }
+    })
+  }
+</div>
+
+<style>
+  .rich-text {
+    --rt-accent: var(--color-bg-3);
+    --rt-rule: rgb(27 28 34 / 0.2);
+    font-size: 15px;
+    line-height: 2;
+    overflow-wrap: anywhere;
+  }
+
+  .rich-text.is-dark {
+    --rt-accent: var(--color-accent-bright);
+    --rt-rule: rgb(255 255 255 / 0.3);
+  }
+
+  .rich-text > :global(* + *) {
+    margin-top: 1.4em;
+  }
+
+  .rich-text :global(h2),
+  .rich-text :global(h3),
+  .rich-text :global(h4) {
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .rich-text > :global(h2) {
+    margin-top: 2.4em;
+    padding: 0.35em 0.7em;
+    font-size: clamp(18px, 1.72vw, 22px);
+    color: #fff;
+    background: var(--color-bg-2);
+    border-left: 8px solid var(--color-accent-bright);
+  }
+
+  .rich-text.is-dark > :global(h2) {
+    color: var(--color-text);
+    background: #fff;
+  }
+
+  .rich-text > :global(h3) {
+    margin-top: 2em;
+    padding-bottom: 0.3em;
+    font-size: clamp(16px, 1.41vw, 18px);
+    border-bottom: 2px dashed var(--rt-accent);
+  }
+
+  .rich-text > :global(h4) {
+    margin-top: 1.8em;
+    font-size: 16px;
+    color: var(--rt-accent);
+  }
+
+  .rich-text :global(a) {
+    color: var(--rt-accent);
+    text-underline-offset: 3px;
+  }
+
+  .rich-text :global(a:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  .rich-text :global(strong) {
+    font-weight: 400;
+    background: linear-gradient(transparent 60%, rgb(0 192 232 / 0.35) 60%);
+  }
+
+  .rich-text :global(.rich-list) {
+    padding-left: 1.4em;
+  }
+
+  .rich-text :global(.rich-list.is-bullet) {
+    list-style: none;
+  }
+
+  /* 箇条書きの印はナビと同じ十字の星 */
+  .rich-text :global(.rich-list.is-bullet > li)::before {
+    content: "✦";
+    float: left;
+    width: 1.4em;
+    margin-left: -1.4em;
+    color: var(--rt-accent);
+  }
+
+  .rich-text :global(.rich-list.is-ordered) {
+    list-style: decimal;
+  }
+
+  .rich-text :global(.rich-list .rich-list) {
+    margin-top: 0.4em;
+  }
+
+  .rich-text :global(blockquote) {
+    margin-inline: 0;
+    padding: 0.6em 1.2em;
+    border-left: 4px solid var(--rt-rule);
+    opacity: 0.85;
+  }
+
+  .rich-text :global(pre) {
+    overflow-x: auto;
+    padding: 1em 1.2em;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #fff;
+    background: var(--color-text);
+  }
+
+  .rich-text :global(code) {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  .rich-text :global(figure img) {
+    width: auto;
+    max-height: 640px;
+    margin-inline: auto;
+    border: 2px solid var(--color-border);
+  }
+
+  .rich-text :global(hr) {
+    border: 0;
+    border-top: 2px dashed var(--rt-rule);
+  }
+</style>

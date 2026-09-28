@@ -24,6 +24,9 @@ importers:
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
+      sax:
+        specifier: ^1.6.1
+        version: 1.6.1
       sharp:
         specifier: ^0.35.4
         version: 0.35.4(@types/node@22.20.4)

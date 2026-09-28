@@ -1,0 +1,97 @@
+---
+/**
+ * Case Study の「実績」など（Figma: service）。CMS の rich_text を h3 ごとに区切り、✦ 付きの小見出しにする。
+ * 1 つ目は全幅、2 つ目からは 2 列に並べる（例: 戦略的プロセスエコノミー / マーケット実績・展開）。
+ * h3 より前の段落は、見出しの無い 1 つ目として扱う。
+ */
+import type { RtBlock } from "../../lib/cms/types";
+import RichInline from "../ui/RichInline.astro";
+import RichText from "../ui/RichText.astro";
+
+interface Props {
+  blocks: RtBlock[];
+}
+
+const { blocks } = Astro.props;
+
+type Group = { heading: Extract<RtBlock, { kind: "heading" }> | null; body: RtBlock[] };
+const groups: Group[] = [];
+for (const block of blocks) {
+  if (block.kind === "heading") groups.push({ heading: block, body: [] });
+  else if (groups.length === 0) groups.push({ heading: null, body: [block] });
+  else groups[groups.length - 1]!.body.push(block);
+}
+---
+
+{
+  groups.length > 0 && (
+    <div class="case-points">
+      {groups.map((group) => (
+        <div class="case-points__item">
+          {group.heading && (
+            <h5 class="case-points__heading">
+              <RichInline nodes={group.heading.children} />
+            </h5>
+          )}
+          {group.body.length > 0 && <RichText blocks={group.body} class="case-points__body" />}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  /* 1 つ目は全幅、2 つ目から 2 列（列の左端は 234 / 661 → 列の幅 427） */
+  .case-points {
+    display: grid;
+    grid-template-columns: minmax(0, 427px) minmax(0, 1fr);
+    gap: 45px 0;
+  }
+
+  .case-points__item:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .case-points__heading {
+    position: relative;
+    margin: 0;
+    padding-left: 25px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+
+  /* ✦（ドットの十字） */
+  .case-points__heading::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 15px;
+    height: 15px;
+    translate: 0 -50%;
+    background:
+      linear-gradient(currentColor, currentColor) center / 15px 5px no-repeat,
+      linear-gradient(currentColor, currentColor) center / 5px 15px no-repeat;
+  }
+
+  .case-points :global(.case-points__body) {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #1b1c22;
+  }
+
+  .case-points :global(.case-points__body > * + *) {
+    margin-top: 0.4em;
+  }
+
+  @media (max-width: 767px) {
+    .case-points {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+  }
+</style>

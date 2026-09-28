@@ -1,0 +1,179 @@
+---
+/**
+ * FAQ。よくある質問（faq）を表示順に並べる。質問を押すと回答が開く（<details>、JS なし）。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import ContactCta from "../components/sections/ContactCta.astro";
+import Decor from "../components/ui/Decor.astro";
+import RichText from "../components/ui/RichText.astro";
+import { CONTACT_HREF } from "../config/site";
+import { getCmsClient } from "../lib/cms/env";
+import { getFaqPageData } from "../lib/cms/queries";
+import { pageDescription, pageTitle } from "../lib/seo";
+import { withBase } from "../lib/url";
+import asteroid from "../assets/decor/asteroid.webp";
+import nebula from "../assets/decor/nebula.webp";
+import sparkleViolet from "../assets/decor/sparkle-violet.webp";
+
+const { siteInfo, faqs } = await getFaqPageData(getCmsClient(Astro.locals));
+---
+
+<PageLayout
+  siteInfo={siteInfo}
+  title={pageTitle(siteInfo, "FAQ")}
+  description={pageDescription(siteInfo)}
+  heading="FAQ"
+  headingSub="よくある質問"
+  crumbs={[{ label: "FAQ" }]}
+>
+  <section class="faq" aria-label="よくある質問">
+    <div class="stage faq__stage">
+      {
+        faqs.length > 0 ? (
+          <ul class="faq__list">
+            {faqs.map((item, i) => (
+              <li>
+                <details class="faq-item" open={i === 0}>
+                  <summary class="faq-item__question">
+                    <span class="faq-item__mark" aria-hidden="true">Q</span>
+                    <span class="faq-item__text">{item.question}</span>
+                    <span class="faq-item__toggle" aria-hidden="true" />
+                  </summary>
+                  <div class="faq-item__answer">
+                    <span class="faq-item__mark is-answer" aria-hidden="true">A</span>
+                    <RichText blocks={item.answer} />
+                  </div>
+                </details>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="faq__empty">よくある質問は準備中です。</p>
+        )
+      }
+
+      <Decor src={nebula} pc={[1060, 40, 180]} sp={false} float delay={0.5} />
+      <Decor src={asteroid} pc={[40, 300, 100]} sp={false} float delay={1.3} />
+      <Decor src={sparkleViolet} pc={[1170, 520, 56]} sp={false} twinkle delay={0.9} />
+    </div>
+  </section>
+
+  <ContactCta body={null} href={withBase(CONTACT_HREF)} />
+</PageLayout>
+
+<style>
+  .faq__stage {
+    padding: 0 var(--gutter) clamp(40px, 6.25vw, 80px);
+  }
+
+  .faq__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    gap: 20px;
+    max-width: 880px;
+    margin-inline: auto;
+  }
+
+  .faq-item {
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    box-shadow: 6px 6px 0 rgb(4 16 74 / 0.45);
+  }
+
+  .faq-item__question {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px clamp(16px, 2.5vw, 28px);
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .faq-item__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item__question:focus-visible {
+    outline: 3px solid var(--color-accent-bright);
+    outline-offset: 2px;
+  }
+
+  .faq-item__mark {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: #fff;
+    background: var(--color-border);
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .faq-item__mark.is-answer {
+    color: var(--color-border);
+    background: var(--color-accent-bright);
+  }
+
+  .faq-item__text {
+    flex: 1;
+  }
+
+  /* 開閉の印（＋ → −） */
+  .faq-item__toggle {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .faq-item__toggle::before,
+  .faq-item__toggle::after {
+    content: "";
+    position: absolute;
+    inset: 7px 0 auto;
+    height: 2px;
+    background: currentColor;
+    transition: rotate var(--duration-base) var(--ease-out);
+  }
+
+  .faq-item__toggle::after {
+    rotate: 90deg;
+  }
+
+  .faq-item[open] .faq-item__toggle::after {
+    rotate: 0deg;
+  }
+
+  .faq-item__answer {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 0 clamp(16px, 2.5vw, 28px);
+    padding: 20px 0 24px;
+    border-top: 2px dashed rgb(27 28 34 / 0.2);
+  }
+
+  .faq-item__answer :global(.rich-text) {
+    flex: 1;
+    padding-top: 4px;
+  }
+
+  .faq__empty {
+    position: relative;
+    z-index: var(--z-content);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-item__toggle::before,
+    .faq-item__toggle::after {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,198 @@
+---
+/**
+ * CONTACT（Figma: contact）。宇宙と地球の見出し → 地平線から下は淡い斜線の地に、案内文・フォーム・会社概要。
+ * 案内文・同意文は contact_page、入力欄は Form API の定義、会社概要は site_info + about（CMS）。
+ * フォームを出せない（定義を取れない・受付停止中・同意文が無い）ときは、その旨だけを出す。
+ * 位置・大きさはデザインの値（幅 1280 基準。design/csv/contact.csv）。地平線から下の要素は、地平線（y=586）からの位置。
+ */
+import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import PageLayout from "../layouts/PageLayout.astro";
+import ContactForm from "../components/contact/ContactForm.astro";
+import CompanyProfile from "../components/sections/CompanyProfile.astro";
+import EarthHeroDecor from "../components/layout/EarthHeroDecor.astro";
+import SkySection from "../components/layout/SkySection.astro";
+import LocalImage from "../components/ui/LocalImage.astro";
+import { PRIVACY_HREF } from "../config/site";
+import { getCmsClient, getFormSubmissionEndpoint } from "../lib/cms/env";
+import { CONTACT_FORM_KEY, getContactPageData, reportCmsError } from "../lib/cms/queries";
+import type { FormField } from "../lib/cms/types";
+import { pageDescription, pageTitle } from "../lib/seo";
+import { withBase } from "../lib/url";
+import title from "../assets/headings/title-contact.webp";
+import sticker from "../assets/headings/sticker-contact.webp";
+import companyPhone from "../assets/illustrations/company-phone.webp";
+import heart from "../assets/icons/heart-bubble.webp";
+
+const { siteInfo, contactPage, about, form } = await getContactPageData(getCmsClient(Astro.locals));
+
+// このサイトで入力欄を出せる型（値を文字列で送るもの）
+const SUPPORTED: FormField["type"][] = ["text", "textarea", "email", "tel", "url", "date", "select"];
+const fields = form?.fields.filter((f) => SUPPORTED.includes(f.type)) ?? [];
+const unsupported = form?.fields.filter((f) => !SUPPORTED.includes(f.type)) ?? [];
+if (unsupported.length > 0) reportCmsError("form has unsupported field types", { form: CONTACT_FORM_KEY, fields: unsupported.map((f) => f.key) });
+
+const consentLabel = contactPage?.consentLabel ?? null;
+if (form?.consentRequired && !consentLabel) reportCmsError("contact_page.consent_label is empty", { form: CONTACT_FORM_KEY });
+
+const canShowForm =
+  form !== null &&
+  form.acceptingSubmissions &&
+  fields.length > 0 &&
+  !unsupported.some((f) => f.required) &&
+  (!form.consentRequired || consentLabel !== null);
+
+const endpoint = getFormSubmissionEndpoint(CONTACT_FORM_KEY);
+const turnstileSiteKey = PUBLIC_TURNSTILE_SITE_KEY ?? null;
+if (canShowForm && endpoint && !turnstileSiteKey) reportCmsError("PUBLIC_TURNSTILE_SITE_KEY is not set", { form: CONTACT_FORM_KEY });
+
+const hasCompany = Boolean(siteInfo || about);
+---
+
+<PageLayout
+  siteInfo={siteInfo}
+  title={pageTitle(siteInfo, "Contact")}
+  description={pageDescription(siteInfo, contactPage?.lead?.replace(/\s+/g, " "))}
+  heading="Contact"
+  headingSub="お問い合わせ"
+  crumbs={[{ label: "CONTACT" }]}
+  hero="title"
+  titleImage={title}
+  titleBox={{ width: 598, top: 207 }}
+  heroHeight={586}
+  heroMinHeightSp={300}
+>
+  <Fragment slot="hero-decor">
+    <EarthHeroDecor />
+  </Fragment>
+
+  <SkySection sticker={sticker} stickerBox={[278, -38, 326]} lead={contactPage?.lead ?? null}>
+    <section class="contact-card" aria-label="お問い合わせフォーム">
+      {
+        canShowForm && form ? (
+          <ContactForm
+            form={form}
+            fields={fields}
+            consentLabel={consentLabel}
+            privacyHref={withBase(PRIVACY_HREF)}
+            endpoint={endpoint}
+            turnstileSiteKey={turnstileSiteKey}
+            topHref={withBase("/")}
+          />
+        ) : (
+          <p class="contact__closed">
+            ただいまフォームからのお問い合わせを受け付けておりません。
+            <br />
+            時間をおいて、もう一度アクセスしてください。
+          </p>
+        )
+      }
+    </section>
+
+    {
+      hasCompany && (
+        <section class="company" aria-labelledby="company-title">
+          <div class="company__visual">
+            <LocalImage src={companyPhone} alt="" />
+          </div>
+          <div class="company__body">
+            <h2 class="company__title" id="company-title">
+              <LocalImage src={heart} alt="" class="company__heart" />
+              会社概要
+            </h2>
+            <CompanyProfile siteInfo={siteInfo} about={about} variant="lines" />
+          </div>
+        </section>
+      )
+    }
+  </SkySection>
+</PageLayout>
+
+<style>
+  /* フォームの台紙 1000 幅（x=140）、地平線から 368（案内文の下 93） */
+  .contact-card {
+    position: relative;
+    z-index: var(--z-content);
+    max-width: 1000px;
+    /* 案内文の最後の行の文字の下端から 93（行の余白の分を引いて 82） */
+    margin: calc(82 / 12.8 * 1cqw) auto 0;
+    padding: 40px 40px 40px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.04);
+  }
+
+  .contact__closed {
+    line-height: 2.2;
+    text-align: center;
+  }
+
+  /* ---- 会社概要（スマホの絵 280 幅を x=195、表 601 幅を x=539。台紙の下から 95） ---- */
+  .company {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: 399px 601px;
+    justify-content: center;
+    margin-top: calc(95 / 12.8 * 1cqw);
+  }
+
+  .company__visual {
+    justify-self: center;
+    width: 280px;
+    margin-top: 12px;
+    translate: -4px 0;
+  }
+
+  .company__visual :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .company__title {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+
+  .company__title :global(.company__heart) {
+    width: 50px;
+    height: auto;
+  }
+
+  @media (max-width: 1099px) {
+    .company {
+      grid-template-columns: minmax(0, 601px);
+      gap: 40px;
+    }
+
+    .company__visual {
+      order: 2;
+      translate: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .contact-card {
+      margin-top: 48px;
+      padding: 28px 20px;
+      border-radius: 16px;
+    }
+
+    .company {
+      margin-top: 72px;
+    }
+
+    .company__title {
+      font-size: 22px;
+    }
+
+    .company__title :global(.company__heart) {
+      width: 40px;
+    }
+  }
+</style>

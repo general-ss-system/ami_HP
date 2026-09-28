@@ -1,0 +1,87 @@
+---
+/**
+ * 事業の画像。星空の丸い枠の上に、背景を透過した画像を下揃えではみ出して見せる。
+ * 上下にきらめきを添える。トップの Our Business と SERVICE ページで使う。
+ */
+import type { Media } from "../../lib/cms/types";
+import CmsImage from "./CmsImage.astro";
+import LocalImage from "./LocalImage.astro";
+import pillBg from "../../assets/backgrounds/business-pill.webp";
+import sparkle from "../../assets/icons/sparkle-light.webp";
+
+interface Props {
+  image: Media | null;
+  class?: string;
+}
+
+const { image, class: className } = Astro.props;
+---
+
+<div class:list={["service-visual", className]}>
+  <span class="service-visual__sparkles" aria-hidden="true">
+    <LocalImage src={sparkle} alt="" />
+    <LocalImage src={sparkle} alt="" />
+  </span>
+  <div class="service-visual__pill">
+    <LocalImage src={pillBg} alt="" class="service-visual__pill-bg" aria-hidden="true" />
+    {image && <CmsImage media={image} class="service-visual__image" />}
+  </div>
+  <span class="service-visual__sparkles" aria-hidden="true">
+    <LocalImage src={sparkle} alt="" />
+    <LocalImage src={sparkle} alt="" />
+  </span>
+</div>
+
+<style>
+  .service-visual {
+    display: grid;
+    gap: 19px;
+  }
+
+  .service-visual > :last-child {
+    margin-top: 11px;
+  }
+
+  .service-visual__sparkles {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .service-visual__sparkles :global(img) {
+    width: 30px;
+  }
+
+  .service-visual__pill {
+    position: relative;
+    width: 88.4%;
+    aspect-ratio: 313 / 461;
+    margin-inline: auto;
+  }
+
+  .service-visual__pill-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 999px;
+  }
+
+  /*
+   * 枠より縦に長い箱に、縦横比を保って下揃えで収める（上にはみ出して見える）。
+   * 画像は透明な余白を含まない透過 PNG を想定。
+   */
+  .service-visual__pill :global(.service-visual__image) {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    width: 92%;
+    height: 110%;
+    max-width: none;
+    translate: -50% 0;
+    object-fit: contain;
+    object-position: center bottom;
+    image-rendering: auto;
+    filter: drop-shadow(0 12px 18px rgb(10 10 60 / 0.35));
+  }
+</style>

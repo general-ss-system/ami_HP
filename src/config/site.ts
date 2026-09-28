@@ -11,10 +11,26 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { label: "ABOUT", href: "/#about" },
-  { label: "SERVICE", href: "/#service" },
-  { label: "MEMBER", href: "/#member" },
-  { label: "TOPICS", href: "/#topics" },
+  { label: "ABOUT", href: "/about" },
+  { label: "SERVICE", href: "/service" },
+  { label: "MEMBER", href: "/member" },
+  { label: "TOPICS", href: "/topics" },
 ];
 
+/** site_info を取得できないときだけ使うサイト名（ロゴの読み上げと同じ）。 */
+export const SITE_NAME = "合同会社ami";
+
 export const CONTACT_HREF = "/contact";
+export const PRIVACY_HREF = "/privacy";
+
+/**
+ * フッターのナビ。ヘッダー（デザインの 4 項目）に、デザインに無い下層ページを足したもの。
+ */
+export const FOOTER_ITEMS: readonly NavItem[] = [
+  ...NAV_ITEMS,
+  { label: "WORKS", href: "/works" },
+  { label: "RECRUIT", href: "/recruit" },
+  { label: "FAQ", href: "/faq" },
+  { label: "CONTACT", href: CONTACT_HREF },
+  { label: "PRIVACY POLICY", href: PRIVACY_HREF },
+];

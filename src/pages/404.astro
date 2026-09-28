@@ -1,0 +1,68 @@
+---
+/**
+ * ページが見つからないとき。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import Decor from "../components/ui/Decor.astro";
+import { withBase } from "../lib/url";
+import astronautBunny from "../assets/decor/astronaut-bunny.webp";
+
+Astro.response.status = 404;
+---
+
+<PageLayout title="ページが見つかりません" heading="404" headingSub="Not Found" crumbs={[{ label: "404" }]} noindex>
+  <section class="not-found">
+    <div class="stage not-found__stage">
+      <p class="not-found__text">
+        お探しのページは、宇宙のどこかへ<br />飛んでいってしまったようです。
+      </p>
+      <p class="not-found__action">
+        <a href={withBase("/")}>TOP へもどる</a>
+      </p>
+      <Decor src={astronautBunny} pc={[900, 0, 180]} sp={[260, 170, 90]} float />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .not-found__stage {
+    padding: 0 var(--gutter) clamp(96px, 12.5vw, 160px);
+    text-align: center;
+  }
+
+  .not-found__text {
+    position: relative;
+    z-index: var(--z-content);
+    line-height: 2.2;
+    letter-spacing: 0.12em;
+  }
+
+  .not-found__action {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    justify-content: center;
+    margin-top: 48px;
+  }
+
+  .not-found__action a {
+    display: grid;
+    place-items: center;
+    width: 220px;
+    height: 64px;
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid #000;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+
+  .not-found__action a:hover {
+    color: #fff;
+    background: var(--color-bg-3);
+  }
+</style>

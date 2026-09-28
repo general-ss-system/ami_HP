@@ -1,0 +1,166 @@
+---
+/**
+ * TOPICS 一覧の中身（Figma: topics）。ドット絵のタイトル・Pick UP!・分類のタブ・カード・ページ送り。
+ * ページ番号・分類ごとのルートから共通で使う。Pick UP! は 1 ページ目（分類なし）だけに出す。
+ * 位置・大きさはデザインの値（幅 1280 基準。design/csv/topics.csv）。
+ */
+import PageLayout from "../../layouts/PageLayout.astro";
+import TopicCard from "../sections/TopicCard.astro";
+import Decor from "../ui/Decor.astro";
+import FilterTabs, { type FilterTab } from "../ui/FilterTabs.astro";
+import Pager from "../ui/Pager.astro";
+import PickupCarousel from "./PickupCarousel.astro";
+import { TOPIC_CATEGORIES } from "../../lib/cms/schemas";
+import type { TopicsArchiveData } from "../../lib/cms/queries";
+import type { TopicCategory } from "../../lib/cms/types";
+import { TOPIC_CATEGORY_LABEL, topicsListHref } from "../../lib/topics";
+import { pageDescription, pageTitle } from "../../lib/seo";
+import title from "../../assets/headings/title-topics.webp";
+import asteroid from "../../assets/decor/asteroid.webp";
+import planetoid from "../../assets/decor/planetoid.webp";
+import planetRinged from "../../assets/decor/planet-ringed.webp";
+import sparkleGold from "../../assets/decor/sparkle-gold.webp";
+import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
+import sparkleViolet from "../../assets/decor/sparkle-violet.webp";
+import moonBunny from "../../assets/decor/moon-bunny.webp";
+
+interface Props {
+  data: TopicsArchiveData;
+}
+
+const { siteInfo, topics, pickups, category, page, totalPages } = Astro.props.data;
+
+const categoryLabel = category ? TOPIC_CATEGORY_LABEL[category] : null;
+const titleParts = ["Topics", categoryLabel, page > 1 ? `${page}ページ目` : null].filter(Boolean);
+
+// 札の色（デザインの値。分類ごとに常に色が付いていて、選んでいる札は光る）
+const TAB_COLORS: Record<TopicCategory, { bg: string; fg: string }> = {
+  news: { bg: "#02B7E9", fg: "#C8ECF6" },
+  sns: { bg: "#A26AE7", fg: "#EDC8F6" },
+  column: { bg: "#53DF7F", fg: "#D4F6C8" },
+};
+
+const tabs: FilterTab[] = [
+  { key: "all", label: "すべて", href: topicsListHref(null), current: category === null, bg: "#C8ECF6", fg: "#041049" },
+  ...TOPIC_CATEGORIES.map((c) => ({
+    key: c,
+    label: TOPIC_CATEGORY_LABEL[c],
+    href: topicsListHref(c),
+    current: category === c,
+    ...TAB_COLORS[c],
+  })),
+];
+
+const crumbs = [
+  { label: "TOPICS", href: category || page > 1 ? topicsListHref(null) : undefined },
+  ...(categoryLabel ? [{ label: categoryLabel, href: page > 1 ? topicsListHref(category) : undefined }] : []),
+  ...(page > 1 ? [{ label: `${page}ページ目` }] : []),
+];
+---
+
+<PageLayout
+  siteInfo={siteInfo}
+  title={pageTitle(siteInfo, titleParts.join(" / "))}
+  description={pageDescription(siteInfo)}
+  heading="Topics"
+  headingSub={[categoryLabel, page > 1 ? `${page}ページ目` : null].filter(Boolean).join(" ") || "お知らせ・SNS・コラム"}
+  crumbs={crumbs}
+  hero="title"
+  titleImage={title}
+  titleBox={{ width: 453, top: 199 }}
+  heroHeight={pickups.length > 0 ? 430 : 400}
+>
+  <Fragment slot="hero-decor">
+    <Decor src={asteroid} pc={[182, 101, 126]} sp={[12, 70, 56]} float delay={0.3} eager />
+    <Decor src={sparkleGold} pc={[62, 153, 60]} sp={false} twinkle delay={0.9} eager />
+    <Decor src={planetRinged} pc={[67, 256, 148.8]} sp={false} rotate={-16.6} float delay={1.4} eager />
+    <Decor src={sparkleBlue} pc={[280, 265, 99]} sp={false} twinkle delay={0.5} eager />
+    <Decor src={sparkleGold} pc={[632, 121, 28]} sp={false} twinkle delay={1.8} eager />
+    <Decor src={sparkleViolet} pc={[864, 145, 56]} sp={false} twinkle delay={1.1} eager />
+    <Decor src={planetoid} pc={[920, 202, 190]} sp={[296, 60, 70]} float delay={0.8} eager />
+    <Decor src={sparkleBlue} pc={[1080, 131, 118]} sp={false} twinkle delay={0.2} eager />
+    <Decor src={sparkleGold} pc={[1169, 354, 60]} sp={false} twinkle delay={1.3} eager />
+  </Fragment>
+
+  <PickupCarousel topics={pickups} />
+
+  <section class:list={["topics-archive", pickups.length > 0 && "has-pickup"]} aria-label="記事の一覧">
+    <div class="stage topics-archive__stage">
+      <div class="topics-archive__inner">
+      <h2 class="visually-hidden">記事の一覧</h2>
+      <FilterTabs tabs={tabs} label="分類で絞り込む" variant="pixel" />
+
+      {
+        topics.length > 0 ? (
+          <ul class="topics-archive__list">
+            {topics.map((topic) => (
+              <li class="topics-archive__item">
+                <TopicCard topic={topic} headingLevel={3} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="topics-archive__empty">まだ記事がありません。</p>
+        )
+      }
+
+      <Pager page={page} totalPages={totalPages} hrefFor={(n) => topicsListHref(category, n)} />
+      </div>
+
+      <Decor src={moonBunny} pc={[40, 80, 137]} sp={false} float delay={1.1} />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  /* Pick UP! の下端（y=839）から札（y=967）まで 128、札の下端から カード（y=1092.5）まで 87 */
+  /* stage に左右の余白を付けると cqw（飾りの位置）がずれるので、左右の余白は中身に付ける */
+  .topics-archive__stage {
+    padding-block: clamp(24px, 3.125vw, 40px) clamp(96px, 12.5vw, 160px);
+  }
+
+  .topics-archive__inner {
+    padding-inline: var(--gutter);
+  }
+
+  .topics-archive.has-pickup .topics-archive__stage {
+    padding-top: clamp(48px, calc(96 / 12.8 * 1vw), 96px);
+  }
+
+  /* カード 305 × 3 列、列の間 42.5・行の送り 486.3（カードの高さ 440 を引いて 46） */
+  .topics-archive__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(3, 305px);
+    justify-content: center;
+    gap: 46px 42.5px;
+    margin-top: 87px;
+  }
+
+  .topics-archive__item {
+    display: flex;
+    justify-content: center;
+  }
+
+  .topics-archive__empty {
+    position: relative;
+    z-index: var(--z-content);
+    margin-top: 64px;
+    text-align: center;
+  }
+
+  @media (max-width: 1099px) {
+    .topics-archive__list {
+      grid-template-columns: repeat(2, 305px);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .topics-archive__list {
+      grid-template-columns: 1fr;
+      gap: 48px;
+      margin-top: 48px;
+    }
+  }
+</style>

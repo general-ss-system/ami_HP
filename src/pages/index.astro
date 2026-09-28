@@ -12,19 +12,20 @@ import Business from "../components/sections/Business.astro";
 import Topics from "../components/sections/Topics.astro";
 import Members from "../components/sections/Members.astro";
 import ContactCta from "../components/sections/ContactCta.astro";
-import { CONTACT_HREF } from "../config/site";
+import { CONTACT_HREF, SITE_NAME } from "../config/site";
 import { getCmsClient } from "../lib/cms/env";
-import { getTopPageData } from "../lib/cms/queries";
+import { getTopPageData, reportCmsError } from "../lib/cms/queries";
+import { pageDescription, pageOgImage } from "../lib/seo";
 import { withBase } from "../lib/url";
 
-const { home, services, topics, members } = await getTopPageData(getCmsClient());
+const { siteInfo, home, services, topics, members } = await getTopPageData(getCmsClient(Astro.locals));
 
-// TODO: SEO の値は site_info（CMS）から解決する。モデルが決まるまでの仮の値。
-const title = "合同会社ami";
-const description = "「トキメキの発生点」を生み出す Z世代インフルエンサー・クリエイター集団。";
+// SEO は site_info（CMS）の既定値。<title> は空にできないため、取得できなければサイト名にして記録する
+const title = siteInfo?.defaultTitle ?? siteInfo?.companyName ?? SITE_NAME;
+if (!siteInfo) reportCmsError("site_info is unavailable; using SITE_NAME for the top page title", {});
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={pageDescription(siteInfo)} ogImage={pageOgImage(Astro.site, siteInfo)}>
   <SiteHeader />
   <div class="page">
     <main>
@@ -32,11 +33,11 @@ const description = "「トキメキの発生点」を生み出す Z世代イン
       <Marquee text={'Where "Tokimeki" Originates.'} />
       {home && <Statement statement={home.statement} />}
       <Business services={services} />
-      <Topics topics={topics} />
+      <Topics topics={topics} moreHref={withBase("/topics")} />
       <Members members={members} moreHref={withBase("/member")} />
       <ContactCta body={home?.contactBody ?? null} href={withBase(CONTACT_HREF)} />
     </main>
-    <SiteFooter />
+    <SiteFooter siteInfo={siteInfo} />
   </div>
 </BaseLayout>
 

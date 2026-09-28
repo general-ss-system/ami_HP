@@ -1,0 +1,151 @@
+---
+/**
+ * 会社概要の表。会社名・所在地は site_info、代表・設立・資本金・事業内容は about（CMS）。
+ * 値が空の行は出さない。項目名と並び順はコードで管理する。
+ *
+ * variant:
+ *   panel … 白い面に入れる（ABOUT）
+ *   lines … 罫線だけの表（Figma: contact の会社概要。項目名は水色で右寄せ、行の間に淡い線）
+ */
+import type { AboutContent, SiteInfo } from "../../lib/cms/types";
+import Panel from "../ui/Panel.astro";
+
+interface Props {
+  siteInfo: SiteInfo | null;
+  about: AboutContent | null;
+  variant?: "panel" | "lines";
+}
+
+const { siteInfo, about, variant = "panel" } = Astro.props;
+
+const rows = [
+  { label: "会社名", value: siteInfo?.companyName ?? null },
+  { label: "代表", value: about?.representative ?? null },
+  { label: "所在地", value: siteInfo?.address ?? null },
+  { label: "設立", value: about?.established ?? null },
+  { label: "資本金", value: about?.capital ?? null },
+  { label: "事業内容", value: about?.businessSummary ?? null },
+  { label: "電話番号", value: siteInfo?.phone ?? null },
+  { label: "メール", value: siteInfo?.email ?? null },
+]
+  .filter((row): row is { label: string; value: string } => Boolean(row.value?.trim()))
+  .map((row) => ({ ...row, lines: row.value.replace(/\r\n?/g, "\n").split("\n") }));
+
+const Wrapper = variant === "panel" ? Panel : "div";
+---
+
+{
+  rows.length > 0 && (
+    <Wrapper class:list={["company-profile", `is-${variant}`]}>
+      <dl class="company-profile__list">
+        {rows.map((row) => (
+          <div class="company-profile__row">
+            <dt>{row.label}</dt>
+            <dd>
+              {row.lines.map((line, i) => (
+                <>
+                  {i > 0 && <br />}
+                  {line}
+                </>
+              ))}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </Wrapper>
+  )
+}
+
+<style>
+  .company-profile__row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 16px;
+    padding: 22px 8px;
+    border-bottom: 2px dashed rgb(27 28 34 / 0.2);
+  }
+
+  .company-profile__row:first-child {
+    padding-top: 0;
+  }
+
+  .company-profile__row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .company-profile__row dt {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--color-bg-3);
+  }
+
+  .company-profile__row dt::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent-bright);
+    translate: 0 -2px;
+  }
+
+  .company-profile__row dd {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  /* ---- lines（Figma: contact。表の幅 601、項目名の右端 616、値は 726 から、行の高さ 72〜78） ---- */
+  .is-lines .company-profile__row {
+    grid-template-columns: 77px 1fr;
+    gap: 110px;
+    align-items: baseline;
+    padding: 24px 0 26px;
+    font-size: 16px;
+    line-height: 1.5;
+    border-bottom: 1.66px solid rgb(152 201 214 / 0.36);
+  }
+
+  .is-lines .company-profile__row:first-child {
+    padding-top: 24px;
+  }
+
+  .is-lines .company-profile__row:last-child {
+    padding-bottom: 26px;
+    border-bottom: 0;
+  }
+
+  .is-lines .company-profile__row dt {
+    display: block;
+    font-size: 15px;
+    text-align: right;
+    color: #02b7e9;
+  }
+
+  .is-lines .company-profile__row dt::before {
+    content: none;
+  }
+
+  .is-lines .company-profile__row dd {
+    margin: 0;
+    color: #1b1c22;
+  }
+
+  @media (max-width: 767px) {
+    .company-profile__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding-block: 16px;
+    }
+
+    .is-lines .company-profile__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding: 16px 4px;
+    }
+
+    .is-lines .company-profile__row dt {
+      text-align: left;
+    }
+  }
+</style>

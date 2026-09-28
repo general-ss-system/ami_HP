@@ -1,0 +1,645 @@
+---
+/**
+ * SERVICE（Figma: service）。宇宙と地球の見出し → 案内文 → 事業（ami_services）ごとのパネルと Case Study（ami_service_cases）。
+ * パネルの色は事業の accent（未入力なら並び順で交互）。番号は並び順。トップの「View more」からは #slug で各事業へ飛んでくる。
+ * Case Study は写真（main_image）があると「商品」の並び、無いと「メディア」の並び。
+ * 位置・大きさはデザインの値（幅 1280 基準。design/csv/service.csv）。
+ */
+import PageLayout from "../layouts/PageLayout.astro";
+import EarthHeroDecor from "../components/layout/EarthHeroDecor.astro";
+import SkySection from "../components/layout/SkySection.astro";
+import CasePoints from "../components/service/CasePoints.astro";
+import CmsImage from "../components/ui/CmsImage.astro";
+import LocalImage from "../components/ui/LocalImage.astro";
+import RichText from "../components/ui/RichText.astro";
+import { getCmsClient } from "../lib/cms/env";
+import { getServicePageData } from "../lib/cms/queries";
+import { isEmptyRichText } from "../lib/cms/richtext";
+import type { ServiceCase } from "../lib/cms/types";
+import { pageDescription, pageTitle } from "../lib/seo";
+import title from "../assets/headings/title-service.webp";
+import sticker from "../assets/headings/sticker-our-business.webp";
+import caseStudy from "../assets/headings/sticker-case-study.webp";
+import badge from "../assets/decor/number-badge.webp";
+
+const { siteInfo, lead, services, casesByService } = await getServicePageData(getCmsClient(Astro.locals));
+
+const accentOf = (accent: "pink" | "blue" | null, i: number) => accent ?? (i % 2 === 0 ? "pink" : "blue");
+const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
+---
+
+<PageLayout
+  siteInfo={siteInfo}
+  title={pageTitle(siteInfo, "Service")}
+  description={pageDescription(siteInfo, lead?.replace(/\s+/g, " ") ?? (services.map((s) => s.title).join("・") || null))}
+  heading="Service"
+  headingSub="事業内容"
+  crumbs={[{ label: "SERVICE" }]}
+  hero="title"
+  titleImage={title}
+  titleBox={{ width: 516, top: 205 }}
+  heroHeight={586}
+  heroMinHeightSp={300}
+>
+  <Fragment slot="hero-decor">
+    <EarthHeroDecor />
+  </Fragment>
+
+  <SkySection sticker={sticker} stickerBox={[327, -20, 349]} lead={lead} leadTop={115}>
+    {
+      services.map((service, i) => {
+        const cases = casesByService.get(service.id) ?? [];
+        return (
+          <section
+            class:list={["service", `is-${accentOf(service.accent, i)}`]}
+            id={service.slug ?? service.id}
+            aria-labelledby={`service-${service.id}`}
+          >
+            <div class:list={["service__head", service.photo && "has-photo"]}>
+              <div class="service__text">
+                <div class="service__heading">
+                  <span class="service__number" aria-hidden="true">
+                    <LocalImage src={badge} alt="" />
+                    <span>{String(i + 1).padStart(2, "0")}</span>
+                  </span>
+                  <div>
+                    <h2 class="service__title" id={`service-${service.id}`}>
+                      {service.title}
+                    </h2>
+                    {service.titleEn && (
+                      <p class="service__title-en" lang="en">
+                        {service.titleEn}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {!isEmptyRichText(service.body) ? (
+                  <RichText blocks={service.body} class="service__body" />
+                ) : (
+                  service.summary && <p class="service__body">{service.summary}</p>
+                )}
+              </div>
+              {service.photo && (
+                <figure class="service__photo">
+                  <CmsImage media={service.photo} photo />
+                </figure>
+              )}
+            </div>
+
+            {cases.length > 0 && (
+              <div class="cases">
+                <LocalImage src={caseStudy} alt="" class="cases__sticker" />
+                <h3 class="visually-hidden">Case Study（{service.title}の事例）</h3>
+                {cases.map((c) => (
+                  <article class:list={["case", `is-${kindOf(c)}`]} aria-labelledby={`case-${c.id}`}>
+                    <div class="case__main">
+                      {c.mainImage && (
+                        <figure class="case__image">
+                          <CmsImage media={c.mainImage} photo />
+                        </figure>
+                      )}
+                      <div class="case__text">
+                        <div class="case__heading">
+                          {c.label && <p class="case__label">{c.label}</p>}
+                          <h4 class="case__title" id={`case-${c.id}`}>
+                            {c.title}
+                          </h4>
+                        </div>
+
+                        {c.sns.length > 0 && (
+                          <div class="case__sns">
+                            <p class="case__sns-label" lang="en">
+                              SNS
+                            </p>
+                            <ul>
+                              {c.sns.map((s) => (
+                                <li>
+                                  <span class="case__sns-service">{s.service}</span>
+                                  <a href={s.href} target="_blank" rel="noopener noreferrer">
+                                    {s.account}
+                                    <span class="visually-hidden">（{s.service}・新しいタブで開く）</span>
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {!isEmptyRichText(c.body) && <RichText blocks={c.body} class="case__body" />}
+
+                        {kindOf(c) === "media" && !isEmptyRichText(c.points) && (
+                          <div class="case__points">
+                            <CasePoints blocks={c.points} />
+                          </div>
+                        )}
+
+                        {c.pricing.length > 0 && (
+                          <table class="case__pricing">
+                            <caption class="visually-hidden">{c.title}の料金</caption>
+                            <tbody>
+                              {c.pricing.map((row) => (
+                                <tr>
+                                  <th scope="row">{row.label}</th>
+                                  <td>
+                                    {row.value}
+                                    {row.note && <small>{row.note}</small>}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+
+                      {kindOf(c) === "media" && c.gallery.length > 0 && (
+                        <ul class:list={["case__reels", c.gallery.length === 1 && "is-single"]}>
+                          {c.gallery.slice(0, 4).map((m) => (
+                            <li>
+                              <CmsImage media={m} photo />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {kindOf(c) === "product" && !isEmptyRichText(c.points) && (
+                      <div class="case__points">
+                        <CasePoints blocks={c.points} />
+                      </div>
+                    )}
+
+                    {kindOf(c) === "product" && c.gallery.length > 0 && (
+                      <ul class="case__gallery">
+                        {c.gallery.slice(0, 5).map((m, gi) => (
+                          <li class:list={[gi === 4 && "is-large"]}>
+                            <CmsImage media={m} photo />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })
+    }
+
+  </SkySection>
+</PageLayout>
+
+<style>
+  /*
+   * パネル: 幅 999・角丸 20.5・線 1px。中の余白は 44.5。
+   * ピンク（#FFF6FF / #FF69AA）と水色（#F6FEFF / #00ADDC）。事業どうしの間は 87。
+   */
+  .service {
+    --accent: #ff69aa;
+    --accent-sub: #ff69aa;
+    --panel-bg: #fff6ff;
+    position: relative;
+    z-index: var(--z-content);
+    max-width: 999px;
+    margin: 64px auto 0;
+    padding: 68.5px 44.5px 67px;
+    background: var(--panel-bg);
+    border: 1px solid var(--accent);
+    border-radius: 20.5px;
+    scroll-margin-top: calc(var(--header-height) + 24px);
+  }
+
+  .service.is-blue {
+    --accent: #00addc;
+    --accent-sub: #00c0e8;
+    --panel-bg: #f6feff;
+  }
+
+  .service + .service {
+    margin-top: 87px;
+  }
+
+  /* 見出しと本文（左）と写真 393×298（右）。写真の左端は 702 */
+  .service__head {
+    display: grid;
+    gap: 40px;
+  }
+
+  .service__head.has-photo {
+    grid-template-columns: minmax(0, 1fr) 393px;
+    gap: 56px;
+  }
+
+  .service__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  .service__number {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 55px;
+    height: 55px;
+    font-family: var(--font-pixel);
+    font-size: 24px;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .service__number :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .service__number span {
+    position: relative;
+  }
+
+  .service__title {
+    font-size: clamp(24px, calc(32 / 12.8 * 1vw), 32px);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: #1b1c22;
+  }
+
+  .service__title-en {
+    margin-top: 5px;
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+
+  .service :global(.service__body) {
+    margin-top: 35px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #1b1c22;
+  }
+
+  .service :global(.service__body > * + *) {
+    margin-top: 1.8em;
+  }
+
+  .service__photo {
+    overflow: hidden;
+    border-radius: 11px;
+  }
+
+  .service__photo :global(img) {
+    width: 100%;
+    aspect-ratio: 393 / 298;
+    object-fit: cover;
+    object-position: center 25%;
+  }
+
+  /* ---- Case Study: 白い台紙（幅 910・角丸 21）。ステッカーは台紙の左上から (-67〜-83, -27) ---- */
+  .cases {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    margin-top: 78px;
+  }
+
+  .cases :global(.cases__sticker) {
+    position: absolute;
+    z-index: 2;
+    top: -27px;
+    left: -67px;
+    width: 257px;
+    height: auto;
+  }
+
+  .service.is-blue .cases {
+    margin-top: 57px;
+  }
+
+  .service.is-blue .cases :global(.cases__sticker) {
+    left: -83px;
+  }
+
+  .case {
+    padding: 73px 41px 76px 49px;
+    background: #fff;
+    border-radius: 21px;
+  }
+
+  .case.is-media {
+    padding: 69px 44px 63px 46px;
+  }
+
+  /* 商品: 写真 370×281（左）と文章（左端 660） */
+  .case__main {
+    display: grid;
+    gap: 56px;
+  }
+
+  .case.is-product .case__main {
+    grid-template-columns: 370px minmax(0, 1fr);
+  }
+
+  .case.is-product .case__text {
+    padding-top: 16px;
+  }
+
+  .case__image {
+    overflow: hidden;
+    border-radius: 9.4px;
+  }
+
+  .case__image :global(img) {
+    width: 100%;
+    aspect-ratio: 370 / 281;
+    object-fit: cover;
+  }
+
+  /* 小見出しと名前: 左に 8×67 の線 */
+  .case__heading {
+    display: grid;
+    align-content: center;
+    gap: 8px;
+    min-height: 67px;
+    padding-left: 13px;
+    border-left: 8px solid var(--accent);
+  }
+
+  .service.is-blue .case__heading {
+    border-left-color: #00c0e8;
+  }
+
+  .case__label {
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--accent);
+  }
+
+  .service.is-blue .case__label {
+    color: #00c0e8;
+  }
+
+  .case__title {
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: #1b1c22;
+  }
+
+  .case :global(.case__body) {
+    margin-top: 24px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #1b1c22;
+  }
+
+  /* メディアの本文は 13px（行の送り 24） */
+  .case.is-media :global(.case__body) {
+    font-size: 13px;
+    line-height: 1.85;
+  }
+
+  .case :global(.case__body > * + *) {
+    margin-top: 1.7em;
+  }
+
+  /* SNS: Instagram @… / X @… / TikTok @…（ドットの書体・アカウントは水色の下線） */
+  .case__sns {
+    margin-top: 30px;
+  }
+
+  .case__sns-label {
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    line-height: 1;
+    color: #3ad4ff;
+  }
+
+  .case__sns ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .case__sns-service {
+    margin-right: 10px;
+    color: #1b1c22;
+  }
+
+  .case__sns a {
+    color: #00c0e8;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+
+  .case__sns a:hover {
+    color: #0090b0;
+  }
+
+  /* 料金の表（幅 439・線 #AAD1DC・角丸 5.5。項目の欄 140 は #E7F6FB） */
+  .case__pricing {
+    width: 100%;
+    max-width: 439px;
+    margin-top: 28px;
+    font-family: "Hiragino Sans", "Noto Sans JP", "BIZ UDPGothic", "Yu Gothic", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid #aad1dc;
+    border-radius: 5.5px;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+  }
+
+  .case__pricing th,
+  .case__pricing td {
+    padding: 12px 16px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .case__pricing tr + tr > * {
+    border-top: 1px solid #aad1dc;
+  }
+
+  .case__pricing th {
+    width: 140px;
+    font-weight: 400;
+    color: #333;
+    background: #e7f6fb;
+  }
+
+  .case__pricing td {
+    color: #212121;
+    background: #fff;
+  }
+
+  .case__pricing small {
+    display: block;
+    font-size: 10.5px;
+  }
+
+  /* メディア: 縦長の写真 150.7×198.5 を 2×2（間 19.6 / 23.2）、1 枚なら 263×346 */
+  .case.is-media .case__main {
+    grid-template-columns: minmax(0, 439px) 321px;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .case__reels {
+    display: grid;
+    grid-template-columns: repeat(2, 150.7px);
+    align-content: start;
+    gap: 23.2px 19.6px;
+    margin-top: 10px;
+  }
+
+  .case__reels li {
+    overflow: hidden;
+    border-radius: 11.9px;
+  }
+
+  .case__reels :global(img) {
+    width: 100%;
+    aspect-ratio: 150.7 / 198.5;
+    object-fit: cover;
+  }
+
+  .case__reels.is-single {
+    grid-template-columns: 263px;
+    justify-content: end;
+    margin-top: 64px;
+  }
+
+  /* 写真が 1 枚（263 幅）のときは、文章の列を広げる（長い名前を 1 行に） */
+  @media (min-width: 1100px) {
+    .case.is-media .case__main:has(.case__reels.is-single) {
+      grid-template-columns: minmax(0, 1fr) 263px;
+    }
+  }
+
+  .case__reels.is-single :global(img) {
+    aspect-ratio: 263 / 346;
+  }
+
+  .case.is-media .case__points {
+    margin-top: 30px;
+  }
+
+  /* 商品: 実績（写真の下 50）と写真の一覧（208×158 を 2×2、右に 371.7×340） */
+  .case.is-product .case__points {
+    margin-top: 50px;
+  }
+
+  .case__gallery {
+    display: grid;
+    grid-template-columns: 208px 208px minmax(0, 1fr);
+    grid-template-rows: 158px 158px;
+    gap: 24px 12px;
+    margin-top: 50px;
+  }
+
+  .case__gallery li {
+    overflow: hidden;
+    border-radius: 10.2px;
+  }
+
+  .case__gallery li.is-large {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    margin-left: 8px;
+  }
+
+  .case__gallery :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 1099px) {
+    .service__head.has-photo,
+    .case.is-product .case__main,
+    .case.is-media .case__main {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .service__photo {
+      max-width: 520px;
+    }
+
+    .case__reels,
+    .case__reels.is-single {
+      justify-content: start;
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .service {
+      padding: 40px 20px 44px;
+      border-radius: 16px;
+    }
+
+    .service + .service {
+      margin-top: 56px;
+    }
+
+    .service__heading {
+      gap: 16px;
+    }
+
+    .service :global(.service__body) {
+      margin-top: 24px;
+    }
+
+    .cases {
+      margin-top: 64px;
+    }
+
+    .cases :global(.cases__sticker),
+    .service.is-blue .cases :global(.cases__sticker) {
+      top: -36px;
+      left: -12px;
+      width: 180px;
+    }
+
+    .case,
+    .case.is-media {
+      padding: 48px 20px 32px;
+      border-radius: 14px;
+    }
+
+    .case__gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: none;
+      gap: 12px;
+    }
+
+    .case__gallery li {
+      aspect-ratio: 208 / 158;
+    }
+
+    .case__gallery li.is-large {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      margin-left: 0;
+      aspect-ratio: 371.7 / 340;
+    }
+
+    .case__reels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+  }
+</style>

@@ -1,0 +1,34 @@
+---
+/** RichText の行内（文字・改行・リンク）。リンクの中身を描くために自分自身を呼ぶ。 */
+import type { RtInline } from "../../lib/cms/richtext";
+
+interface Props {
+  nodes: RtInline[];
+}
+
+const { nodes } = Astro.props;
+---
+
+{
+  nodes.map((node) => {
+    if (node.kind === "break") return <br />;
+    if (node.kind === "link") {
+      return (
+        <a
+          href={node.href}
+          target={node.external ? "_blank" : undefined}
+          rel={node.external ? "noopener noreferrer" : undefined}
+        >
+          <Astro.self nodes={node.children} />
+        </a>
+      );
+    }
+    let content: unknown = node.text;
+    if (node.code) content = <code>{content}</code>;
+    if (node.bold) content = <strong>{content}</strong>;
+    if (node.italic) content = <em>{content}</em>;
+    if (node.underline) content = <u>{content}</u>;
+    if (node.strike) content = <s>{content}</s>;
+    return content;
+  })
+}

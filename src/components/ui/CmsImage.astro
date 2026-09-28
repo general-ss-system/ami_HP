@@ -3,7 +3,7 @@
  * CMS から届いた画像を表示する。
  *
  * URL は CMS が返したものをそのまま使う（CMS のドメインをハードコードしない / CMS docs/04 §16）。
- * width / height を必ず出してレイアウトのずれを防ぐ。alt が null の画像は装飾として扱う。
+ * width / height を必ず出してレイアウトのずれを防ぐ。alt が null の画像は装飾として扱う（alt="" と aria-hidden="true"）。
  */
 import type { HTMLAttributes } from "astro/types";
 import type { Media } from "../../lib/cms/types";
@@ -20,6 +20,7 @@ const { media, photo = false, class: className, loading = "lazy", ...rest } = As
 <img
   src={media.url}
   alt={media.alt ?? ""}
+  aria-hidden={media.alt ? undefined : "true"}
   width={media.width ?? undefined}
   height={media.height ?? undefined}
   loading={loading}

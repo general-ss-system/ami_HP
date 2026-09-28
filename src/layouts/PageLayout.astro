@@ -1,0 +1,242 @@
+---
+/**
+ * 下層ページの枠。ヘッダー・ページの見出し（パンくず付き）・フッターを置き、本文は slot に入れる。
+ * 背景はトップと同じ（星空 + 紺 → 紫 → 水色のグラデーション）。
+ *
+ * 見出しは 3 通り（hero）:
+ *   sticker … 英字のステッカー（PageHeading）とパンくず。デザインの無いページ
+ *   title   … デザインのドット絵の英字タイトル（titleImage）。パンくずは読み上げ用にだけ残す。飾りは slot="hero-decor"
+ *   none    … 見出しの帯を出さない（記事ページなど、本文側に h1 があり、デザインに帯が無い場合）
+ */
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/layout/SiteHeader.astro";
+import SiteFooter from "../components/layout/SiteFooter.astro";
+import Decor from "../components/ui/Decor.astro";
+import LocalImage from "../components/ui/LocalImage.astro";
+import PageHeading from "../components/ui/PageHeading.astro";
+import type { ImageMetadata } from "astro";
+import type { SiteInfo } from "../lib/cms/types";
+import { pageOgImage } from "../lib/seo";
+import { withBase } from "../lib/url";
+import sparkleCluster from "../assets/decor/sparkle-cluster.webp";
+import sparkleGold from "../assets/decor/sparkle-gold.webp";
+import planetoid from "../assets/decor/planetoid.webp";
+import galaxy from "../assets/decor/galaxy.webp";
+
+export interface Crumb {
+  label: string;
+  /** 省略すると現在のページ */
+  href?: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  /** OGP 画像の絶対URL。未指定なら site_info の既定の画像 */
+  ogImage?: string;
+  noindex?: boolean;
+  /** OGP 画像の既定値とフッターの SNS に使う。取得できなければ null */
+  siteInfo?: SiteInfo | null;
+  /** 英字の見出し */
+  heading: string;
+  /** 日本語の添え書き */
+  headingSub?: string;
+  /** TOP の後ろに続くパンくず。最後が現在のページ */
+  crumbs: Crumb[];
+  /** 英字の見出しを h1 にしない（記事ページなど、本文側に h1 がある場合） */
+  headingIsTitle?: boolean;
+  hero?: "sticker" | "title" | "none";
+  /** hero="title" のときのタイトルの画像（src/assets/headings/title-*.webp） */
+  titleImage?: ImageMetadata;
+  /** タイトルの幅と上端（デザイン上の px。幅 1280 基準） */
+  titleBox?: { width: number; top: number };
+  /** 見出しの帯の高さ（デザイン上の px。hero="title" のとき。次の要素の位置を合わせる） */
+  heroHeight?: number;
+  /** スマホでの見出しの帯の最低の高さ（px）。地球などの絵を下に置くページで使う */
+  heroMinHeightSp?: number;
+}
+
+const {
+  title,
+  description,
+  ogImage,
+  noindex,
+  heading,
+  headingSub,
+  crumbs,
+  headingIsTitle = true,
+  siteInfo,
+  hero = "sticker",
+  titleImage,
+  titleBox,
+  heroHeight,
+  heroMinHeightSp,
+} = Astro.props;
+const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
+---
+
+<BaseLayout title={title} description={description} ogImage={ogImage ?? pageOgImage(Astro.site, siteInfo)} noindex={noindex}>
+  <SiteHeader />
+  <div class="page">
+    <main>
+      {
+        hero === "sticker" && (
+          <header class="page-hero">
+            <div class="stage page-hero__stage">
+              <nav class="page-hero__crumbs" aria-label="パンくずリスト">
+                <ol>
+                  {
+                    trail.map((crumb) => (
+                      <li>
+                        {crumb.href ? <a href={crumb.href}>{crumb.label}</a> : <span aria-current="page">{crumb.label}</span>}
+                      </li>
+                    ))
+                  }
+                </ol>
+              </nav>
+
+              <PageHeading text={heading} sub={headingSub} level={headingIsTitle ? 1 : "none"} />
+
+              <Decor src={galaxy} pc={[1020, 40, 190]} sp={[300, 20, 64]} float delay={0.4} eager />
+              <Decor src={sparkleCluster} pc={[110, 150, 170]} sp={[8, 110, 60]} twinkle delay={0.8} eager />
+              <Decor src={planetoid} pc={[300, 40, 90]} sp={false} float delay={1.6} eager />
+              <Decor src={sparkleGold} pc={[900, 230, 50]} sp={false} twinkle delay={1.2} eager />
+            </div>
+          </header>
+        )
+      }
+      {
+        hero === "title" && titleImage && (
+          <header class="page-hero is-title" style={{
+            "--hero-h": heroHeight ?? 420,
+            "--title-w": titleBox?.width ?? 460,
+            "--title-top": titleBox?.top ?? 200,
+            ...(heroMinHeightSp ? { "--hero-min-sp": `${heroMinHeightSp}px` } : {}),
+          }}>
+            <div class="stage page-hero__stage">
+              <nav class="page-hero__crumbs visually-hidden" aria-label="パンくずリスト">
+                <ol>
+                  {
+                    trail.map((crumb) => (
+                      <li>
+                        {crumb.href ? <a href={crumb.href}>{crumb.label}</a> : <span aria-current="page">{crumb.label}</span>}
+                      </li>
+                    ))
+                  }
+                </ol>
+              </nav>
+              <h1 class="page-hero__title">
+                <LocalImage src={titleImage} alt={heading} loading="eager" />
+                {headingSub && <span class="visually-hidden">（{headingSub}）</span>}
+              </h1>
+              <slot name="hero-decor" />
+            </div>
+          </header>
+        )
+      }
+      {
+        hero === "none" && (
+          <div class="page-hero is-none">
+            <nav class="visually-hidden" aria-label="パンくずリスト">
+              <ol>
+                {trail.map((crumb) => (
+                  <li>{crumb.href ? <a href={crumb.href}>{crumb.label}</a> : <span aria-current="page">{crumb.label}</span>}</li>
+                ))}
+              </ol>
+            </nav>
+          </div>
+        )
+      }
+
+      <slot />
+    </main>
+    <SiteFooter siteInfo={siteInfo} />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    overflow-x: clip;
+    background:
+      url("../assets/backgrounds/star-field.svg") center top / 1280px auto repeat,
+      /*
+       * トップと同じ色の並び。ただし上の方はデザイン（高さ 7254）と同じ px で暗い紺を保つ。
+       * 下層ページはデザインより短いので、割合だけだと上の方が明るくなってしまうため。下の方は割合のまま（フッターは明るい空）
+       */
+      linear-gradient(
+        180deg,
+        var(--color-bg-0) 0,
+        var(--color-bg-1) max(16.8%, 1218px),
+        var(--color-bg-2) max(33.2%, 2408px),
+        var(--color-bg-3) max(51%, 2408px),
+        var(--color-bg-4) max(68.3%, 2408px),
+        var(--color-bg-5) 84.1%,
+        var(--color-bg-6) 100%
+      );
+  }
+
+  .page-hero__stage {
+    padding: calc(var(--header-height) + clamp(24px, 3.125vw, 40px)) var(--gutter) clamp(56px, 7.8vw, 100px);
+  }
+
+  /* ドット絵のタイトル: 上端・幅・帯の高さをデザインの px に合わせ、画面幅に比例させる */
+  .page-hero.is-title .page-hero__stage {
+    /* 自分自身の高さには cqw が使えないため、幅との比で決める（スマホでは最低限の高さを確保） */
+    aspect-ratio: 1280 / var(--hero-h);
+    min-height: var(--hero-min-sp, calc(var(--header-height) + 32px + var(--title-w) * 0.55px * 0.3 + 48px));
+    padding: 0;
+  }
+
+  .page-hero__title {
+    position: absolute;
+    z-index: var(--z-content);
+    top: max(calc(var(--title-top) / 12.8 * 1cqw), calc(var(--header-height) + 32px));
+    left: 50%;
+    width: clamp(calc(var(--title-w) * 0.55px), calc(var(--title-w) / 12.8 * 1cqw), calc(var(--title-w) * 1px));
+    translate: -50% 0;
+    line-height: 0;
+  }
+
+  .page-hero__title :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .page-hero.is-none {
+    height: var(--header-height);
+  }
+
+  .page-hero__crumbs {
+    position: relative;
+    z-index: var(--z-content);
+    margin-bottom: clamp(48px, 6.25vw, 80px);
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page-hero__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 10px;
+  }
+
+  .page-hero__crumbs li + li::before {
+    content: ">";
+    margin-right: 10px;
+    opacity: 0.6;
+  }
+
+  .page-hero__crumbs a {
+    text-underline-offset: 4px;
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  .page-hero__crumbs a:hover {
+    color: var(--color-accent-bright);
+  }
+
+  .page-hero__crumbs [aria-current] {
+    color: var(--color-text-muted);
+  }
+</style>

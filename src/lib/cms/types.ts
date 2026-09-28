@@ -4,6 +4,10 @@
  * UI コンポーネントはこの型だけに依存し、CMS の応答の形（snake_case の key 等）を知らない。
  */
 
+import type { RtBlock } from "./richtext";
+
+export type { RtBlock };
+
 export interface Media {
   url: string;
   /** null は装飾画像として扱う（alt=""）。 */
@@ -41,10 +45,37 @@ export interface HomeContent {
 
 export interface Service {
   id: string;
+  /** SERVICE ページのアンカー（#slug）に使う。 */
+  slug: string | null;
   title: string;
   summary: string | null;
   image: Media | null;
   link: Link | null;
+  /** SERVICE ページの本文。空なら []。 */
+  body: RtBlock[];
+  titleEn: string | null;
+  photo: Media | null;
+  accent: "pink" | "blue" | null;
+}
+
+export interface PriceRow {
+  label: string;
+  value: string;
+  note: string | null;
+}
+
+export interface ServiceCase {
+  id: string;
+  /** 事業（ami_services）の id。null ならどの事業にも出さない */
+  serviceId: string | null;
+  label: string | null;
+  title: string;
+  mainImage: Media | null;
+  body: RtBlock[];
+  points: RtBlock[];
+  sns: MemberSns[];
+  pricing: PriceRow[];
+  gallery: Media[];
 }
 
 export type TopicCategory = "news" | "sns" | "column";
@@ -57,17 +88,141 @@ export interface Topic {
   thumbnail: Media | null;
   excerpt: string | null;
   publishedDate: string;
+  /** 設定されていれば、カードから直接この URL を開く。 */
+  externalLink: Link | null;
+  /** TOPICS 一覧の「Pick UP!」に出す。 */
+  pickup: boolean;
+}
+
+export interface TopicDetail extends Topic {
+  body: RtBlock[];
+}
+
+export interface MemberSns {
+  service: "Instagram" | "X" | "TikTok";
+  /** アカウント名（CMS の link の label） */
+  account: string;
+  href: string;
 }
 
 export interface Member {
   id: string;
+  slug: string | null;
   name: string;
   role: string | null;
   portrait: Media | null;
+  profile: string | null;
+  /** YYYY-MM-DD */
+  birthday: string | null;
+  hometown: string | null;
+  height: string | null;
+  mbti: string | null;
+  personalColor: string | null;
+  sns: MemberSns[];
+  /** 最大 4 枚 */
+  photos: Media[];
+}
+
+export type WorkTag = "branding" | "web" | "graphic" | "movie";
+
+export interface Work {
+  id: string;
+  slug: string | null;
+  title: string;
+  clientName: string | null;
+  summary: string | null;
+  publishedDate: string | null;
+  tags: WorkTag[];
+  thumbnail: Media | null;
+}
+
+export interface WorkDetail extends Work {
+  gallery: Media[];
+  body: RtBlock[];
+  externalLink: Link | null;
+}
+
+export interface SiteInfo {
+  companyName: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  /** SNS のアカウント（https の URL のみ。それ以外は null）。 */
+  instagramUrl: string | null;
+  xUrl: string | null;
+  defaultTitle: string | null;
+  titleTemplate: string | null;
+  defaultDescription: string | null;
+  defaultOgImage: Media | null;
+}
+
+export interface AboutContent {
+  lead: string | null;
+  body: RtBlock[];
+  mainImage: Media | null;
+  representative: string | null;
+  established: string | null;
+  capital: string | null;
+  businessSummary: string | null;
+}
+
+export interface ContactPageContent {
+  lead: string | null;
+  privacyNote: RtBlock[];
+  consentLabel: string | null;
+}
+
+export interface RecruitContent {
+  messageTitle: string;
+  messageBody: RtBlock[];
+  mainImage: Media | null;
+  gallery: Media[];
+}
+
+export type EmploymentType = "full_time" | "contract" | "part_time" | "intern";
+
+export interface JobPosition {
+  id: string;
+  /** RECRUIT ページのアンカー（#slug）に使う。 */
+  slug: string | null;
+  title: string;
+  employmentType: EmploymentType;
+  location: string | null;
+  summary: string | null;
+  description: RtBlock[];
+  isOpen: boolean;
+}
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: RtBlock[];
+}
+
+export type FormFieldType = "text" | "textarea" | "email" | "tel" | "url" | "number" | "date" | "select" | "checkboxes" | "checkbox";
+
+export interface FormField {
+  key: string;
+  label: string;
+  type: FormFieldType;
+  required: boolean;
+  helpText: string | null;
+  options: { value: string; label: string }[] | null;
+  maxLength: number | null;
+}
+
+/** Form API の定義（GET /api/v1/forms/{siteKey}/{formKey}）。 */
+export interface ContactForm {
+  key: string;
+  acceptingSubmissions: boolean;
+  consentRequired: boolean;
+  consentTextVersion: string | null;
+  fields: FormField[];
 }
 
 /** トップページに必要なデータ一式。取得・検証に失敗したセクションは null / 空配列になる。 */
 export interface TopPageData {
+  siteInfo: SiteInfo | null;
   home: HomeContent | null;
   services: Service[];
   topics: Topic[];

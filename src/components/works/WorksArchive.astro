@@ -1,0 +1,130 @@
+---
+/**
+ * WORKS 一覧の中身（タグのタブ・カード・ページ送り）。ページ番号・タグごとのルートから共通で使う。
+ */
+import PageLayout from "../../layouts/PageLayout.astro";
+import WorkCard from "./WorkCard.astro";
+import Decor from "../ui/Decor.astro";
+import FilterTabs, { type FilterTab } from "../ui/FilterTabs.astro";
+import Pager from "../ui/Pager.astro";
+import { WORK_TAGS } from "../../lib/cms/schemas";
+import type { WorksArchiveData } from "../../lib/cms/queries";
+import { WORK_TAG_LABEL, worksListHref } from "../../lib/works";
+import { pageDescription, pageTitle } from "../../lib/seo";
+import galaxy from "../../assets/decor/galaxy.webp";
+import rocketCat from "../../assets/decor/rocket-cat.webp";
+import sparkleViolet from "../../assets/decor/sparkle-violet.webp";
+
+interface Props {
+  data: WorksArchiveData;
+}
+
+const { siteInfo, works, tag, page, totalPages } = Astro.props.data;
+
+const tagLabel = tag ? WORK_TAG_LABEL[tag] : null;
+const titleParts = ["Works", tagLabel, page > 1 ? `${page}ページ目` : null].filter(Boolean);
+
+const tabs: FilterTab[] = [
+  { key: "all", label: "すべて", href: worksListHref(null), current: tag === null },
+  ...WORK_TAGS.map((t) => ({ key: t, label: WORK_TAG_LABEL[t], href: worksListHref(t), current: tag === t })),
+];
+
+const crumbs = [
+  { label: "WORKS", href: tag || page > 1 ? worksListHref(null) : undefined },
+  ...(tagLabel ? [{ label: tagLabel, href: page > 1 ? worksListHref(tag) : undefined }] : []),
+  ...(page > 1 ? [{ label: `${page}ページ目` }] : []),
+];
+---
+
+<PageLayout
+  siteInfo={siteInfo}
+  title={pageTitle(siteInfo, titleParts.join(" / "))}
+  description={pageDescription(siteInfo)}
+  heading="Works"
+  headingSub="実績"
+  crumbs={crumbs}
+>
+  <section class="works-archive" aria-label="実績の一覧">
+    <div class="stage works-archive__stage">
+      <FilterTabs tabs={tabs} label="タグで絞り込む" />
+
+      {
+        works.length > 0 ? (
+          <ul class="works-archive__list">
+            {works.map((work) => (
+              <li class="works-archive__item">
+                <WorkCard work={work} headingLevel={2} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="works-archive__empty">まだ実績がありません。</p>
+        )
+      }
+
+      <Pager page={page} totalPages={totalPages} hrefFor={(n) => worksListHref(tag, n)} />
+
+      <Decor src={galaxy} pc={[1110, 40, 150]} sp={false} float delay={0.6} />
+      <Decor src={rocketCat} pc={[-20, 620, 170]} sp={false} float delay={1.5} />
+      <Decor src={sparkleViolet} pc={[1170, 900, 56]} sp={false} twinkle delay={0.8} />
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .works-archive__stage {
+    padding: 0 var(--gutter) clamp(96px, 12.5vw, 160px);
+  }
+
+  .works-archive__list {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 320px));
+    justify-content: center;
+    gap: 56px clamp(28px, 3.9vw, 50px);
+    margin-top: clamp(56px, 6.25vw, 80px);
+  }
+
+  .works-archive__item {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* 写真を机に並べたように、少しずつ傾ける */
+  .works-archive__item:nth-child(3n + 1) {
+    rotate: -1.5deg;
+  }
+
+  .works-archive__item:nth-child(3n + 2) {
+    rotate: 1deg;
+  }
+
+  .works-archive__item:nth-child(3n + 3) {
+    rotate: -0.5deg;
+  }
+
+  .works-archive__empty {
+    position: relative;
+    z-index: var(--z-content);
+    margin-top: 64px;
+    text-align: center;
+  }
+
+  @media (max-width: 1023px) {
+    .works-archive__list {
+      grid-template-columns: repeat(2, minmax(0, 320px));
+    }
+  }
+
+  @media (max-width: 599px) {
+    .works-archive__list {
+      grid-template-columns: minmax(0, 340px);
+      gap: 40px;
+    }
+
+    .works-archive__item {
+      rotate: 0deg !important;
+    }
+  }
+</style>

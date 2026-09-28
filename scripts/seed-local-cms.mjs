@@ -6,11 +6,15 @@
  *
  * 前提（CMS リポジトリ側）:
  *   pnpm dev
- *   pnpm -F @ss/backend run dev:bootstrap -- --site ami --name "合同会社ami" --preset ami
- *   → 最後に表示される「管理画面へのログインURL」の token=... の部分を控える
+ *   pnpm -F @ss/backend run dev:bootstrap -- --site ami
+ *   → 表示される「Delivery API 公開キー」と「管理画面へのログインURL」の token=... の部分を控える
  *
  * 使い方（このリポジトリで）:
  *   pnpm seed:cms -- --token <ログインURLの token>
+ *
+ * することの順番:
+ *   1. サイトに ami のモデル（preset "ami"）とフォーム（ami_contact）を有効にする
+ *   2. 仮データを登録して公開する（画像はアップロードし、rich_text の画像・relation も CMS の保存形式に直す）
  *
  * オプション: --api http://localhost:8787 / --site ami
  * 同じサイトに2回実行すると、記事が重複して登録される（新しく作ったサイトに1回だけ実行する）。
@@ -19,7 +23,21 @@
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fixtureHome, fixtureMembers, fixtureServices, fixtureTopics } from "../src/lib/cms/fixtures.ts";
+import {
+  fixtureAbout,
+  fixtureContactPage,
+  fixtureFaqs,
+  fixtureHome,
+  fixtureJobPositions,
+  fixtureMembers,
+  fixtureRecruit,
+  fixtureServiceCases,
+  fixtureServicePage,
+  fixtureServices,
+  fixtureSiteInfo,
+  fixtureTopics,
+  fixtureWorks,
+} from "../src/lib/cms/fixtures.ts";
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -69,13 +87,20 @@ const cookie = (login.headers.get("set-cookie") ?? "").split(";")[0];
 const sites = must(await api("/api/v1/admin/sites", {}, cookie), 200, "サイト一覧の取得");
 const site = sites.data.find((s) => s.key === SITE_KEY);
 if (!site) {
-  console.error(`サイト「${SITE_KEY}」がありません。dev:bootstrap に --site ${SITE_KEY} --preset ami を付けて実行してください。`);
+  console.error(`サイト「${SITE_KEY}」がありません。dev:bootstrap に --site ${SITE_KEY} を付けて実行してください。`);
   process.exit(1);
 }
 const S = `/api/v1/admin/sites/${site.id}`;
 
+// ---- モデルとフォームを有効にする ----
+const models = must(await api(`${S}/models`, { method: "POST", body: JSON.stringify({ preset: "ami" }) }, cookie), 200, "モデルの有効化");
+console.log(`✓ モデル: ${[...models.enabled, ...models.synced].join(", ") || "（変更なし）"}`);
+const forms = must(await api(`${S}/forms`, { method: "POST", body: JSON.stringify({ formKeys: ["ami_contact"] }) }, cookie), 200, "フォームの有効化");
+console.log(`✓ フォーム: ${[...forms.enabled, ...forms.synced].join(", ") || "（変更なし）"}`);
+
 // ---- 画像のアップロード（同じ画像は1回だけ） ----
 const uploaded = new Map(); // 仮データの media.id → CMS の media id
+const entryIds = new Map(); // 仮データの entry.id → CMS の entry id（relation 用）
 
 async function toRef(media) {
   if (!uploaded.has(media.id)) {
@@ -93,19 +118,29 @@ async function toRef(media) {
   return { $ref: "media", id: uploaded.get(media.id) };
 }
 
-/** 配信形式（展開済みの media）を、保存形式（ID 参照）に戻す。 */
-async function toStored(content) {
-  const out = {};
-  for (const [key, value] of Object.entries(content)) {
-    if (Array.isArray(value) && value.every(isMedia)) out[key] = await Promise.all(value.map(toRef));
-    else if (isMedia(value)) out[key] = await toRef(value);
-    else out[key] = value;
-  }
-  return out;
-}
-
 function isMedia(v) {
   return v !== null && typeof v === "object" && "url" in v && "mimeType" in v;
+}
+
+function isEntryRef(v) {
+  return v !== null && typeof v === "object" && "model" in v && "id" in v && "slug" in v && !("url" in v);
+}
+
+/** 配信形式（展開済みの media・entry）を、保存形式（ID 参照）に戻す。rich_text の中の画像も直す。 */
+async function toStored(value) {
+  if (Array.isArray(value)) return Promise.all(value.map(toStored));
+  if (isMedia(value)) return toRef(value);
+  if (isEntryRef(value)) {
+    const id = entryIds.get(value.id);
+    if (!id) throw new Error(`参照先がまだ登録されていません: ${value.model} ${value.id}`);
+    return { $ref: "entry", id };
+  }
+  if (value !== null && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = await toStored(v);
+    return out;
+  }
+  return value;
 }
 
 async function createAndPublish(modelKey, entry) {
@@ -125,12 +160,23 @@ async function createAndPublish(modelKey, entry) {
     200,
     `${modelKey} の公開`,
   );
+  entryIds.set(entry.id, created.entry.id);
   console.log(`✓ ${modelKey}${entry.slug ? ` / ${entry.slug}` : ""}`);
 }
 
 console.log(`… ${API} のサイト「${SITE_KEY}」に仮データを登録します`);
+// relation の参照先（ami_services）を先に登録する
+await createAndPublish("site_info", fixtureSiteInfo);
+await createAndPublish("about", fixtureAbout);
+await createAndPublish("contact_page", fixtureContactPage);
 await createAndPublish("ami_home", fixtureHome);
+await createAndPublish("ami_service_page", fixtureServicePage);
+await createAndPublish("recruit", fixtureRecruit);
 for (const e of fixtureServices) await createAndPublish("ami_services", e);
+for (const e of fixtureServiceCases) await createAndPublish("ami_service_cases", e);
 for (const e of fixtureTopics) await createAndPublish("ami_topics", e);
 for (const e of fixtureMembers) await createAndPublish("members", e);
+for (const e of fixtureWorks) await createAndPublish("works", e);
+for (const e of fixtureJobPositions) await createAndPublish("job_positions", e);
+for (const e of fixtureFaqs) await createAndPublish("faq", e);
 console.log("完了しました。公開サイトの .dev.vars を CMS_MODE=live にして確認してください。");
