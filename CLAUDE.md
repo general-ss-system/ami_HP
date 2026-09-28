@@ -13,6 +13,7 @@
 - API の応答の型: `src/lib/cms/contracts.ts`（CMS の `packages/contracts` の写し。手で書き換えない）。
 
 - ページの作り方（手順とプロンプト）: `docs/page-development-guide.md`。新しいページはこの手順で作り、分かったことを追記する。
+- 現状と残りの作業（別のデバイスで続けるとき）: `docs/HANDOFF.md`。
 
 ## 2. 技術構成
 
