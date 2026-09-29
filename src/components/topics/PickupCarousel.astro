@@ -99,6 +99,7 @@ const { topics } = Astro.props;
   function autoAdvance(track: HTMLElement, items: HTMLElement[]) {
     const INTERVAL = 2000;
     const IDLE_AFTER_INPUT = 3000;
+    const SLIDE_DURATION = 1200;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)");
     if (items.length < 2) return;
 
@@ -107,7 +108,30 @@ const { topics } = Astro.props;
     let lastInput = 0;
     const markInput = () => (lastInput = Date.now());
 
+    // ブラウザの smooth スクロールは速すぎるので、自前でゆっくり動かす（途中は吸着を外す）
+    let anim = 0;
+    const stopAnim = () => {
+      cancelAnimationFrame(anim);
+      anim = 0;
+      track.style.scrollSnapType = "";
+    };
+    const slideBy = (distance: number) => {
+      stopAnim();
+      const from = track.scrollLeft;
+      const start = performance.now();
+      track.style.scrollSnapType = "none";
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / SLIDE_DURATION);
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+        track.scrollLeft = from + distance * eased;
+        if (t < 1) anim = requestAnimationFrame(step);
+        else stopAnim();
+      };
+      anim = requestAnimationFrame(step);
+    };
+
     track.addEventListener("pointerdown", () => {
+      stopAnim();
       pressing = true;
       markInput();
     });
@@ -117,8 +141,19 @@ const { topics } = Astro.props;
         pressing = false;
       });
     }
-    track.addEventListener("wheel", (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && markInput(), { passive: true });
-    track.addEventListener("keydown", markInput);
+    track.addEventListener(
+      "wheel",
+      (e) => {
+        if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+        stopAnim();
+        markInput();
+      },
+      { passive: true },
+    );
+    track.addEventListener("keydown", () => {
+      stopAnim();
+      markInput();
+    });
     new IntersectionObserver(([e]) => (visible = e!.isIntersecting)).observe(track);
 
     // 真ん中に一番近いパネル
@@ -143,7 +178,7 @@ const { topics } = Astro.props;
       const next = items[(currentIndex() + 1) % items.length]!;
       const tr = track.getBoundingClientRect();
       const nr = next.getBoundingClientRect();
-      track.scrollBy({ left: nr.left + nr.width / 2 - (tr.left + tr.width / 2), behavior: "smooth" });
+      slideBy(nr.left + nr.width / 2 - (tr.left + tr.width / 2));
     }, INTERVAL);
   }
 </script>
