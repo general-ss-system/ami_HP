@@ -1,6 +1,7 @@
 ---
 /**
  * フッター。地球のドット絵の上にロゴとナビを重ねる。
+ * plain … 地球を出さず、淡い斜線の地（SkySection の続き）に黒の文字・ボタンで並べる（service / contact）
  * SNS のリンクは site_info（CMS）に URL があるものだけを出す。
  */
 import type { SiteInfo } from "../../lib/cms/types";
@@ -13,20 +14,21 @@ import NavMark from "../ui/NavMark.astro";
 
 interface Props {
   siteInfo?: SiteInfo | null;
+  variant?: "earth" | "plain";
 }
 
-const { siteInfo } = Astro.props;
+const { siteInfo, variant = "earth" } = Astro.props;
 const sns = [
   { label: "Instagram", href: siteInfo?.instagramUrl ?? null },
   { label: "X", href: siteInfo?.xUrl ?? null },
 ].filter((item): item is { label: string; href: string } => item.href !== null);
 ---
 
-<footer class="site-footer">
-  <LocalImage src={earth} alt="" class="site-footer__earth" aria-hidden="true" loading="lazy" />
+<footer class:list={["site-footer", `is-${variant}`]}>
+  {variant === "earth" && <LocalImage src={earth} alt="" class="site-footer__earth" aria-hidden="true" loading="lazy" />}
   <div class="site-footer__inner">
     <a class="site-footer__logo" href={withBase("/")} aria-label="合同会社ami トップページ">
-      <Logo variant="white" height={36} />
+      <Logo variant={variant === "earth" ? "white" : "color"} height={36} />
     </a>
     <nav aria-label="フッターメニュー">
       <ul class="site-footer__list">
@@ -144,6 +146,25 @@ const sns = [
     background: #fff;
   }
 
+  /* plain: 地球を出さず、文字の並びは同じまま黒にする。地は SkySection と同じ淡い斜線 */
+  .site-footer.is-plain {
+    aspect-ratio: auto;
+    min-height: 0;
+    padding-block: 24px 72px;
+    background: repeating-linear-gradient(135deg, #f6fdff 0 7.07px, #f1f8fa 7.07px 14.14px);
+  }
+
+  .site-footer.is-plain .site-footer__inner {
+    position: static;
+    color: var(--color-text);
+    filter: none;
+  }
+
+  .site-footer.is-plain .site-footer__sns-link:hover {
+    color: #fff;
+    background: var(--color-text);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .site-footer__sns-link {
       transition: none;
@@ -163,6 +184,11 @@ const sns = [
     .site-footer__inner {
       flex-direction: column;
       bottom: 64px;
+    }
+
+    .site-footer.is-plain {
+      height: auto;
+      padding-block: 16px 56px;
     }
 
     .site-footer__list {
