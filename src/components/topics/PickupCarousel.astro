@@ -91,29 +91,34 @@ const { topics } = Astro.props;
   }
 
   /*
-   * 操作が無いときは、数秒ごとに次のパネルへ自動で送る（最後まで行ったら先頭へ戻る）。
-   * マウスを乗せている間・フォーカスがある間・触ってからしばらくは止める。画面に見えていないとき、
-   * prefers-reduced-motion のときは動かさない。
+   * 操作が無いときは、2 秒ごとに次のパネルへ自動で送る（最後まで行ったら先頭へ戻る）。
+   * 押している間・キーボードでフォーカスしている間・横に動かしてから少しの間は止める。
+   * 画面に見えていないとき、prefers-reduced-motion のときは動かさない。
+   * （マウスを乗せただけ・ページの縦スクロールでは止めない）
    */
   function autoAdvance(track: HTMLElement, items: HTMLElement[]) {
-    const INTERVAL = 4500;
-    const IDLE_AFTER_INPUT = 6000;
+    const INTERVAL = 2000;
+    const IDLE_AFTER_INPUT = 3000;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)");
     if (items.length < 2) return;
 
-    let hovering = false;
+    let pressing = false;
     let visible = false;
     let lastInput = 0;
     const markInput = () => (lastInput = Date.now());
 
-    track.addEventListener("pointerenter", () => (hovering = true));
-    track.addEventListener("pointerleave", () => {
-      hovering = false;
+    track.addEventListener("pointerdown", () => {
+      pressing = true;
       markInput();
     });
-    for (const type of ["pointerdown", "wheel", "touchstart", "keydown"]) {
-      track.addEventListener(type, markInput, { passive: true });
+    for (const type of ["pointerup", "pointercancel", "pointerleave"]) {
+      track.addEventListener(type, () => {
+        if (pressing) markInput();
+        pressing = false;
+      });
     }
+    track.addEventListener("wheel", (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && markInput(), { passive: true });
+    track.addEventListener("keydown", markInput);
     new IntersectionObserver(([e]) => (visible = e!.isIntersecting)).observe(track);
 
     // 真ん中に一番近いパネル
@@ -131,8 +136,9 @@ const { topics } = Astro.props;
     };
 
     setInterval(() => {
-      if (reduce.matches || !visible || hovering || document.hidden) return;
-      if (track.contains(document.activeElement)) return;
+      if (reduce.matches || !visible || pressing || document.hidden) return;
+      // クリックで付いたフォーカスでは止めない（キーボードで操作しているときだけ止める）
+      if (track.matches(":focus-visible, :has(:focus-visible)")) return;
       if (Date.now() - lastInput < IDLE_AFTER_INPUT) return;
       const next = items[(currentIndex() + 1) % items.length]!;
       const tr = track.getBoundingClientRect();
