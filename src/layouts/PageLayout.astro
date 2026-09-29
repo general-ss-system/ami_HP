@@ -1,7 +1,7 @@
 ---
 /**
  * 下層ページの枠。ヘッダー・ページの見出し（パンくず付き）・フッターを置き、本文は slot に入れる。
- * 背景はトップと同じ（星空 + 紺 → 紫 → 水色のグラデーション）。
+ * 背景はトップと同じ（星空 + 紺 → 紫 → 水色のグラデーション。--gradient-page）。
  *
  * 見出しは 3 通り（hero）:
  *   sticker … 英字のステッカー（PageHeading）とパンくず。デザインの無いページ
@@ -155,24 +155,20 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
 </BaseLayout>
 
 <style>
+  /* 中身が短いページでも画面の下までグラデーションを伸ばし、フッターを画面の下端に置く */
   .page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
     overflow-x: clip;
     background:
       url("../assets/backgrounds/star-field.svg") center top / 1280px auto repeat,
-      /*
-       * トップと同じ色の並び。ただし上の方はデザイン（高さ 7254）と同じ px で暗い紺を保つ。
-       * 下層ページはデザインより短いので、割合だけだと上の方が明るくなってしまうため。下の方は割合のまま（フッターは明るい空）
-       */
-      linear-gradient(
-        180deg,
-        var(--color-bg-0) 0,
-        var(--color-bg-1) max(16.8%, 1218px),
-        var(--color-bg-2) max(33.2%, 2408px),
-        var(--color-bg-3) max(51%, 2408px),
-        var(--color-bg-4) max(68.3%, 2408px),
-        var(--color-bg-5) 84.1%,
-        var(--color-bg-6) 100%
-      );
+      /* トップと同じグラデーション。ページの高さに合わせて、紺 → 紫 → 水色へ移る（フッターは明るい空） */
+      var(--gradient-page);
+  }
+
+  .page > main {
+    flex: 1;
   }
 
   .page-hero__stage {
