@@ -165,7 +165,7 @@ const trail: Crumb[] = [{ label: "TOP", href: withBase("/") }, ...crumbs];
     min-height: 100dvh;
     overflow-x: clip;
     background:
-      url("../assets/backgrounds/star-field.svg") center top / 1280px auto repeat,
+      var(--bg-stars),
       /* トップと同じグラデーション。ページの高さに合わせて、紺 → 紫 → 水色へ移る（フッターは明るい空） */
       var(--gradient-page);
   }
