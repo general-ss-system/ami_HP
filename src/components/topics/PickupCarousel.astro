@@ -1,7 +1,7 @@
 ---
 /**
  * TOPICS 一覧の「Pick UP!」（Figma: topics / Pick UP!）。CMS で pickup を付けた記事を、光る枠のパネルで横に並べる。
- * 真ん中の 1 枚をはっきり見せ、左右は薄く見せる（横にスクロール / スワイプで送る）。
+ * 真ん中の 1 枚をはっきり見せ、左右は薄く見せる（横にスクロール / スワイプで送る。操作が無いときは自動で送る）。
  * 枠の形（角のドット）はデザインの path をそのまま使う（src/assets/shapes/pickup-panel.json）。
  */
 import type { Topic } from "../../lib/cms/types";
@@ -87,6 +87,58 @@ const { topics } = Astro.props;
       { root: track, threshold: [0, 0.6, 1] },
     );
     items.forEach((item) => io.observe(item));
+    autoAdvance(track, items);
+  }
+
+  /*
+   * 操作が無いときは、数秒ごとに次のパネルへ自動で送る（最後まで行ったら先頭へ戻る）。
+   * マウスを乗せている間・フォーカスがある間・触ってからしばらくは止める。画面に見えていないとき、
+   * prefers-reduced-motion のときは動かさない。
+   */
+  function autoAdvance(track: HTMLElement, items: HTMLElement[]) {
+    const INTERVAL = 4500;
+    const IDLE_AFTER_INPUT = 6000;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+    if (items.length < 2) return;
+
+    let hovering = false;
+    let visible = false;
+    let lastInput = 0;
+    const markInput = () => (lastInput = Date.now());
+
+    track.addEventListener("pointerenter", () => (hovering = true));
+    track.addEventListener("pointerleave", () => {
+      hovering = false;
+      markInput();
+    });
+    for (const type of ["pointerdown", "wheel", "touchstart", "keydown"]) {
+      track.addEventListener(type, markInput, { passive: true });
+    }
+    new IntersectionObserver(([e]) => (visible = e!.isIntersecting)).observe(track);
+
+    // 真ん中に一番近いパネル
+    const currentIndex = () => {
+      const r = track.getBoundingClientRect();
+      const center = r.left + r.width / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      items.forEach((item, i) => {
+        const ir = item.getBoundingClientRect();
+        const d = Math.abs(ir.left + ir.width / 2 - center);
+        if (d < bestDist) [best, bestDist] = [i, d];
+      });
+      return best;
+    };
+
+    setInterval(() => {
+      if (reduce.matches || !visible || hovering || document.hidden) return;
+      if (track.contains(document.activeElement)) return;
+      if (Date.now() - lastInput < IDLE_AFTER_INPUT) return;
+      const next = items[(currentIndex() + 1) % items.length]!;
+      const tr = track.getBoundingClientRect();
+      const nr = next.getBoundingClientRect();
+      track.scrollBy({ left: nr.left + nr.width / 2 - (tr.left + tr.width / 2), behavior: "smooth" });
+    }, INTERVAL);
   }
 </script>
 
