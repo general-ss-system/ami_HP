@@ -58,6 +58,12 @@ body {
   /* ドット絵をぼかさない */
   image-rendering: pixelated;
   -webkit-font-smoothing: antialiased;
+  /*
+   * 日本語は文節の区切り（middleware が入れるゼロ幅スペース / src/lib/phrases.ts）でだけ改行する。
+   * 1 つの文節が幅に収まらないときだけ途中で折り返す（anywhere は表や flex の最小幅を縮めてしまうので break-word）
+   */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 h1,

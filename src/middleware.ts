@@ -7,9 +7,10 @@
  * 静的書き出し（GitHub Pages のプレビュー）では何もしない。
  */
 
-import { defineMiddleware } from "astro:middleware";
+import { defineMiddleware, sequence } from "astro:middleware";
 import { PreviewTokenError } from "./lib/cms/client";
 import { PREVIEW_COOKIE, PREVIEW_HEADERS, previewCookieOptions } from "./lib/cms/preview";
+import { addPhraseBreaks } from "./lib/phrases";
 
 const EXPIRED_HTML = `<!doctype html>
 <html lang="ja">
@@ -36,7 +37,7 @@ const EXPIRED_HTML = `<!doctype html>
 </body>
 </html>`;
 
-export const onRequest = defineMiddleware(async (context, next) => {
+const preview = defineMiddleware(async (context, next) => {
   context.locals.previewToken = null;
   if (context.isPrerendered) return next();
 
@@ -60,3 +61,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   return response;
 });
+
+/**
+ * 日本語の文を文節の区切りでだけ改行させる（Google の BudouX / src/lib/phrases.ts）。
+ * CMS の文章も含めて、出来上がった HTML の本文にまとめて区切りを入れる。静的書き出しにも効く。
+ */
+const phraseBreaks = defineMiddleware(async (_context, next) => {
+  const response = await next();
+  if (!response.headers.get("Content-Type")?.startsWith("text/html")) return response;
+  const headers = new Headers(response.headers);
+  headers.delete("Content-Length");
+  return new Response(addPhraseBreaks(await response.text()), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+});
+
+export const onRequest = sequence(phraseBreaks, preview);

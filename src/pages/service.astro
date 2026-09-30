@@ -8,7 +8,6 @@
 import PageLayout from "../layouts/PageLayout.astro";
 import EarthHeroDecor from "../components/layout/EarthHeroDecor.astro";
 import SkySection from "../components/layout/SkySection.astro";
-import Phrases from "../components/ui/Phrases.astro";
 import CasePoints from "../components/service/CasePoints.astro";
 import CmsImage from "../components/ui/CmsImage.astro";
 import LocalImage from "../components/ui/LocalImage.astro";
@@ -66,7 +65,7 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
                   </span>
                   <div>
                     <h2 class="service__title" id={`service-${service.id}`}>
-                      <Phrases text={service.title} />
+                      {service.title}
                     </h2>
                     {service.titleEn && (
                       <p class="service__title-en" lang="en">
@@ -143,8 +142,8 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
                                 <tr>
                                   <th scope="row">{row.label}</th>
                                   <td>
-                                    <Phrases text={row.value} />
-                                    {row.note && <small><Phrases text={row.note} /></small>}
+                                    {row.value}
+                                    {row.note && <small>{row.note}</small>}
                                   </td>
                                 </tr>
                               ))}
