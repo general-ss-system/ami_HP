@@ -23,10 +23,8 @@
     var(--color-bg-6) 100%
   );
   --gradient-hero: linear-gradient(180deg, #00124b 0%, #002175 100%);
-  /* 星のドット（幅 1280 で敷き詰める）。流れ星だけ別の SVG にして、中の CSS で流す（scripts/star-field-meteors.mjs） */
-  --bg-stars:
-    url("../assets/backgrounds/star-field-meteors.svg") center top / 1280px auto repeat,
-    url("../assets/backgrounds/star-field-still.svg") center top / 1280px auto repeat;
+  /* 星のドット（幅 1280 で敷き詰める）。流れ星は除いてあり、ShootingStars がランダムに流す（scripts/star-field-meteors.mjs） */
+  --bg-stars: url("../assets/backgrounds/star-field-still.svg") center top / 1280px auto repeat;
 
   /* ---- 色: 文字・面 ---- */
   --color-text-on-dark: #ffffff;

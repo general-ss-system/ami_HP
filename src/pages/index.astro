@@ -12,6 +12,7 @@ import Business from "../components/sections/Business.astro";
 import Topics from "../components/sections/Topics.astro";
 import Members from "../components/sections/Members.astro";
 import ContactCta from "../components/sections/ContactCta.astro";
+import ShootingStars from "../components/ui/ShootingStars.astro";
 import { CONTACT_HREF, SITE_NAME } from "../config/site";
 import { getCmsClient } from "../lib/cms/env";
 import { getTopPageData, reportCmsError } from "../lib/cms/queries";
@@ -28,6 +29,7 @@ if (!siteInfo) reportCmsError("site_info is unavailable; using SITE_NAME for the
 <BaseLayout title={title} description={pageDescription(siteInfo)} ogImage={pageOgImage(Astro.site, siteInfo)}>
   <SiteHeader />
   <div class="page">
+    <ShootingStars />
     <main>
       {home && <Hero images={home.heroImages} />}
       <Marquee text={'Where "Tokimeki" Originates.'} />
@@ -43,6 +45,7 @@ if (!siteInfo) reportCmsError("site_info is unavailable; using SITE_NAME for the
 
 <style>
   .page {
+    isolation: isolate;
     overflow-x: clip;
     background:
       var(--bg-stars),

@@ -1,0 +1,88 @@
+---
+/**
+ * 背景の流れ星。場所・向き・速さ・間隔を毎回ランダムにして、1 本ずつ流しては消す。
+ * 絵はデザインの星から取り出した 2 本（scripts/star-field-meteors.mjs）。左右反転も混ぜる。
+ *
+ * .page の最初に置く。画面に固定した層を .page の背景のすぐ上（本文より下）に敷くので、
+ * .page には isolation: isolate が要る。prefers-reduced-motion のときは何も流さない
+ * （そのときは背景の星に、動かない流れ星を出す。tokens.css の --bg-stars）。
+ */
+import meteorA from "../../assets/backgrounds/meteor-a.svg?url";
+import meteorB from "../../assets/backgrounds/meteor-b.svg?url";
+import meteors from "../../assets/backgrounds/meteors.json";
+
+const sprites = meteors.map((m) => ({ ...m, src: m.id === "a" ? meteorA : meteorB }));
+---
+
+<div class="shooting-stars" aria-hidden="true" data-shooting-stars={JSON.stringify(sprites)}></div>
+
+<script>
+  type Sprite = { src: string; width: number; height: number; dir: [number, number] };
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+  for (const layer of document.querySelectorAll<HTMLElement>("[data-shooting-stars]")) {
+    const sprites: Sprite[] = JSON.parse(layer.dataset.shootingStars ?? "[]");
+    if (sprites.length === 0) continue;
+
+    const launch = () => {
+      const s = sprites[Math.floor(Math.random() * sprites.length)]!;
+      // 半分は左右を反転して、流れる向きを 4 通りにする
+      const flip = Math.random() < 0.5 ? -1 : 1;
+      const [dx, dy] = [s.dir[0] * flip, s.dir[1]];
+      const distance = rand(140, 280);
+      const duration = rand(900, 1700);
+      const peak = rand(0.35, 0.6);
+
+      const img = document.createElement("img");
+      img.src = s.src;
+      img.alt = "";
+      img.width = Math.round(s.width);
+      img.height = Math.round(s.height);
+      img.decoding = "async";
+      img.style.left = `${rand(0.08, 0.92) * innerWidth - s.width / 2}px`;
+      img.style.top = `${rand(0.05, 0.6) * innerHeight - s.height / 2}px`;
+      layer.append(img);
+
+      const mirror = `scaleX(${flip})`;
+      img
+        .animate(
+          [
+            { transform: `translate(0, 0) ${mirror}`, opacity: 0 },
+            { opacity: peak, offset: 0.15 },
+            { opacity: peak, offset: 0.7 },
+            { transform: `translate(${dx * distance}px, ${dy * distance}px) ${mirror}`, opacity: 0 },
+          ],
+          { duration, easing: "cubic-bezier(.45, 0, .9, .6)" },
+        )
+        .finished.finally(() => img.remove());
+    };
+
+    // 次の 1 本までの間隔もランダム（ときどき続けて流れる）
+    const schedule = () => {
+      const gap = Math.random() < 0.2 ? rand(300, 900) : rand(1800, 6000);
+      setTimeout(() => {
+        if (!reduce.matches && !document.hidden) launch();
+        schedule();
+      }, gap);
+    };
+    schedule();
+  }
+</script>
+
+<style>
+  .shooting-stars {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .shooting-stars :global(img) {
+    position: absolute;
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+</style>
