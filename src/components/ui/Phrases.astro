@@ -1,0 +1,23 @@
+---
+/**
+ * 文を文節の区切りでだけ改行させる（src/lib/phrases.ts）。区切りに <wbr> を入れ、それ以外では改行しない。
+ * 1 つの文節が幅に収まらないときだけ、途中で折り返す。
+ */
+import { phrases } from "../../lib/phrases";
+
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+const parts = phrases(text);
+---
+
+<span class="phrases">{parts.map((part, i) => <>{i > 0 && <wbr />}{part}</>)}</span>
+
+<style>
+  .phrases {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -8,6 +8,7 @@
 import PageLayout from "../layouts/PageLayout.astro";
 import EarthHeroDecor from "../components/layout/EarthHeroDecor.astro";
 import SkySection from "../components/layout/SkySection.astro";
+import Phrases from "../components/ui/Phrases.astro";
 import CasePoints from "../components/service/CasePoints.astro";
 import CmsImage from "../components/ui/CmsImage.astro";
 import LocalImage from "../components/ui/LocalImage.astro";
@@ -65,7 +66,7 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
                   </span>
                   <div>
                     <h2 class="service__title" id={`service-${service.id}`}>
-                      {service.title}
+                      <Phrases text={service.title} />
                     </h2>
                     {service.titleEn && (
                       <p class="service__title-en" lang="en">
@@ -142,8 +143,8 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
                                 <tr>
                                   <th scope="row">{row.label}</th>
                                   <td>
-                                    {row.value}
-                                    {row.note && <small>{row.note}</small>}
+                                    <Phrases text={row.value} />
+                                    {row.note && <small><Phrases text={row.note} /></small>}
                                   </td>
                                 </tr>
                               ))}
@@ -619,6 +620,18 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
     .case.is-media {
       padding: 48px 20px 32px;
       border-radius: 14px;
+    }
+
+    /* 左の列は項目名の長さだけにして、右の列（料金・納期）を広くとる */
+    .case__pricing th {
+      width: auto;
+      white-space: nowrap;
+    }
+
+    /* 幅 360px でも「150,000円〜 / 1本」が 1 行に収まるよう、左右の余白を詰める */
+    .case__pricing th,
+    .case__pricing td {
+      padding: 12px 10px;
     }
 
     .case__gallery {

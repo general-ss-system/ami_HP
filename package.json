@@ -24,6 +24,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
     "astro": "^7.3.5",
+    "budoux": "^0.9.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {
