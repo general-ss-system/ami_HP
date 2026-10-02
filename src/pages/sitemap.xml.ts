@@ -8,7 +8,7 @@ import { getSitemapEntries, renderSitemap } from "../lib/sitemap";
 
 export const GET: APIRoute = async ({ site }) => {
   const entries = await getSitemapEntries(getCmsClient());
-  return new Response(renderSitemap(entries, site!), {
+  return new Response(renderSitemap(entries, site!, { trailingSlash: __STATIC_BUILD__ }), {
     headers: { "Content-Type": "application/xml; charset=utf-8" },
   });
 };

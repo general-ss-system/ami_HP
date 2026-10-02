@@ -1,9 +1,19 @@
 {
-  "$comment": "公開サイトの本番設定の見本。先方の Cloudflare とドメインが決まったら production.json にコピーして値を入れる。Secret（CMS_DELIVERY_KEY）は書かない（wrangler secret put で登録）。",
-  "workerName": "ami-hp",
-  "accountId": "0123456789abcdef0123456789abcdef",
+  "$comment": "公開サイトの本番設定の見本（docs/deploy.md）。公開サイトは Xserver に静的に置き、下書きプレビューと CMS の Webhook の受け口は先方の Cloudflare の workers.dev に置く（CMS docs/05 ADR-031）。値が決まったら production.json にコピーして入れる。Secret（CMS の公開キー・SSH の秘密鍵・Webhook の署名鍵・GitHub のトークン）は書かない。",
   "siteHost": "www.example.co.jp",
-  "cmsBaseUrl": "https://cms.example.co.jp",
+  "cmsBaseUrl": "https://ami-cms.your-subdomain.workers.dev",
   "cmsSiteKey": "ami",
-  "turnstileSiteKey": "0x4AAAAAAAexample"
+  "turnstileSiteKey": "0x4AAAAAAAexample",
+  "preview": {
+    "workerName": "ami-hp-preview",
+    "accountId": "0123456789abcdef0123456789abcdef",
+    "host": "ami-hp-preview.your-subdomain.workers.dev",
+    "githubRepo": "your-org/ami_HP"
+  },
+  "xserver": {
+    "host": "sv12345.xserver.jp",
+    "port": 10022,
+    "user": "xsvuser",
+    "path": "/home/xsvuser/example.co.jp/public_html"
+  }
 }

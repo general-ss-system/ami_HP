@@ -1,33 +1,81 @@
-# 本番（Cloudflare Workers）へのデプロイ（docs/deploy.md）。先方のリポジトリで使う。
+# 本番へのデプロイ（docs/deploy.md / CMS docs/05 ADR-031）。先方のリポジトリで使う。
+#
+# - site            … CMS の公開中の内容で静的にビルドし、Xserver に置く。
+#                     main への push・手動実行のほか、CMS で公開・非公開にしたとき（repository_dispatch: cms-publish）に動く。
+# - preview-worker  … 下書きプレビュー用の Worker（workers.dev）を出す。コードが変わったとき（push・手動実行）だけ動く。
 #
 # 準備（GitHub の Settings）:
 #   - Variables: DEPLOY_ENABLED = true（これが無いリポジトリでは動かない。本番の準備前に誤って動かさないため）
-#   - Environments: production（承認者を設定すると、デプロイ前に承認を求められる）
+#   - Environments: production（CMS の公開で自動で動くため、承認者（Required reviewers）は設定しない）
 #   - Secrets（production 環境）:
-#       CLOUDFLARE_DEPLOY_TOKEN   デプロイ用の API トークン（Workers のスクリプトの編集・対象ゾーンの Workers Routes）
+#       CMS_DELIVERY_KEY          CMS の公開キー（ssdk_…）。ビルドのときに CMS を読む
+#       XSERVER_SSH_KEY           Xserver に置くための SSH の秘密鍵（このデプロイ専用に作る。パスフレーズなし）
+#       XSERVER_KNOWN_HOSTS       Xserver のホスト鍵（`ssh-keyscan -p 10022 <host>` の出力を確かめてから登録）
+#       CLOUDFLARE_DEPLOY_TOKEN   下書きプレビュー用 Worker のデプロイ用 API トークン（Workers のスクリプトの編集）
 #       CLOUDFLARE_ACCOUNT_ID     Cloudflare のアカウントID
 #   - deploy/production.json をコミットしておく（Secret は含まない）
-#   - CMS の公開キー（CMS_DELIVERY_KEY）は初回に `wrangler secret put` で Worker に登録済みであること（デプロイでは消えない）
 name: Deploy
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [cms-publish]
 
 permissions:
   contents: read
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 jobs:
-  deploy:
+  site:
     if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
+    # 公開が続いても、実行中の1件と待ちの1件にまとまる（待ちは最新のものに置き換わる）。
+    # 実行中のものは止めない（アップロードの途中で止めると、ページが欠けたままになりうる）。
+    concurrency:
+      group: deploy-site
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # コードが変わったときは、型チェックとテストが通らない状態を公開しない（CMS の公開だけのときはコードは同じ）
+      - if: ${{ github.event_name != 'repository_dispatch' }}
+        run: pnpm check
+      - if: ${{ github.event_name != 'repository_dispatch' }}
+        run: pnpm test
+      - name: ビルド（CMS の公開中の内容を読む）
+        run: pnpm release build
+        env:
+          CMS_DELIVERY_KEY: ${{ secrets.CMS_DELIVERY_KEY }}
+      - name: SSH の準備
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$XSERVER_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$XSERVER_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        env:
+          XSERVER_SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
+          XSERVER_KNOWN_HOSTS: ${{ secrets.XSERVER_KNOWN_HOSTS }}
+      - name: Xserver に置く
+        run: pnpm release upload --yes
+      - if: ${{ always() }}
+        run: rm -f ~/.ssh/id_ed25519
+
+  preview-worker:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && github.event_name != 'repository_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    concurrency:
+      group: deploy-preview-worker
+      cancel-in-progress: false
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DEPLOY_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -39,8 +87,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # 型チェックとテストが通らない状態は公開しない
       - run: pnpm check
       - run: pnpm test
       - name: デプロイ
-        run: pnpm release deploy --yes
+        run: pnpm release preview-deploy --yes

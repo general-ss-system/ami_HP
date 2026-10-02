@@ -17,9 +17,11 @@
 
 ## 2. 技術構成
 
-- Astro（SSR, `output: "server"`）+ `@astrojs/cloudflare`。Cloudflare Workers にデプロイ。本番の値は `deploy/production.json`、デプロイは `pnpm release`（`docs/deploy.md`）。
+- Astro + `@astrojs/cloudflare`。開発は SSR（`output: "server"`）。本番は `BUILD_TARGET=xserver` で**静的に書き出して Xserver に置く**（CMS の公開のたびに Actions で再ビルド）。
+  下書きプレビューだけ `BUILD_TARGET=preview-worker` の SSR を workers.dev で動かす（CMS docs/05 ADR-031）。本番の値は `deploy/production.json`、デプロイは `pnpm release`（`docs/deploy.md`）。
+- **ページは静的に書き出せる作りにする。** 動的なルートには `getStaticPaths` を書き、ページで Cookie・クエリ文字列・リクエストの時刻を使わない（下書きプレビューは middleware と `src/preview/` だけが扱う）。
 - パッケージマネージャは pnpm。
-- Frontend 側にキャッシュ層（ISR 等）を足さない。反映は CMS 側の CDN タグパージだけで行う（ADR-022）。
+- Frontend 側にキャッシュ層（ISR 等）を足さない。反映は CMS の Webhook による再ビルドで行う（ADR-022・ADR-031）。
 
 ## 3. ディレクトリ
 
@@ -72,7 +74,7 @@ scripts/         素材の変換
   ただし `CMS_MODE=fixture` の仮データは制作中の表示用として使ってよい。
 - 画像は CMS が返す `url` をそのまま使い、CMS のドメインをハードコードしない。`width` / `height` を必ず指定する。
 - レイアウト・余白・色・動き・ナビの構成はコードで管理する（CMS にしない）。
-- Delivery の公開キー（`CMS_DELIVERY_KEY`）をリポジトリに入れない。ローカルは `.dev.vars`、本番は `wrangler secret`。
+- Delivery の公開キー（`CMS_DELIVERY_KEY`）をリポジトリに入れない。ローカルは `.dev.vars`、本番は GitHub の Secret（ビルド）と `wrangler secret`（下書きプレビュー用 Worker）。
 - 動きは `prefers-reduced-motion` で止められるようにする。
 
 ## 5. コマンド

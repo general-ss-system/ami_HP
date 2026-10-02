@@ -13,6 +13,8 @@
 - CMS は 2026-10-02 に、汎用の CMS（`SS-HP-PUBLIC-SYSTEM`）から ami 専用の `general-ss-system/ami-cms` に切り出した（履歴は持ち込んでいない）。
   先方へ完全に引き渡すため（ami-cms の `docs/09` の形C）。ami の CMS の作業は ami-cms で行う。
 - 納品時は、このリポジトリと ami-cms を先方の GitHub の Organization へ移す。本番の Cloudflare は最初から先方名義で作る。
+- 本番の構成（2026-10-02 決定、ami-cms ADR-031）: DNS（Xserver・Google Workspace）には触れない。公開サイトは **Xserver に静的な HTML**、
+  CMS と下書きプレビューは先方の Cloudflare の **workers.dev**。公開の反映は CMS の Webhook → GitHub Actions で再ビルド（数分）。
 - プレビュー: https://general-ss-system.github.io/ami_HP/ （`main` への push で更新。仮データ・静的書き出し）
 - 別デバイスでは `develop` を取り込んでから作業する。`main` へ戻すときは `develop` → `main` をマージする。
 
@@ -31,8 +33,11 @@
 ## 3. 残っていること（決めること・やること）
 
 - [ ] 本番の構築（手順は `docs/deploy.md`。Workers Free で構築し、一般公開の前に Paid にするかを先方と決める）
-  - 先方の準備待ち: Cloudflare アカウント・ドメイン（まだ無い）・Turnstile・Resend・Cache Purge のトークン・自社担当者の招待
-  - 決まったら `deploy/production.json`（ドメイン・Turnstile のサイトキー）を作り、`CMS_DELIVERY_KEY` を `wrangler secret put` で登録する
+  - 仕組みは用意済み: `pnpm release build|upload|deploy|preview-deploy`、`.github/workflows/deploy.yml`、Webhook の受け口 `/api/cms-webhook`。
+    ローカルの CMS を相手に静的ビルド（30ページ・画像の取り込み）と Webhook の受け口（署名の検証）を確認済み。Xserver への実際のアップロードは未確認
+  - 先方の準備待ち: Cloudflare アカウント（workers.dev のサブドメイン）・Turnstile・Resend（DNS は Xserver に追加）・自社担当者の招待・
+    Xserver の SSH（鍵の登録・国外IPアクセス制限の確認）と置き場所のディレクトリ
+  - 決まったら `deploy/production.json` を作り、GitHub の Secret と Worker の Secret を登録する（`docs/deploy.md` §4）
 - [ ] 原稿: 次は仮データ（先方に入れてもらう。トップページ・SERVICE には仮の文言は無い）
   - ABOUT・CONTACT の会社概要: 代表メッセージ・代表者名・所在地・設立・資本金・電話番号・メールアドレス
   - MEMBER: 名前が「ここにお名前」の人がいる
