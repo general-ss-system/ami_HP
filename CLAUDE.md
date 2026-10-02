@@ -7,8 +7,8 @@
 
 - デザイン: Figma「株式会社ami ホームページデザイン」 top フレーム（node 226:236、PC 1280px）。
   スマホ版のデザインは無い。レスポンシブはこのリポジトリで設計する。
-- 素材の元データ: CMS リポジトリの `ami HP 素材/`。`src/assets/` に英数字名で取り込んで使う。
-- CMS 連携の規約: CMS リポジトリの `docs/04_WEBSITE_CMS_INTEGRATION_RULES.md`（必読）、
+- 素材の元データ: `202511_Amiホームページ/ami HP/ami HP 素材/`（Git 管理外）。`src/assets/` に英数字名で取り込んで使う。
+- CMS 連携の規約: CMS リポジトリ（general-ss-system/ami-cms。このリポジトリと同じ階層の `ami-cms/`）の `docs/04_WEBSITE_CMS_INTEGRATION_RULES.md`（必読）、
   `docs/02_BACKEND_DATA_API_SPEC.md`、案件別の `docs/projects/ami/CONTENT_CONTRACT.md`。
 - API の応答の型: `src/lib/cms/contracts.ts`（CMS の `packages/contracts` の写し。手で書き換えない）。
 
@@ -102,7 +102,7 @@ pnpm が PATH に無い環境では `corepack pnpm <コマンド>` で動かす�
 
 - `CMS_MODE=fixture`（既定）: 仮データで表示する。CMS が無くても制作できる。
 - `CMS_MODE=live`: `CMS_BASE_URL` / `CMS_SITE_KEY` / `CMS_DELIVERY_KEY` で Delivery API から取得する。
-  ローカルの CMS は、CMS リポジトリで `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap -- --site ami` を実行すると、公開キーを含めて用意される。
+  ローカルの CMS は、ami-cms で `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap` を実行すると、公開キーと下書きプレビュー用URLを含めて用意される。
   そのあとこのリポジトリで `pnpm seed:cms -- --token <ログインURLの token>` を実行すると、ami のモデル・フォームを有効にして、全ページの仮データを登録する。
   （dev:bootstrap を実行するたびに公開キーが発行し直されるので、`.dev.vars` の `CMS_DELIVERY_KEY` も差し替える。ログインの token は 1 回しか使えない）
 

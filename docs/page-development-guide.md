@@ -32,7 +32,7 @@
 ┌──────────────────────────────┐        ┌──────────────────────────────┐
 │ CMS（管理画面とデータ）         │        │ 公開サイト（このリポジトリ）     │
 │ general-ss-system/            │ 配信API │ general-ss-system/ami_HP      │
-│   SS-HP-PUBLIC-SYSTEM         │ ─────▶ │ Astro（SSR）+ Cloudflare       │
+│   ami-cms                     │ ─────▶ │ Astro（SSR）+ Cloudflare       │
 │ ・どんな項目があるか（モデル）   │        │ ・見た目・動き・レイアウト       │
 │ ・クライアントが入れる文章や写真 │        │ ・CMS から取った値を表示する     │
 └──────────────────────────────┘        └──────────────────────────────┘
@@ -69,10 +69,10 @@
 2つを **同じフォルダの中に並べて** 置きます。
 
 ```bash
-git clone https://github.com/general-ss-system/SS-HP-PUBLIC-SYSTEM.git "ami HP"
+git clone https://github.com/general-ss-system/ami-cms.git ami-cms
 git clone https://github.com/general-ss-system/ami_HP.git ami_HP
 
-cd "ami HP" && pnpm install && git switch develop && cd ..
+cd ami-cms && pnpm install && git switch develop && cd ..
 cd ami_HP   && pnpm install && git switch develop
 cp .dev.vars.example .dev.vars
 ```
@@ -195,12 +195,12 @@ design プラグインの Figma 接続（mcp__plugin_design_figma__*）を使っ
 
 → 表を確認し、**クライアントに見せても分かる言葉** になっているか（label と helpText）をチェックしてから次へ。
 
-### ③ CMS に項目を定義する（CMS リポジトリ）
+### ③ CMS に項目を定義する（CMS リポジトリ ami-cms）
 
 **プロンプト**
 
 ```text
-ami HP（CMS リポジトリ）で作業します。②の Content Map のとおり、
+ami-cms（CMS リポジトリ）で作業します。②の Content Map のとおり、
 packages/content-schema/src/projects/ami.ts に〈ami_about〉を追加し、AMI_MODELS と SITE_PRESETS.ami に登録してください。
 - key は ami_ で始める。後から変えない前提で決める
 - 一覧の並び替え・絞り込みに使う項目だけ indexed: true

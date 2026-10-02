@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-09-29 時点）
+# 引き継ぎメモ（2026-10-02 時点）
 
 別のデバイスで作業を続けるための、現状のまとめ。手順の決まりごとは `CLAUDE.md`、CMS の項目は `docs/content-model.md` が正本。
 
@@ -8,9 +8,11 @@
 |---|---|---|
 | `ami_HP`（このリポジトリ） | `main` | 公開サイト。push すると GitHub Pages のプレビューが更新される |
 | 〃 | `develop` | `main` をマージ済み ＋ このメモ（`main` には無い `docs/page-development-guide.md` もある） |
-| `SS-HP-PUBLIC-SYSTEM`（CMS） | `develop` | ami のモデル定義をこのサイトに合わせた変更を含む（下の 4.） |
-| 〃 | `main` | **origin には未 push**（ローカルに 3 commit 先行。`develop` にはマージ済み） |
+| `ami-cms`（CMS・非公開） | `develop` / `main` | ami 専用の管理画面・API。作業は `develop` で行う |
 
+- CMS は 2026-10-02 に、汎用の CMS（`SS-HP-PUBLIC-SYSTEM`）から ami 専用の `general-ss-system/ami-cms` に切り出した（履歴は持ち込んでいない）。
+  先方へ完全に引き渡すため（ami-cms の `docs/09` の形C）。ami の CMS の作業は ami-cms で行う。
+- 納品時は、このリポジトリと ami-cms を先方の GitHub の Organization へ移す。本番の Cloudflare は最初から先方名義で作る。
 - プレビュー: https://general-ss-system.github.io/ami_HP/ （`main` への push で更新。仮データ・静的書き出し）
 - 別デバイスでは `develop` を取り込んでから作業する。`main` へ戻すときは `develop` → `main` をマージする。
 
@@ -21,24 +23,32 @@
   主な要素はデザインの座標と ±3px 前後（SNS の事例カードの高さなど、中身の量で変わるところを除く）
 - デザインの資料: `design/csv/*.csv`（要素ごとの位置・大きさ・色・影）、部品を取り出す道具 `scripts/design-extract.mjs` ほか（`design/README.md`）。
   元の SVG（`service.svg` など、リポジトリ直下）は大きいのでコミットしていない → **別デバイスで使うなら SVG を手で持っていく**
-- CMS 連携: `CMS_MODE=live` で全ページが CMS のデータで表示され、管理画面での変更が反映されることをローカルの CMS で確認済み
+- CMS 連携（2026-10-02 に ami-cms で確認）: 全ページ（32 URL）が CMS のデータと画像で表示される。
+  お問い合わせ（確認画面・Turnstile のテスト用キー・送信 → 管理画面の受信一覧）、下書き保存ではサイトが変わらないこと、
+  下書きのプレビュー（トップページ・トピックス記事）、公開するとサイトに反映されること
 - 公開前の点検（画像の width/height・alt・見出しの順・キーボード操作・動きを減らす設定・空の項目・375/820/1440）を実施済み（`CLAUDE.md`「公開前の点検」）
 
 ## 3. 残っていること（決めること・やること）
 
-- [ ] CMS リポジトリの `main` を push するか（`develop` には入っている）
 - [ ] 本番ドメイン（`astro.config.mjs` の `site` が仮の `https://www.example.com`）。canonical・OGP・sitemap に使う
 - [ ] 本番の `PUBLIC_TURNSTILE_SITE_KEY`（お問い合わせのボット対策。ビルド時に埋め込まれる）と `CMS_DELIVERY_KEY`（`wrangler secret`）
-- [ ] 原稿: 会社情報・代表メッセージ・プライバシーポリシー・採用・FAQ・事例などは「（仮）」の仮データ
+- [ ] 原稿: 次は仮データ（先方に入れてもらう。トップページ・SERVICE には仮の文言は無い）
+  - ABOUT・CONTACT の会社概要: 代表メッセージ・代表者名・所在地・設立・資本金・電話番号・メールアドレス
+  - MEMBER: 名前が「ここにお名前」の人がいる
+  - RECRUIT: 採用メッセージ・募集職種（3 件）
+  - FAQ: 質問と回答（4 件）
+  - WORKS: 実績 5 件すべて（タイトル・クライアント名・紹介文・成果）
+  - TOPICS: 記事のタイトル・本文（「タイトル」「ここに記事の本文が入ります。」）
+  - PRIVACY POLICY: 本文
 - [ ] お問い合わせの通知先（CMS の管理画面で設定）
-- [ ] 本番の CMS でサイトを作るとき、preset `ami` とフォーム `ami_contact` を有効にする（`docs/projects/ami/CONTENT_CONTRACT.md` の立ち上げ設定）
+- [ ] 本番の CMS でサイトを作るとき、preset `ami`・フォーム `ami_contact`・プレビュー用URL を設定する
+  （ami-cms の `provision init-site`。例は ami-cms の `docs/09` §5.3）
 - 決めたこと（変える場合は相談）:
   - 社名は「合同会社ami」
   - ヘッダーのナビは 4 項目（service / contact のデザインには CONTACT があるが、topics / member のデザインには無い）
   - SERVICE の事業の順番は CMS の `sort_order`（トップと同じ。デザインでは商品開発が 01）
   - お問い合わせは「入力 → 確認 → 送信」の流れを残した（デザインは入力画面のみ）
-- CMS 側の既知の問題: backend のテストのうち 3 件（ログインが要る HTTP のテスト。form-admin の CSV 2 件・outbox の Webhook 1 件）は、今回の変更の前から失敗している
-- `SS-HP-PUBLIC-SYSTEM/apps/ami-hp-main` は初期の試作で、公開サイトには使わない（key も古い）
+- CMS 側のテストは ami-cms ですべて通る（以前失敗していた 3 件は、テストのセッションの時刻の修正で解消）
 
 ## 4. CMS の定義（2026-09-27〜28 の変更）
 

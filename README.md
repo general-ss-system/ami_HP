@@ -28,12 +28,12 @@ pnpm dev                         # http://localhost:4321
 
 ## ローカルの CMS につなぐ
 
-CMS リポジトリ（ss-hp-public-system）で:
+CMS リポジトリ（ami-cms）で:
 
 ```bash
 pnpm dev
-pnpm -F @ss/backend run dev:bootstrap -- --site ami --name "合同会社ami" --preset ami
-# → 「Delivery API 公開キー」と「管理画面へのログインURL」が表示される
+pnpm -F @ss/backend run dev:bootstrap
+# → サイト ami・フォーム ami_contact・下書きプレビュー用URLを用意し、「Delivery API 公開キー」と「管理画面へのログインURL」が表示される
 ```
 
 このリポジトリで:

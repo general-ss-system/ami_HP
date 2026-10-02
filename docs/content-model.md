@@ -1,6 +1,6 @@
 # トップページの Content Model
 
-状態: **確定（2026-09-25）**。正本は CMS リポジトリの `docs/projects/ami/CONTENT_CONTRACT.md` と
+状態: **確定（2026-09-25）**。正本は CMS リポジトリ（ami-cms）の `docs/projects/ami/CONTENT_CONTRACT.md` と
 `packages/content-schema/src/projects/ami.ts`。本書はサイト側から見た要約。食い違ったら CMS 側が正しい。
 
 サイト側の実装はこの案に合わせてある（`src/lib/cms/schemas.ts`）。key や型を変えるときは、

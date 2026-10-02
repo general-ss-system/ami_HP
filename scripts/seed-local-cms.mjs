@@ -4,9 +4,9 @@
  * 画面で使っている仮データと CMS の中身を一致させ、CMS_MODE=live に切り替えても同じ表示になることを確かめるためのもの。
  * **ローカル専用。** 本番の CMS には使わない（本番の初期データはクライアントが管理画面で入れる）。
  *
- * 前提（CMS リポジトリ側）:
+ * 前提（CMS リポジトリ ami-cms 側）:
  *   pnpm dev
- *   pnpm -F @ss/backend run dev:bootstrap -- --site ami
+ *   pnpm -F @ss/backend run dev:bootstrap
  *   → 表示される「Delivery API 公開キー」と「管理画面へのログインURL」の token=... の部分を控える
  *
  * 使い方（このリポジトリで）:
