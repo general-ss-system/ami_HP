@@ -8,6 +8,8 @@
  * トークンを URL に載せたまま回遊させない（共有された瞬間に下書きが第三者へ渡るため）。
  */
 
+import type { PreviewCmsClient } from "./client";
+import type { DeliveryEntry } from "./contracts";
 import { entryPath } from "./richtext";
 import { withBase } from "../url";
 
@@ -56,6 +58,38 @@ export function resolvePreviewPath(model: string, slug: string | null): string |
   }
   const list = COLLECTION_PATHS[model];
   return list ? withBase(list) : null;
+}
+
+/**
+ * プレビューする下書きを読む。
+ *
+ * 管理画面は singleton（トップページなど）でも entryId を付けて開くが、CMS の
+ * `entries/{model}/{entryId}` は collection 専用で、singleton には 404 を返す。
+ * そのため singleton は entryId があっても `singletons/{model}` で読む。
+ */
+export async function loadPreviewEntry(
+  client: PreviewCmsClient,
+  params: { model: string; slug: string | null; entryId: string | null },
+): Promise<DeliveryEntry | null> {
+  const { model, slug, entryId } = params;
+  if (model in SINGLETON_PATHS) return client.getSingleton(model);
+  if (entryId) return client.getEntryById(model, entryId);
+  if (slug) return client.getEntry(model, slug);
+  return client.getSingleton(model);
+}
+
+/**
+ * プレビューの行き先を決めるための slug。詳細ページを持たない記事は null（一覧へ送る）。
+ * 外部リンクを設定したトピックスはカードから外部サイトを開くだけで、詳細ページは 404 になるため。
+ */
+export function previewTargetSlug(model: string, entry: DeliveryEntry): string | null {
+  if (model === "ami_topics") {
+    const link = (entry.content as Record<string, unknown>).external_url;
+    if (link && typeof link === "object" && typeof (link as { href?: unknown }).href === "string" && (link as { href: string }).href) {
+      return null;
+    }
+  }
+  return entry.slug;
 }
 
 /** /api/preview-exit?to=... の戻り先。サイト内のパスだけを受け付ける（オープンリダイレクトにしない）。 */
