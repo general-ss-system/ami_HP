@@ -1,0 +1,9 @@
+{
+  "$comment": "公開サイトの本番設定の見本。先方の Cloudflare とドメインが決まったら production.json にコピーして値を入れる。Secret（CMS_DELIVERY_KEY）は書かない（wrangler secret put で登録）。",
+  "workerName": "ami-hp",
+  "accountId": "0123456789abcdef0123456789abcdef",
+  "siteHost": "www.example.co.jp",
+  "cmsBaseUrl": "https://cms.example.co.jp",
+  "cmsSiteKey": "ami",
+  "turnstileSiteKey": "0x4AAAAAAAexample"
+}

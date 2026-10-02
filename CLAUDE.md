@@ -17,7 +17,7 @@
 
 ## 2. 技術構成
 
-- Astro（SSR, `output: "server"`）+ `@astrojs/cloudflare`。Cloudflare Workers にデプロイ。
+- Astro（SSR, `output: "server"`）+ `@astrojs/cloudflare`。Cloudflare Workers にデプロイ。本番の値は `deploy/production.json`、デプロイは `pnpm release`（`docs/deploy.md`）。
 - パッケージマネージャは pnpm。
 - Frontend 側にキャッシュ層（ISR 等）を足さない。反映は CMS 側の CDN タグパージだけで行う（ADR-022）。
 

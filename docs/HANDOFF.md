@@ -30,8 +30,9 @@
 
 ## 3. 残っていること（決めること・やること）
 
-- [ ] 本番ドメイン（`astro.config.mjs` の `site` が仮の `https://www.example.com`）。canonical・OGP・sitemap に使う
-- [ ] 本番の `PUBLIC_TURNSTILE_SITE_KEY`（お問い合わせのボット対策。ビルド時に埋め込まれる）と `CMS_DELIVERY_KEY`（`wrangler secret`）
+- [ ] 本番の構築（手順は `docs/deploy.md`。Workers Free で構築し、一般公開の前に Paid にするかを先方と決める）
+  - 先方の準備待ち: Cloudflare アカウント・ドメイン（まだ無い）・Turnstile・Resend・Cache Purge のトークン・自社担当者の招待
+  - 決まったら `deploy/production.json`（ドメイン・Turnstile のサイトキー）を作り、`CMS_DELIVERY_KEY` を `wrangler secret put` で登録する
 - [ ] 原稿: 次は仮データ（先方に入れてもらう。トップページ・SERVICE には仮の文言は無い）
   - ABOUT・CONTACT の会社概要: 代表メッセージ・代表者名・所在地・設立・資本金・電話番号・メールアドレス
   - MEMBER: 名前が「ここにお名前」の人がいる

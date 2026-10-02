@@ -36,3 +36,6 @@ design-src/
 
 # Figma から書き出したデザインの SVG（大きいのでコミットしない。要素の一覧は design/csv/ の CSV を使う）
 /*.svg
+
+# scripts/deploy.mjs が deploy/production.json から毎回作る
+wrangler.production.json

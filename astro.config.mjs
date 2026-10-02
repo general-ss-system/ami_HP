@@ -25,8 +25,8 @@ const draftPreviewRoutes = {
 
 // https://astro.build/config
 export default defineConfig({
-  // 本番ドメインが決まったら差し替える（canonical / OGP の絶対URLに使う）。
-  site: isPagesPreview ? "https://general-ss-system.github.io" : "https://www.example.com",
+  // canonical / OGP / sitemap の絶対URL。本番は scripts/deploy.mjs が deploy/production.json の siteHost から渡す。
+  site: isPagesPreview ? "https://general-ss-system.github.io" : (process.env.SITE_URL ?? "https://www.example.com"),
   base: isPagesPreview ? "/ami_HP" : "/",
 
   // 本番は CMS の更新をリクエスト時に反映するため SSR にする。
@@ -38,6 +38,8 @@ export default defineConfig({
   adapter: isPagesPreview
     ? undefined
     : cloudflare({
+        // 本番は scripts/deploy.mjs が書き出した設定（案件の値入り）を使う。無ければ開発用の wrangler.jsonc。
+        configPath: process.env.WRANGLER_CONFIG,
         // 手元の素材（src/assets）は事前に WebP にしたものを直接配信し（LocalImage）、
         // CMS の画像は CMS が返す URL をそのまま使う（変換は CMS 側の Cloudflare Images）。
         imageService: { build: "compile", runtime: "passthrough" },

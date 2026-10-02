@@ -1,0 +1,46 @@
+# 本番（Cloudflare Workers）へのデプロイ（docs/deploy.md）。先方のリポジトリで使う。
+#
+# 準備（GitHub の Settings）:
+#   - Variables: DEPLOY_ENABLED = true（これが無いリポジトリでは動かない。本番の準備前に誤って動かさないため）
+#   - Environments: production（承認者を設定すると、デプロイ前に承認を求められる）
+#   - Secrets（production 環境）:
+#       CLOUDFLARE_DEPLOY_TOKEN   デプロイ用の API トークン（Workers のスクリプトの編集・対象ゾーンの Workers Routes）
+#       CLOUDFLARE_ACCOUNT_ID     Cloudflare のアカウントID
+#   - deploy/production.json をコミットしておく（Secret は含まない）
+#   - CMS の公開キー（CMS_DELIVERY_KEY）は初回に `wrangler secret put` で Worker に登録済みであること（デプロイでは消えない）
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DEPLOY_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 型チェックとテストが通らない状態は公開しない
+      - run: pnpm check
+      - run: pnpm test
+      - name: デプロイ
+        run: pnpm release deploy --yes

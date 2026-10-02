@@ -21,7 +21,7 @@ pnpm dev                         # http://localhost:4321
 | `pnpm test` | 単体テスト |
 | `pnpm build` | 本番ビルド |
 | `pnpm preview` | ビルド結果を手元の workerd で確認 |
-| `pnpm deploy` | ビルドして Cloudflare にデプロイ |
+| `pnpm release check` / `deploy --yes` | 本番の設定を検証 / 本番の値でビルドして Cloudflare にデプロイ（`docs/deploy.md`） |
 | `pnpm assets:webp` | `src/assets/` の PNG を WebP に変換 |
 | `pnpm build:pages` | GitHub Pages 用のプレビューをビルド（仮データ・静的書き出し） |
 | `pnpm seed:cms -- --token …` | ローカルの CMS に仮データを登録・公開（下の「ローカルの CMS につなぐ」） |
