@@ -62,9 +62,10 @@ describe("validateProductionConfig", () => {
     expect(withPath("/var/www")).toEqual(["xserver.path"]);
   });
 
-  it("Xserver の項目が無ければ指摘する", () => {
+  it("Xserver の項目は省略できる（決まるまでは下書きプレビュー用 Worker だけ出す）。書くなら全部必要", () => {
     const { xserver: _omit, ...rest } = valid;
-    expect(fields(validateProductionConfig(rest))).toEqual(["xserver.host", "xserver.port", "xserver.user", "xserver.path"]);
+    expect(validateProductionConfig(rest)).toEqual([]);
+    expect(fields(validateProductionConfig({ ...rest, xserver: {} }))).toEqual(["xserver.host", "xserver.port", "xserver.user", "xserver.path"]);
   });
 });
 

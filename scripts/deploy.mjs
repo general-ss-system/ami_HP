@@ -73,7 +73,7 @@ function check() {
   const base = JSON.parse(stripJsonc(readFileSync(join(root, "wrangler.jsonc"), "utf8")));
   writeFileSync(join(root, GENERATED_CONFIG), `${JSON.stringify(renderPreviewWranglerConfig(base, d), null, 2)}\n`);
   console.log(`✓ 本番設定は正しい形式です。${GENERATED_CONFIG} を書き出しました`);
-  console.log(`  公開: https://${d.siteHost}（Xserver: ${d.xserver.user}@${d.xserver.host}:${d.xserver.path}）`);
+  console.log(`  公開: https://${d.siteHost}（Xserver: ${d.xserver ? `${d.xserver.user}@${d.xserver.host}:${d.xserver.path}` : "未設定。アップロードの前に deploy/production.json の xserver を入れる"}）`);
   console.log(`  CMS: ${d.cmsBaseUrl}（サイト: ${d.cmsSiteKey}） / 下書きプレビュー: https://${d.preview.host}`);
   return d;
 }
@@ -159,6 +159,11 @@ async function build(d) {
   console.log(`✓ 静的なサイトを書き出しました（${files.length} ファイル）`);
 }
 
+/** Xserver の項目が無い設定（下書きプレビュー用 Worker だけ先に出す段階）ではアップロードしない。 */
+function requireXserver(d) {
+  if (!d.xserver) fail("deploy/production.json に xserver（Xserver の SSH の接続先）がありません。docs/deploy.md §4.2");
+}
+
 function sshArgs(d) {
   return ["-p", String(d.xserver.port), "-o", "BatchMode=yes"];
 }
@@ -224,11 +229,13 @@ switch (command) {
     break;
   case "upload": {
     const d = check();
+    requireXserver(d);
     if (confirmed(`dist/ を ${d.xserver.user}@${d.xserver.host}:${d.xserver.path} に置く（https://${d.siteHost}）`)) upload(d);
     break;
   }
   case "deploy": {
     const d = check();
+    requireXserver(d);
     if (!confirmed(`CMS の公開中の内容でビルドし、${d.xserver.host}:${d.xserver.path} に置く（https://${d.siteHost}）`)) break;
     await build(d);
     upload(d);

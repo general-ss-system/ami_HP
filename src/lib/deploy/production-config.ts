@@ -29,8 +29,11 @@ export interface ProductionConfig {
     /** CMS の Webhook を受けたときに再ビルドを起動するリポジトリ（owner/name）。 */
     readonly githubRepo: string;
   };
-  /** 公開サイトの置き場所（Xserver の SSH）。秘密鍵は書かない（GitHub の Secret か手元の ssh-agent）。 */
-  readonly xserver: {
+  /**
+   * 公開サイトの置き場所（Xserver の SSH）。秘密鍵は書かない（GitHub の Secret か手元の ssh-agent）。
+   * 決まるまでは省略できる（下書きプレビュー用 Worker だけ先に出す）。アップロードには必須。
+   */
+  readonly xserver?: {
     /** 例: sv12345.xserver.jp */
     readonly host: string;
     /** Xserver の SSH は 10022。 */
@@ -80,6 +83,7 @@ export function validateProductionConfig(input: unknown): string[] {
   );
   at("preview.githubRepo", str(p.githubRepo) && GITHUB_REPO.test(p.githubRepo), "このリポジトリ（owner/name）");
 
+  if (d.xserver === undefined) return errors;
   const x = (d.xserver ?? {}) as Record<string, unknown>;
   at("xserver.host", str(x.host) && HOSTNAME.test(x.host), "Xserver のホスト名（例: sv12345.xserver.jp）");
   at("xserver.port", Number.isInteger(x.port) && (x.port as number) > 0 && (x.port as number) < 65536, "SSH のポート（Xserver は 10022）");
