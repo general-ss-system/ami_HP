@@ -24,4 +24,10 @@ describe("sitemap", () => {
     const xml = renderSitemap([{ path: "/topics/a&b", lastmod: "2026-09-01" }], new URL("https://example.com"));
     expect(xml).toContain("<loc>https://example.com/topics/a&amp;b</loc><lastmod>2026-09-01</lastmod>");
   });
+
+  it("静的に書き出すときは末尾スラッシュ付きの URL にする（canonical と揃える）", () => {
+    const xml = renderSitemap([{ path: "/" }, { path: "/about" }], new URL("https://example.com"), { trailingSlash: true });
+    expect(xml).toContain("<loc>https://example.com/</loc>");
+    expect(xml).toContain("<loc>https://example.com/about/</loc>");
+  });
 });

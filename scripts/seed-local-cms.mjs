@@ -4,9 +4,9 @@
  * 画面で使っている仮データと CMS の中身を一致させ、CMS_MODE=live に切り替えても同じ表示になることを確かめるためのもの。
  * **ローカル専用。** 本番の CMS には使わない（本番の初期データはクライアントが管理画面で入れる）。
  *
- * 前提（CMS リポジトリ側）:
+ * 前提（CMS リポジトリ ami-cms 側）:
  *   pnpm dev
- *   pnpm -F @ss/backend run dev:bootstrap -- --site ami
+ *   pnpm -F @ss/backend run dev:bootstrap
  *   → 表示される「Delivery API 公開キー」と「管理画面へのログインURL」の token=... の部分を控える
  *
  * 使い方（このリポジトリで）:
@@ -18,6 +18,10 @@
  *
  * オプション: --api http://localhost:8787 / --site ami
  * 同じサイトに2回実行すると、記事が重複して登録される（新しく作ったサイトに1回だけ実行する）。
+ *
+ * 例外: 先方に見せる確認用の環境（R2 の有効化前など / CMS ADR-032）に仮データを入れるときだけ、
+ * 本番の CMS の URL を --allow-remote に同じ値で重ねて指定すると実行できる。記事が1件でもあるサイトには実行しない。
+ *   pnpm seed:cms -- --api https://ami-cms.ami-cms.workers.dev --allow-remote https://ami-cms.ami-cms.workers.dev --token …
  */
 
 import { readFile } from "node:fs/promises";
@@ -52,8 +56,11 @@ if (!TOKEN) {
   console.error("--token が必要です（dev:bootstrap が表示するログインURLの token=... の部分）");
   process.exit(1);
 }
-if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API)) {
-  console.error(`ローカルの CMS 以外には実行できません: ${API}`);
+const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API);
+// 本番の CMS に誤って入れないよう、URL を2回（--api と --allow-remote）一致させたときだけ許す
+const ALLOW_REMOTE = arg("allow-remote", "")?.replace(/\/+$/, "");
+if (!IS_LOCAL && !(ALLOW_REMOTE === API && API.startsWith("https://"))) {
+  console.error(`ローカルの CMS 以外には実行できません: ${API}（確認用の環境に入れるときは --allow-remote に同じ URL を指定）`);
   process.exit(1);
 }
 
@@ -97,6 +104,15 @@ const models = must(await api(`${S}/models`, { method: "POST", body: JSON.string
 console.log(`✓ モデル: ${[...models.enabled, ...models.synced].join(", ") || "（変更なし）"}`);
 const forms = must(await api(`${S}/forms`, { method: "POST", body: JSON.stringify({ formKeys: ["ami_contact"] }) }, cookie), 200, "フォームの有効化");
 console.log(`✓ フォーム: ${[...forms.enabled, ...forms.synced].join(", ") || "（変更なし）"}`);
+
+// 確認用の環境では、入力済みの内容と混ざらないよう、記事が1件でもあれば止める
+if (!IS_LOCAL) {
+  const existing = must(await api(`${S}/models/ami_topics/entries`, {}, cookie), 200, "既存の記事の確認");
+  if ((existing.data ?? []).length > 0) {
+    console.error("このサイトには既に記事があります。仮データは新しく作ったサイトにだけ入れます。");
+    process.exit(1);
+  }
+}
 
 // ---- 画像のアップロード（同じ画像は1回だけ） ----
 const uploaded = new Map(); // 仮データの media.id → CMS の media id

@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   define: {
     __PREVIEW_BUILD__: "false",
+    __STATIC_BUILD__: "false",
   },
   test: {
     include: ["src/**/*.test.ts"],

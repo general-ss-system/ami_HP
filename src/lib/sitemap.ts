@@ -50,9 +50,14 @@ function escapeXml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
-export function renderSitemap(entries: SitemapEntry[], site: URL): string {
+/**
+ * trailingSlash: 静的に書き出したサイト（/about/index.html）では、ページの URL は末尾スラッシュ付きが実体になる。
+ * canonical（Astro.url）と揃え、Apache の /about → /about/ のリダイレクトを経由させないため。
+ */
+export function renderSitemap(entries: SitemapEntry[], site: URL, options: { trailingSlash?: boolean } = {}): string {
   const urls = entries.map((e) => {
-    const loc = new URL(withBase(e.path), site).toString();
+    const path = options.trailingSlash && !e.path.endsWith("/") ? `${e.path}/` : e.path;
+    const loc = new URL(withBase(path), site).toString();
     const lastmod = e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : "";
     return `  <url><loc>${escapeXml(loc)}</loc>${lastmod}</url>`;
   });

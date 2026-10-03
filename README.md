@@ -1,6 +1,9 @@
 # 合同会社ami 公式サイト
 
-Astro（SSR）+ Cloudflare Workers。コンテンツはヘッドレスCMS（ss-hp-public-system）の Delivery API から取得する。
+Astro。コンテンツは ami 専用のヘッドレスCMS（ami-cms）の Delivery API から取得する。
+本番は CMS の公開のたびに静的に書き出して Xserver に置き、下書きプレビューだけ Cloudflare Workers（workers.dev）の SSR で動かす（`docs/deploy.md`）。
+
+**下層ページを作る人は、まず [docs/page-development-guide.md](docs/page-development-guide.md)（手順書・プロンプト付き）を読むこと。**
 
 ## はじめかた
 
@@ -19,19 +22,19 @@ pnpm dev                         # http://localhost:4321
 | `pnpm test` | 単体テスト |
 | `pnpm build` | 本番ビルド |
 | `pnpm preview` | ビルド結果を手元の workerd で確認 |
-| `pnpm deploy` | ビルドして Cloudflare にデプロイ |
+| `pnpm release check` / `build` / `deploy --yes` / `preview-deploy --yes` | 本番の設定を検証 / CMS から静的に書き出す / 書き出して Xserver に置く / 下書きプレビュー用 Worker を出す（`docs/deploy.md`） |
 | `pnpm assets:webp` | `src/assets/` の PNG を WebP に変換 |
 | `pnpm build:pages` | GitHub Pages 用のプレビューをビルド（仮データ・静的書き出し） |
 | `pnpm seed:cms -- --token …` | ローカルの CMS に仮データを登録・公開（下の「ローカルの CMS につなぐ」） |
 
 ## ローカルの CMS につなぐ
 
-CMS リポジトリ（ss-hp-public-system）で:
+CMS リポジトリ（ami-cms）で:
 
 ```bash
 pnpm dev
-pnpm -F @ss/backend run dev:bootstrap -- --site ami --name "合同会社ami" --preset ami
-# → 「Delivery API 公開キー」と「管理画面へのログインURL」が表示される
+pnpm -F @ss/backend run dev:bootstrap
+# → サイト ami・フォーム ami_contact・下書きプレビュー用URLを用意し、「Delivery API 公開キー」と「管理画面へのログインURL」が表示される
 ```
 
 このリポジトリで:
@@ -54,9 +57,10 @@ CMS_DELIVERY_KEY=<表示された公開キー>
 | 名前 | 置き場所 | 内容 |
 |---|---|---|
 | `CMS_MODE` | `wrangler.jsonc` / `.dev.vars` | `fixture`（仮データ）か `live`（CMS から取得） |
-| `CMS_BASE_URL` | `.dev.vars` / Cloudflare の変数 | CMS の URL（例: `https://cms.example.co.jp`） |
+| `CMS_BASE_URL` | `.dev.vars` / `deploy/production.json` | CMS の URL（例: `https://ami-cms.example.workers.dev`） |
 | `CMS_SITE_KEY` | 同上 | CMS のサイトキー |
-| `CMS_DELIVERY_KEY` | `.dev.vars` / `wrangler secret put` | Delivery API の公開キー（`ssdk_...`）。コミットしない |
+| `CMS_DELIVERY_KEY` | `.dev.vars` / GitHub の Secret・`wrangler secret put` | Delivery API の公開キー（`ssdk_...`）。コミットしない |
+| `GITHUB_REPO` / `CMS_WEBHOOK_SECRET` / `GITHUB_DISPATCH_TOKEN` | 下書きプレビュー用 Worker だけ | CMS の Webhook を受けて再ビルドを起動する（`docs/deploy.md` §4.4） |
 
 ## プレビュー（GitHub Pages）
 
@@ -64,7 +68,7 @@ CMS_DELIVERY_KEY=<表示された公開キー>
 仮データで書き出したプレビューを GitHub Pages に公開する。
 
 - URL: https://general-ss-system.github.io/ami_HP/ （誰でも開ける。noindex 付き）
-- 本番（Cloudflare Workers / SSR / CMS 接続）とは別物。確認用。
+- 本番（CMS の内容で静的に書き出して Xserver に置く）とは別物。確認用。
 - サイト内リンクは `withBase()`（`src/lib/url.ts`）を通す。プレビューは `/ami_HP/` の下に置かれるため。
 
 ## 素材の差し替え

@@ -15,7 +15,7 @@
     "check": "astro check",
     "test": "vitest run",
     "generate-types": "wrangler types",
-    "deploy": "astro build && wrangler deploy",
+    "release": "node scripts/deploy.mjs",
     "assets:webp": "node scripts/assets-webp.mjs",
     "build:pages": "node scripts/build-pages.mjs",
     "seed:cms": "node scripts/seed-local-cms.mjs",

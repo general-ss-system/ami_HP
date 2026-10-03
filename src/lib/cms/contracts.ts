@@ -1,9 +1,9 @@
 /**
  * Delivery / Preview / Form API の応答の型（CMS との契約）。
  *
- * このファイルは CMS リポジトリ（ss-hp-public-system）の
+ * このファイルは CMS リポジトリ（ami-cms）の
  * `packages/contracts/src/index.ts` の写し。手で書き換えない。
- * 写した時点のコミット: 233726b
+ * 写した時点のコミット: ami-cms 0f6dcb5（切り出し前の CMS では 233726b。内容は同じ）
  * CMS 側で契約が変わったら、丸ごと写し直してコミットを更新する。
  */
 

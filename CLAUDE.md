@@ -7,16 +7,21 @@
 
 - デザイン: Figma「株式会社ami ホームページデザイン」 top フレーム（node 226:236、PC 1280px）。
   スマホ版のデザインは無い。レスポンシブはこのリポジトリで設計する。
-- 素材の元データ: CMS リポジトリの `ami HP 素材/`。`src/assets/` に英数字名で取り込んで使う。
-- CMS 連携の規約: CMS リポジトリの `docs/04_WEBSITE_CMS_INTEGRATION_RULES.md`（必読）、
+- 素材の元データ: `202511_Amiホームページ/ami HP/ami HP 素材/`（Git 管理外）。`src/assets/` に英数字名で取り込んで使う。
+- CMS 連携の規約: CMS リポジトリ（general-ss-system/ami-cms。このリポジトリと同じ階層の `ami-cms/`）の `docs/04_WEBSITE_CMS_INTEGRATION_RULES.md`（必読）、
   `docs/02_BACKEND_DATA_API_SPEC.md`、案件別の `docs/projects/ami/CONTENT_CONTRACT.md`。
 - API の応答の型: `src/lib/cms/contracts.ts`（CMS の `packages/contracts` の写し。手で書き換えない）。
 
+- ページの作り方（手順とプロンプト）: `docs/page-development-guide.md`。新しいページはこの手順で作り、分かったことを追記する。
+- 現状と残りの作業（別のデバイスで続けるとき）: `docs/HANDOFF.md`。
+
 ## 2. 技術構成
 
-- Astro（SSR, `output: "server"`）+ `@astrojs/cloudflare`。Cloudflare Workers にデプロイ。
+- Astro + `@astrojs/cloudflare`。開発は SSR（`output: "server"`）。本番は `BUILD_TARGET=xserver` で**静的に書き出して Xserver に置く**（CMS の公開のたびに Actions で再ビルド）。
+  下書きプレビューだけ `BUILD_TARGET=preview-worker` の SSR を workers.dev で動かす（CMS docs/05 ADR-031）。本番の値は `deploy/production.json`、デプロイは `pnpm release`（`docs/deploy.md`）。
+- **ページは静的に書き出せる作りにする。** 動的なルートには `getStaticPaths` を書き、ページで Cookie・クエリ文字列・リクエストの時刻を使わない（下書きプレビューは middleware と `src/preview/` だけが扱う）。
 - パッケージマネージャは pnpm。
-- Frontend 側にキャッシュ層（ISR 等）を足さない。反映は CMS 側の CDN タグパージだけで行う（ADR-022）。
+- Frontend 側にキャッシュ層（ISR 等）を足さない。反映は CMS の Webhook による再ビルドで行う（ADR-022・ADR-031）。
 
 ## 3. ディレクトリ
 
@@ -69,7 +74,7 @@ scripts/         素材の変換
   ただし `CMS_MODE=fixture` の仮データは制作中の表示用として使ってよい。
 - 画像は CMS が返す `url` をそのまま使い、CMS のドメインをハードコードしない。`width` / `height` を必ず指定する。
 - レイアウト・余白・色・動き・ナビの構成はコードで管理する（CMS にしない）。
-- Delivery の公開キー（`CMS_DELIVERY_KEY`）をリポジトリに入れない。ローカルは `.dev.vars`、本番は `wrangler secret`。
+- Delivery の公開キー（`CMS_DELIVERY_KEY`）をリポジトリに入れない。ローカルは `.dev.vars`、本番は GitHub の Secret（ビルド）と `wrangler secret`（下書きプレビュー用 Worker）。
 - 動きは `prefers-reduced-motion` で止められるようにする。
 
 ## 5. コマンド
@@ -99,7 +104,7 @@ pnpm が PATH に無い環境では `corepack pnpm <コマンド>` で動かす�
 
 - `CMS_MODE=fixture`（既定）: 仮データで表示する。CMS が無くても制作できる。
 - `CMS_MODE=live`: `CMS_BASE_URL` / `CMS_SITE_KEY` / `CMS_DELIVERY_KEY` で Delivery API から取得する。
-  ローカルの CMS は、CMS リポジトリで `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap -- --site ami` を実行すると、公開キーを含めて用意される。
+  ローカルの CMS は、ami-cms で `pnpm dev` → `pnpm -F @ss/backend dev:bootstrap` を実行すると、公開キーと下書きプレビュー用URLを含めて用意される。
   そのあとこのリポジトリで `pnpm seed:cms -- --token <ログインURLの token>` を実行すると、ami のモデル・フォームを有効にして、全ページの仮データを登録する。
   （dev:bootstrap を実行するたびに公開キーが発行し直されるので、`.dev.vars` の `CMS_DELIVERY_KEY` も差し替える。ログインの token は 1 回しか使えない）
 

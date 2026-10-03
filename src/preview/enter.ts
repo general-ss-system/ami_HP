@@ -11,7 +11,7 @@
 import type { APIRoute } from "astro";
 import { getPreviewClient } from "../lib/cms/env";
 import { PreviewTokenError } from "../lib/cms/client";
-import { PREVIEW_COOKIE, PREVIEW_HEADERS, previewCookieOptions, resolvePreviewPath } from "../lib/cms/preview";
+import { PREVIEW_COOKIE, PREVIEW_HEADERS, loadPreviewEntry, previewCookieOptions, previewTargetSlug, resolvePreviewPath } from "../lib/cms/preview";
 
 export const prerender = false;
 
@@ -35,14 +35,10 @@ export const GET: APIRoute = async ({ url, cookies }) => {
   }
 
   try {
-    const entry = entryId
-      ? await client.getEntryById(model, entryId)
-      : slug
-        ? await client.getEntry(model, slug)
-        : await client.getSingleton(model);
+    const entry = await loadPreviewEntry(client, { model, slug, entryId });
     if (!entry) return message(404, "プレビューする内容が見つかりませんでした。");
 
-    const path = resolvePreviewPath(model, entry.slug);
+    const path = resolvePreviewPath(model, previewTargetSlug(model, entry));
     if (!path) return message(404, `この内容を表示するページがサイトにありません（${model}）。`);
 
     cookies.set(PREVIEW_COOKIE, token, previewCookieOptions(url.protocol === "https:"));

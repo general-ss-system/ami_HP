@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { PreviewTokenError, createPreviewClient, previewToDeliveryEntry } from "./client";
-import { resolvePreviewPath, safeReturnPath } from "./preview";
+import { loadPreviewEntry, previewTargetSlug, resolvePreviewPath, safeReturnPath } from "./preview";
 
 const draft = {
   id: "e1",
@@ -67,6 +67,37 @@ describe("createPreviewClient", () => {
     expect(previewToDeliveryEntry({ ...draft, status: "published", publishedAt: "2026-09-01T00:00:00.000Z" }).publishedAt).toBe(
       "2026-09-01T00:00:00.000Z",
     );
+  });
+});
+
+describe("loadPreviewEntry", () => {
+  it("singleton は entryId があっても singletons で読む（entries は collection 専用で 404 になるため）", async () => {
+    const f = mockFetch(200, { preview: true, data: { ...draft, slug: null } });
+    await loadPreviewEntry(client(f), { model: "ami_home", slug: null, entryId: "e1" });
+    expect(f.mock.calls[0]![0]).toBe("https://cms.example.com/api/v1/preview/ami/singletons/ami_home");
+  });
+
+  it("collection は entryId、無ければ slug で読む", async () => {
+    const byId = mockFetch(200, { preview: true, data: draft });
+    await loadPreviewEntry(client(byId), { model: "ami_topics", slug: "draft-post", entryId: "e1" });
+    expect(byId.mock.calls[0]![0]).toBe("https://cms.example.com/api/v1/preview/ami/entries/ami_topics/e1");
+
+    const bySlug = mockFetch(200, { preview: true, data: draft });
+    await loadPreviewEntry(client(bySlug), { model: "ami_topics", slug: "draft-post", entryId: null });
+    expect(bySlug.mock.calls[0]![0]).toBe("https://cms.example.com/api/v1/preview/ami/content/ami_topics/draft-post");
+  });
+});
+
+describe("previewTargetSlug", () => {
+  const entry = (content: Record<string, unknown>) => ({ id: "e1", slug: "post", content, publishedAt: "2026-09-26T00:00:00.000Z", updatedAt: "2026-09-26T00:00:00.000Z" });
+
+  it("外部リンクだけのトピックスは詳細ページが無いので null（一覧へ送る）", () => {
+    expect(previewTargetSlug("ami_topics", entry({ external_url: { label: "外部", href: "https://example.com/", target: "_blank" } }))).toBeNull();
+  });
+
+  it("それ以外は slug のまま", () => {
+    expect(previewTargetSlug("ami_topics", entry({ external_url: null }))).toBe("post");
+    expect(previewTargetSlug("works", entry({ external_url: { label: "見る", href: "https://example.com/", target: "_blank" } }))).toBe("post");
   });
 });
 
