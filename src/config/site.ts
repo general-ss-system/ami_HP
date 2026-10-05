@@ -5,6 +5,8 @@
  * 並び順はヘッダーのデザインに合わせる（フッターも同じ順番）。
  */
 
+import { OPTIONAL_SECTIONS } from "./sections";
+
 export interface NavItem {
   label: string;
   href: string;
@@ -25,12 +27,13 @@ export const PRIVACY_HREF = "/privacy";
 
 /**
  * フッターのナビ。ヘッダー（デザインの 4 項目）に、デザインに無い下層ページを足したもの。
+ * WORKS・RECRUIT・FAQ は src/config/sections.ts で公開しているときだけ出す。
  */
 export const FOOTER_ITEMS: readonly NavItem[] = [
   ...NAV_ITEMS,
-  { label: "WORKS", href: "/works" },
-  { label: "RECRUIT", href: "/recruit" },
-  { label: "FAQ", href: "/faq" },
+  ...(OPTIONAL_SECTIONS.works ? [{ label: "WORKS", href: "/works" }] : []),
+  ...(OPTIONAL_SECTIONS.recruit ? [{ label: "RECRUIT", href: "/recruit" }] : []),
+  ...(OPTIONAL_SECTIONS.faq ? [{ label: "FAQ", href: "/faq" }] : []),
   { label: "CONTACT", href: CONTACT_HREF },
   { label: "PRIVACY POLICY", href: PRIVACY_HREF },
 ];

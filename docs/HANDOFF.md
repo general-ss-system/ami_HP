@@ -50,6 +50,8 @@
 - [ ] 本番の CMS でサイトを作るとき、preset `ami`・フォーム `ami_contact`・プレビュー用URL を設定する
   （ami-cms の `provision init-site`。例は ami-cms の `docs/09` §5.3）
 - 決めたこと（変える場合は相談）:
+  - WORKS・RECRUIT・FAQ は今回の要件に入っていないため非公開（2026-10-05）。ページは `src/optional-pages/` にあり、
+    `src/config/sections.ts` を true にしてビルドし直せば復活する（フッター・サイトマップ・プレビュー・内部リンクも連動）。CMS のデータは残している
   - 社名は「合同会社ami」
   - ヘッダーのナビは 4 項目（service / contact のデザインには CONTACT があるが、topics / member のデザインには無い）
   - SERVICE の事業の順番は CMS の `sort_order`（トップと同じ。デザインでは商品開発が 01）

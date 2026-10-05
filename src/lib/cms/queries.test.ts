@@ -110,10 +110,12 @@ describe("下層ページ", () => {
     expect(chamini?.gallery).toHaveLength(5);
   });
 
-  it("SERVICE: 料金の表は「項目|値|注記」の行を読み、欠けた行は飛ばす", () => {
-    expect(parsePricing("タイアップ投稿|150,000円〜 / 1本|※注記\n納期目安｜1ヶ月\n|値だけ\n項目だけ")).toEqual([
+  it("SERVICE: 料金の表は「項目|値|注記」の行を読み、区切りの無い行は文のまま 1 行にする（値の無い行・空行だけ飛ばす）", () => {
+    expect(parsePricing("タイアップ投稿|150,000円〜 / 1本|※注記\n納期目安｜1ヶ月\n|値だけ\n項目だけ|\n\nご相談ください")).toEqual([
       { label: "タイアップ投稿", value: "150,000円〜 / 1本", note: "※注記" },
       { label: "納期目安", value: "1ヶ月", note: null },
+      { label: null, value: "値だけ", note: null },
+      { label: null, value: "ご相談ください", note: null },
     ]);
   });
 

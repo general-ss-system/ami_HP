@@ -59,7 +59,8 @@ export interface Service {
 }
 
 export interface PriceRow {
-  label: string;
+  /** 項目。null は区切り（|）の無い行で、value を表の幅いっぱいに出す（例:「ご相談ください」）。 */
+  label: string | null;
   value: string;
   note: string | null;
 }

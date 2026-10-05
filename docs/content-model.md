@@ -172,7 +172,7 @@ Figma「株式会社ami ホームページデザイン」（`j89x4NQBPwr9L2SbxVG
 | 〃 | main_image | media | あると「商品」の並び（写真が左・下に写真の一覧 5 枚）、無いと「メディア」の並び（写真が右に 2×2、1 枚なら大きく） |
 | 〃 | body / points | rich_text | 本文と、実績など（points は h3 ごとに区切り、✦ の小見出しにする。1 つ目は全幅、2 つ目から 2 列） |
 | 〃 | instagram_url / x_url / tiktok_url | link | members と同じ |
-| 〃 | pricing | long_text | 料金の表。1 行に「項目\|値\|注記」（注記は省略可） |
+| 〃 | pricing | long_text | 料金の表。1 行に「項目\|値\|注記」（注記は省略可）。区切りの無い行は文のまま表の幅いっぱいに出す（例: ご相談ください） |
 | 〃 | gallery | media_list | 写真 |
 | 〃 | sort_order | number（indexed） | 昇順 |
 

@@ -107,13 +107,22 @@ describe("resolvePreviewPath", () => {
     expect(resolvePreviewPath("about", null)).toBe("/about");
     expect(resolvePreviewPath("contact_page", null)).toBe("/contact");
     expect(resolvePreviewPath("ami_topics", "hello")).toBe("/topics/hello");
-    expect(resolvePreviewPath("works", "w1")).toBe("/works/w1");
     expect(resolvePreviewPath("ami_services", "sns")).toBe("/service#sns");
     expect(resolvePreviewPath("members", "m1")).toBe("/member#m1");
-    expect(resolvePreviewPath("recruit", null)).toBe("/recruit");
-    expect(resolvePreviewPath("job_positions", "j1")).toBe("/recruit#j1");
-    expect(resolvePreviewPath("job_positions", null)).toBe("/recruit");
-    expect(resolvePreviewPath("faq", null)).toBe("/faq");
+  });
+
+  it("WORKS・RECRUIT・FAQ は、公開しているときだけページへ送る（src/config/sections.ts）", () => {
+    const on = { works: true, recruit: true, faq: true };
+    expect(resolvePreviewPath("works", "w1", on)).toBe("/works/w1");
+    expect(resolvePreviewPath("recruit", null, on)).toBe("/recruit");
+    expect(resolvePreviewPath("job_positions", "j1", on)).toBe("/recruit#j1");
+    expect(resolvePreviewPath("job_positions", null, on)).toBe("/recruit");
+    expect(resolvePreviewPath("faq", null, on)).toBe("/faq");
+
+    const off = { works: false, recruit: false, faq: false };
+    for (const [model, slug] of [["works", "w1"], ["works", null], ["recruit", null], ["job_positions", "j1"], ["faq", null]] as const) {
+      expect(resolvePreviewPath(model, slug, off)).toBeNull();
+    }
   });
 
   it("slug が無ければ一覧、ページの無いモデルは null", () => {

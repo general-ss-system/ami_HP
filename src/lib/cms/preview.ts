@@ -12,6 +12,7 @@ import type { PreviewCmsClient } from "./client";
 import type { DeliveryEntry } from "./contracts";
 import { entryPath } from "./richtext";
 import { withBase } from "../url";
+import { OPTIONAL_SECTIONS } from "../../config/sections";
 
 export const PREVIEW_COOKIE = "ami_preview_token";
 
@@ -45,15 +46,27 @@ const COLLECTION_PATHS: Record<string, string> = {
   ami_service_cases: "/service",
 };
 
+/** 公開していないページ（src/config/sections.ts）を出すモデル。プレビューの行き先が無い。 */
+function hiddenModels(sections: Sections): Set<string> {
+  return new Set([
+    ...(sections.works ? [] : ["works"]),
+    ...(sections.recruit ? [] : ["recruit", "job_positions"]),
+    ...(sections.faq ? [] : ["faq"]),
+  ]);
+}
+
+type Sections = { readonly works: boolean; readonly recruit: boolean; readonly faq: boolean };
+
 /**
- * プレビューする内容 → サイト内のパス。ページが無いモデルは null。
+ * プレビューする内容 → サイト内のパス。ページが無いモデル・公開していないページのモデルは null。
  * 詳細ページ・アンカーの形は本文の内部リンク（richtext.ts の entryPath）と同じにする。
  */
-export function resolvePreviewPath(model: string, slug: string | null): string | null {
+export function resolvePreviewPath(model: string, slug: string | null, sections: Sections = OPTIONAL_SECTIONS): string | null {
+  if (hiddenModels(sections).has(model)) return null;
   const singleton = SINGLETON_PATHS[model];
   if (singleton) return withBase(singleton);
   if (slug) {
-    const path = entryPath({ id: "", model, slug });
+    const path = entryPath({ id: "", model, slug }, sections);
     if (path) return path;
   }
   const list = COLLECTION_PATHS[model];

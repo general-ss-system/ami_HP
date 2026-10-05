@@ -6,6 +6,7 @@
 import type { CmsClient } from "./cms/client";
 import { getAllTopics, getAllWorks, reportCmsError, type CmsErrorReporter } from "./cms/queries";
 import { FOOTER_ITEMS } from "../config/site";
+import { OPTIONAL_SECTIONS } from "../config/sections";
 import { withBase } from "./url";
 
 export interface SitemapEntry {
@@ -20,7 +21,12 @@ export const STATIC_PATHS: readonly string[] = ["/", ...FOOTER_ITEMS.map((item) 
 
 const DATE = /^\d{4}-\d{2}-\d{2}/;
 
-export async function getSitemapEntries(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<SitemapEntry[]> {
+/** sections: WORKS を公開していないとき（src/config/sections.ts）は、実績の詳細ページを載せない。 */
+export async function getSitemapEntries(
+  client: CmsClient,
+  report: CmsErrorReporter = reportCmsError,
+  sections: { readonly works: boolean } = OPTIONAL_SECTIONS,
+): Promise<SitemapEntry[]> {
   const entries: SitemapEntry[] = STATIC_PATHS.map((path) => ({ path }));
 
   const [topics, works] = await Promise.all([
@@ -28,10 +34,12 @@ export async function getSitemapEntries(client: CmsClient, report: CmsErrorRepor
       report("failed to load ami_topics for sitemap", err);
       return [];
     }),
-    getAllWorks(client, report).catch((err) => {
-      report("failed to load works for sitemap", err);
-      return [];
-    }),
+    sections.works
+      ? getAllWorks(client, report).catch((err) => {
+          report("failed to load works for sitemap", err);
+          return [];
+        })
+      : [],
   ]);
 
   // 外部リンクの記事は詳細ページが無いので載せない

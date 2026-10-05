@@ -153,14 +153,24 @@ function toSns(links: Partial<Record<"instagram_url" | "x_url" | "tiktok_url", z
   });
 }
 
-/** 料金の表: 1 行に「項目|値|注記」。項目か値が空の行は読み飛ばす。 */
+/**
+ * 料金の表: 1 行に「項目|値|注記」。
+ * 区切り（|）の無い行や項目が空の行は、その文を表の幅いっぱいの 1 行にする（「ご相談ください」だけを書いた場合など）。
+ * 書いた内容が黙って消えると、入力した人が原因に気付けないため。値が空の行（「項目|」）と空行だけを読み飛ばす。
+ */
 export function parsePricing(text: string | null | undefined): PriceRow[] {
   return (text ?? "")
     .replace(/\r\n?/g, "\n")
     .split("\n")
-    .map((line) => line.split(/[|｜]/).map((s) => s.trim()))
-    .filter(([label, value]) => Boolean(label && value))
-    .map(([label, value, note]) => ({ label: label!, value: value!, note: note || null }));
+    .map((line) => line.trim())
+    .filter((line) => line !== "")
+    .flatMap((line): PriceRow[] => {
+      const parts = line.split(/[|｜]/).map((s) => s.trim());
+      if (parts.length === 1) return [{ label: null, value: parts[0]!, note: null }];
+      const [label, value, note] = parts;
+      if (!value) return [];
+      return [{ label: label || null, value, note: note || null }];
+    });
 }
 
 export function mapServicePage(entry: DeliveryEntry): MapResult<{ lead: string | null }> {
