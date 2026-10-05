@@ -22,6 +22,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { renderPreviewWranglerConfig, stripJsonc, validateProductionConfig } from "../src/lib/deploy/production-config.ts";
 import { LOCAL_MEDIA_PREFIX, apacheConfig, collectMediaKeys, rewriteMediaUrls } from "../src/lib/deploy/static-media.ts";
+import { removeHiddenPages } from "./lib/remove-hidden-pages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -145,6 +146,9 @@ async function build(d) {
   });
   // 仮データ（CMS_MODE=fixture）用の画像。本番は CMS の画像を使うので置かない。
   rmSync(join(dist, "fixtures"), { recursive: true, force: true });
+  // 管理画面のページの表示設定で非表示のページは置かない（前回置いたものは upload が manifest で消す）
+  const hidden = removeHiddenPages(dist);
+  if (hidden.length > 0) console.log(`✓ 非表示のページを除きました: ${hidden.join(", ")}`);
   await importMedia(d);
   writeFileSync(join(dist, ".htaccess"), apacheConfig());
 

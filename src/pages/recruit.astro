@@ -4,6 +4,8 @@
  * 各職種は #slug で開ける。応募はお問い合わせフォームから受け付ける。
  */
 import PageLayout from "../layouts/PageLayout.astro";
+import { isPageVisible } from "../lib/cms/queries";
+import { respondHiddenPage } from "../lib/hidden-page";
 import CmsImage from "../components/ui/CmsImage.astro";
 import Decor from "../components/ui/Decor.astro";
 import PageHeading from "../components/ui/PageHeading.astro";
@@ -22,6 +24,8 @@ import moonBunny from "../assets/decor/moon-bunny.webp";
 import sparkleBlue from "../assets/decor/sparkle-blue.webp";
 
 const { siteInfo, recruit, positions } = await getRecruitPageData(getCmsClient(Astro.locals));
+// 管理画面のページの表示設定で非表示なら出さない（下書きのプレビューでは確認できる）
+if (!isPageVisible(siteInfo, "recruit") && !Astro.locals.previewToken) return respondHiddenPage((p) => Astro.rewrite(p));
 ---
 
 <PageLayout

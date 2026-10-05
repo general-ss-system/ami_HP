@@ -9,7 +9,6 @@
  * HTML 文字列は作らない。描画は RichText.astro がこの木をたどって行う。
  */
 
-import { OPTIONAL_SECTIONS } from "../../config/sections";
 import { DeliveryMediaSchema, type DeliveryEntryRef } from "./contracts";
 import { toMedia } from "./mapper";
 import type { Media } from "./types";
@@ -96,14 +95,8 @@ export function sanitizeHref(raw: unknown): { href: string; external: boolean } 
   return null;
 }
 
-/**
- * 内部リンクの参照先 → サイト内のパス。ページの無いモデルは null（リンクにせず文字だけにする）。
- * 公開していないページ（src/config/sections.ts）への参照も null。
- */
-export function entryPath(
-  ref: DeliveryEntryRef,
-  sections: { readonly works: boolean; readonly recruit: boolean } = OPTIONAL_SECTIONS,
-): string | null {
+/** 内部リンクの参照先 → サイト内のパス。ページの無いモデルは null。 */
+export function entryPath(ref: DeliveryEntryRef): string | null {
   if (!ref.slug) return null;
   const slug = encodeURIComponent(ref.slug);
   switch (ref.model) {
@@ -114,9 +107,9 @@ export function entryPath(
     case "members":
       return withBase(`/member#${slug}`);
     case "works":
-      return sections.works ? withBase(`/works/${slug}`) : null;
+      return withBase(`/works/${slug}`);
     case "job_positions":
-      return sections.recruit ? withBase(`/recruit#${slug}`) : null;
+      return withBase(`/recruit#${slug}`);
     default:
       return null;
   }

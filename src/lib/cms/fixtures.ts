@@ -380,6 +380,13 @@ export const fixtureMembers: DeliveryEntry[] = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((
 // 会社情報・ABOUT・CONTACT（CMS の汎用モデル）。実際の値は未定のため仮の値
 // ---------------------------------------------------------------------------
 
+/** ページの表示設定（ami_page_visibility）。今回の公開に合わせて WORKS・RECRUIT・FAQ は非表示。 */
+export const fixturePageVisibility: DeliveryEntry = entry("fx-page-visibility", null, {
+  show_works: false,
+  show_recruit: false,
+  show_faq: false,
+});
+
 export const fixtureSiteInfo: DeliveryEntry = entry("fx-site-info", null, {
   company_name: "合同会社ami",
   address: "東京都〇〇区〇〇 0-0-0（仮）",

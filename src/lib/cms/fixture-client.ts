@@ -16,6 +16,7 @@ import {
   fixtureServiceCases,
   fixtureServicePage,
   fixtureServices,
+  fixturePageVisibility,
   fixtureSiteInfo,
   fixtureTopics,
   fixtureWorks,
@@ -24,6 +25,7 @@ import {
 const singletons: Record<string, DeliveryEntry> = {
   ami_home: fixtureHome,
   site_info: fixtureSiteInfo,
+  ami_page_visibility: fixturePageVisibility,
   about: fixtureAbout,
   contact_page: fixtureContactPage,
   recruit: fixtureRecruit,

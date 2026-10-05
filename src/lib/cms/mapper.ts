@@ -10,6 +10,7 @@ import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 import {
   AboutContentSchema,
   AmiHomeContentSchema,
+  AmiPageVisibilityContentSchema,
   AmiServiceCaseContentSchema,
   AmiServiceContentSchema,
   AmiServicePageContentSchema,
@@ -48,6 +49,7 @@ import type {
   WorkTag,
 } from "./types";
 import { withBase } from "../url";
+import type { PageVisibility } from "../../config/pages";
 
 export const DEFAULT_TOPICS_LIMIT = 4;
 
@@ -59,6 +61,13 @@ export interface MapError {
 }
 
 export type MapResult<T> = { ok: true; value: T } | { ok: false; error: MapError };
+
+/** ページの表示設定。true のページだけ表示する（未入力は非表示）。 */
+export function mapPageVisibility(entry: DeliveryEntry): MapResult<PageVisibility> {
+  const r = parseContent("ami_page_visibility", entry, AmiPageVisibilityContentSchema);
+  if (!r.ok) return r;
+  return { ok: true, value: { works: r.value.show_works === true, recruit: r.value.show_recruit === true, faq: r.value.show_faq === true } };
+}
 
 function parseContent<S extends z.ZodType>(model: string, entry: DeliveryEntry, schema: S): MapResult<z.infer<S>> {
   const parsed = schema.safeParse(entry.content);

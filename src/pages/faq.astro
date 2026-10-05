@@ -8,7 +8,8 @@ import Decor from "../components/ui/Decor.astro";
 import RichText from "../components/ui/RichText.astro";
 import { CONTACT_HREF } from "../config/site";
 import { getCmsClient } from "../lib/cms/env";
-import { getFaqPageData } from "../lib/cms/queries";
+import { getFaqPageData, isPageVisible } from "../lib/cms/queries";
+import { respondHiddenPage } from "../lib/hidden-page";
 import { pageDescription, pageTitle } from "../lib/seo";
 import { withBase } from "../lib/url";
 import asteroid from "../assets/decor/asteroid.webp";
@@ -16,6 +17,8 @@ import nebula from "../assets/decor/nebula.webp";
 import sparkleViolet from "../assets/decor/sparkle-violet.webp";
 
 const { siteInfo, faqs } = await getFaqPageData(getCmsClient(Astro.locals));
+// 管理画面のページの表示設定で非表示なら出さない（下書きのプレビューでは確認できる）
+if (!isPageVisible(siteInfo, "faq") && !Astro.locals.previewToken) return respondHiddenPage((p) => Astro.rewrite(p));
 ---
 
 <PageLayout

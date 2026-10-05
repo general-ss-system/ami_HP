@@ -5,8 +5,8 @@
 
 import type { CmsClient } from "./cms/client";
 import { getAllTopics, getAllWorks, reportCmsError, type CmsErrorReporter } from "./cms/queries";
-import { FOOTER_ITEMS } from "../config/site";
-import { OPTIONAL_SECTIONS } from "../config/sections";
+import { footerItems } from "../config/site";
+import type { PageVisibility } from "../config/pages";
 import { withBase } from "./url";
 
 export interface SitemapEntry {
@@ -16,25 +16,27 @@ export interface SitemapEntry {
   lastmod?: string;
 }
 
-/** 固定のページ（トップとフッターのナビ）。 */
-export const STATIC_PATHS: readonly string[] = ["/", ...FOOTER_ITEMS.map((item) => item.href)];
+/** 固定のページ（トップとフッターのナビ）。表示にしていない WORKS・RECRUIT・FAQ は載せない。 */
+export function staticPaths(visibility: PageVisibility): string[] {
+  return ["/", ...footerItems(visibility).map((item) => item.href)];
+}
 
 const DATE = /^\d{4}-\d{2}-\d{2}/;
 
-/** sections: WORKS を公開していないとき（src/config/sections.ts）は、実績の詳細ページを載せない。 */
 export async function getSitemapEntries(
   client: CmsClient,
+  visibility: PageVisibility,
   report: CmsErrorReporter = reportCmsError,
-  sections: { readonly works: boolean } = OPTIONAL_SECTIONS,
 ): Promise<SitemapEntry[]> {
-  const entries: SitemapEntry[] = STATIC_PATHS.map((path) => ({ path }));
+  const entries: SitemapEntry[] = staticPaths(visibility).map((path) => ({ path }));
 
   const [topics, works] = await Promise.all([
     getAllTopics(client, report).catch((err) => {
       report("failed to load ami_topics for sitemap", err);
       return [];
     }),
-    sections.works
+    // WORKS を表示していなければ、実績の詳細ページも載せない
+    visibility.works
       ? getAllWorks(client, report).catch((err) => {
           report("failed to load works for sitemap", err);
           return [];

@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig, envField } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
-import { OPTIONAL_SECTIONS } from "./src/config/sections.ts";
 
 /**
  * ビルドの種類（CMS docs/05 ADR-031）。
@@ -32,30 +31,6 @@ const draftPreviewRoutes = {
   },
 };
 
-/**
- * 今回の公開に含めない下層ページ（WORKS・RECRUIT・FAQ）。src/config/sections.ts で true のものだけ登録する。
- * ページのファイルは src/pages/ ではなく src/optional-pages/ に置く（置くだけでは公開されない）。
- */
-/** @type {import("astro").AstroIntegration} */
-const optionalPages = {
-  name: "ami-optional-pages",
-  hooks: {
-    "astro:config:setup": ({ injectRoute }) => {
-      /** @param {string} pattern @param {string} file */
-      const add = (pattern, file) => injectRoute({ pattern, entrypoint: new URL(`./src/optional-pages/${file}`, import.meta.url) });
-      if (OPTIONAL_SECTIONS.works) {
-        add("/works", "works/index.astro");
-        add("/works/page/[page]", "works/page/[page].astro");
-        add("/works/tag/[tag]", "works/tag/[tag]/index.astro");
-        add("/works/tag/[tag]/page/[page]", "works/tag/[tag]/page/[page].astro");
-        add("/works/[slug]", "works/[slug].astro");
-      }
-      if (OPTIONAL_SECTIONS.recruit) add("/recruit", "recruit.astro");
-      if (OPTIONAL_SECTIONS.faq) add("/faq", "faq.astro");
-    },
-  },
-};
-
 // https://astro.build/config
 export default defineConfig({
   // canonical / OGP / sitemap の絶対URL。本番は scripts/deploy.mjs が deploy/production.json から渡す。
@@ -66,7 +41,7 @@ export default defineConfig({
   // Frontend 側で2つ目のキャッシュ層（ISR 等）は持たない（CMS docs/04 §20, ADR-022）。
   output: isStatic ? "static" : "server",
 
-  integrations: isStatic ? [optionalPages] : [optionalPages, draftPreviewRoutes],
+  integrations: isStatic ? [] : [draftPreviewRoutes],
 
   adapter: isStatic
     ? undefined

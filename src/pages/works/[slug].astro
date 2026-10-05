@@ -11,7 +11,8 @@ import Decor from "../../components/ui/Decor.astro";
 import Panel from "../../components/ui/Panel.astro";
 import RichText from "../../components/ui/RichText.astro";
 import { getCmsClient } from "../../lib/cms/env";
-import { getAllWorks, getWorkDetail } from "../../lib/cms/queries";
+import { getAllWorks, getWorkDetail, getPageVisibility, isPageVisible } from "../../lib/cms/queries";
+import { respondHiddenPage } from "../../lib/hidden-page";
 import { isEmptyRichText } from "../../lib/cms/richtext";
 import { pageDescription, pageOgImage, pageTitle } from "../../lib/seo";
 import { WORK_TAG_LABEL, formatWorkDate, worksListHref } from "../../lib/works";
@@ -20,6 +21,7 @@ import sparkleBlue from "../../assets/decor/sparkle-blue.webp";
 
 // GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
 export const getStaticPaths = (async () => {
+  if (!(await getPageVisibility(getCmsClient())).works) return [];
   const works = await getAllWorks(getCmsClient());
   return works.filter((w) => w.slug).map((w) => ({ params: { slug: w.slug! } }));
 }) satisfies GetStaticPaths;
@@ -29,6 +31,8 @@ const data = slug ? await getWorkDetail(getCmsClient(Astro.locals), slug) : null
 if (!data) return Astro.rewrite("/404");
 
 const { siteInfo, work, others } = data;
+// 管理画面のページの表示設定で非表示なら出さない（下書きのプレビューでは確認できる）
+if (!isPageVisible(siteInfo, "works") && !Astro.locals.previewToken) return respondHiddenPage((p) => Astro.rewrite(p));
 const summaryLines = work.summary ? work.summary.replace(/\r\n?/g, "\n").split("\n") : [];
 ---
 

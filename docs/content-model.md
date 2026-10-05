@@ -101,6 +101,7 @@ CMS 側の定義（`packages/content-schema`）は 2026-09-27 にこのサイト
 | `members` | profile | long_text | MEMBER の紹介文（改行あり） |
 | `works` | title（必須）/ client_name / summary / published_date / tags（multi_select）/ thumbnail / gallery / body / external_url | | CMS の汎用モデルそのまま。タグの表示名は `src/lib/works.ts`（CMS の選択肢の label と同じ） |
 | `site_info` | company_name（必須）/ address / phone / email / instagram_url / x_url / default_title / title_template / default_description / default_og_image | | 会社概要の表（電話番号・メールも）、フッターの SNS（http(s) の URL だけ）、トップの `<title>`・description（`default_*`）、下層ページの `<title>`（`title_template` の `%s` にページ名）、OGP 画像の既定値（記事・実績はサムネイルを優先） |
+| `ami_page_visibility` | show_works / show_recruit / show_faq | | WORKS・RECRUIT・FAQ を表示するか（管理画面「サイト設定 > ページの表示設定」）。false・未作成・未公開は非表示（404、フッター・サイトマップからも外す）。`getSiteInfo` が `siteInfo.pageVisibility` に入れる（CMS ADR-035） |
 | `about` | lead / body（rich_text）/ main_image / representative / established / capital / business_summary | | ABOUT のメッセージと会社概要の表。空の行は出さない |
 | `contact_page` | lead / privacy_note（rich_text）/ consent_label | | CONTACT の案内文・個人情報の取り扱い・同意チェックの文言 |
 
