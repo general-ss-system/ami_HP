@@ -14,10 +14,18 @@
 #       CLOUDFLARE_DEPLOY_TOKEN   下書きプレビュー用 Worker のデプロイ用 API トークン（Workers のスクリプトの編集）
 #       CLOUDFLARE_ACCOUNT_ID     Cloudflare のアカウントID
 #   - deploy/production.json をコミットしておく（Secret は含まない）
+#
+# 公開前のリハーサル: Actions の画面で Deploy を手動実行し、「rehearsal」にチェックを入れる。
+#   DEPLOY_ENABLED が無くても site だけ動き、CMS を読んでビルドし、Xserver に接続して置くファイルを数える（何も書かない）。
 name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      rehearsal:
+        description: リハーサル（ビルドと Xserver への接続だけ確かめ、ファイルは置かない）
+        type: boolean
+        default: false
   push:
     branches: [main]
   repository_dispatch:
@@ -28,7 +36,7 @@ permissions:
 
 jobs:
   site:
-    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    if: ${{ vars.DEPLOY_ENABLED == 'true' || inputs.rehearsal }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -64,12 +72,12 @@ jobs:
           XSERVER_SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
           XSERVER_KNOWN_HOSTS: ${{ secrets.XSERVER_KNOWN_HOSTS }}
       - name: Xserver に置く
-        run: pnpm release upload --yes
+        run: pnpm release upload --yes ${{ inputs.rehearsal && '--dry-run' || '' }}
       - if: ${{ always() }}
         run: rm -f ~/.ssh/id_ed25519
 
   preview-worker:
-    if: ${{ vars.DEPLOY_ENABLED == 'true' && github.event_name != 'repository_dispatch' }}
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && github.event_name != 'repository_dispatch' && !inputs.rehearsal }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production

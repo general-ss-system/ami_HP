@@ -7,6 +7,7 @@
  *   check           本番設定を検証し、下書きプレビュー用 Worker の設定（wrangler.production.json）を書き出す（どこにも触れない）
  *   build           check のうえで、CMS の公開中の内容を読んで静的な HTML を dist/ に書き出し、CMS の画像を取り込む
  *   upload          dist/ を Xserver に SSH で置く。--yes を付けたときだけ実行する
+ *                   --dry-run を足すと、接続して置く・消すファイルを数えるだけで、Xserver には何も書かない（公開前のリハーサル）
  *   deploy          build と upload を続けて行う。--yes を付けたときだけ実行する
  *   preview-deploy  下書きプレビュー用の Worker（workers.dev）をビルドしてデプロイする。--yes を付けたときだけ実行する
  *
@@ -182,6 +183,14 @@ function upload(d) {
   if (prev.status !== 0) fail(`Xserver に SSH でつながりません（${dest}:${d.xserver.port}）`);
   const previous = prev.stdout.split("\n").filter(Boolean);
   const current = new Set(readFileSync(join(dist, MANIFEST), "utf8").split("\n").filter(Boolean));
+
+  if (process.argv.includes("--dry-run")) {
+    // 公開前のリハーサル。rsync も -n（書き込まない）で通し、置き場所への書き込み権限と転送の道筋まで確かめる。
+    run("rsync", ["-rltzn", "--stats", "--chmod=D755,F644", "-e", `ssh ${sshArgs(d).join(" ")}`, "dist/", `${dest}:${path}/`]);
+    const stale = previous.filter((f) => !current.has(f));
+    console.log(`✓ リハーサル: ${dest}:${path} に接続できました。置くファイル ${current.size + 1} 件・消すファイル ${stale.length} 件（何も書いていません）`);
+    return;
+  }
 
   // 先に新しいファイルを置き（公開中のページが欠ける時間を作らない）、そのあとで消えたものだけを消す。
   // --delete は使わない。同じ場所に先方のファイルがあっても消さないため。

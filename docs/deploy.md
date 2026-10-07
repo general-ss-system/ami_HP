@@ -130,10 +130,13 @@ CMS の管理画面（platform_admin）で Webhook を登録する。
 
 ### 4.6 GitHub の設定と初回の公開
 
-- Variables: `DEPLOY_ENABLED` = `true`
+- Variables: `DEPLOY_ENABLED` = `true`（**公開する時に入れる**。下記）
 - Environments: `production`（**承認者は設定しない**。CMS の公開で自動で動くため）
 - Secrets（production 環境）: `CMS_DELIVERY_KEY`・`XSERVER_SSH_KEY`・`XSERVER_KNOWN_HOSTS`・`CLOUDFLARE_DEPLOY_TOKEN`（Workers のスクリプトの編集）・`CLOUDFLARE_ACCOUNT_ID`
-- Actions の Deploy を手動で実行する（初回の公開）
+- 公開の前に、Actions の Deploy を **rehearsal にチェックを入れて** 手動で実行する。`DEPLOY_ENABLED` を入れる前でも動き、
+  CMS の公開中の内容でビルドし、Xserver に接続して置くファイルを数える（Xserver には何も書かない。`pnpm release upload --yes --dry-run`）
+- 公開するとき: `DEPLOY_ENABLED` = `true` を入れてから、Actions の Deploy を手動で実行する（初回の公開。ビルドから表示まで数分）。
+  入れた時点から、CMS での公開・main への push のたびに Xserver へ反映される
 
 ### 4.7 確認
 
