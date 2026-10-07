@@ -50,13 +50,13 @@
 ### 先方の確認・判断
 - [x] 先方に管理画面と確認用サイトを共有した（10-07 までに案内文を送信済み）。操作感・デザインの確認の返事待ち
 - [x] R2 の有効化（10-07。先方が支払い方法を登録 → こちらで移行・デプロイ済み）
-- [ ] **Workers Paid（月 $5〜）にするか**: 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
+- [ ] **Workers Paid（月 $5〜）にするか** → 10-07 決定: 公開から 3 か月は無料プランのまま CPU 時間・エラーを監視して決める（2027-01 ごろ）。 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
   今はエラーは出ていないが、1102 エラーの恐れ。CMS 側は問題なし。公開サイト（Xserver）は無関係
 - [ ] 原稿の差し替え（仮データのまま）: ABOUT・CONTACT の会社概要、MEMBER の名前、TOPICS の記事、PRIVACY POLICY の本文
   （WORKS・RECRUIT・FAQ は非表示なので後回しでよい）
 - [ ] プライバシーポリシーに「お問い合わせ内容は外部のメール送信サービス（米国）を通る」旨を書く（ADR-033）
 - [ ] お問い合わせの通知先（管理画面で設定。共有の窓口アドレス推奨）
-- [ ] 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
+- [ ] （10-07 に先方が管理者へ依頼済み・完了の連絡待ち） 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
 - [ ] （任意）ami.tokyo.jp 本体の SPF（`v=spf1 include:_spf.google.com ~all`）と DMARC
 - [ ] Cloudflare・Resend の 2 段階認証（先方が最後に設定すると決めた。納品前に必ず確認）
 - [x] 公開ドメインは `www.ami.tokyo.jp` で確定（10-07 に先方が了承。CMS の許可オリジン・Turnstile の設定はこのまま）
@@ -73,13 +73,13 @@
      （入れると main への push・CMS での公開のたびに Xserver へ反映される）
   5. ~~Worker の Secret と Webhook~~ 済（10-07）。同じアカウントの workers.dev どうしは fetch が 404（エラー 1042）になるため、CMS に `global_fetch_strictly_public` を足した（ami-cms ADR-036）
   6. `DEPLOY_ENABLED=true` を入れて Actions の Deploy を手動で実行 → §4.7 のチェックリストで確認 → Xserver の `default_page.png` を消す
-- [ ] 公開前に ami_HP を private に戻すか決める（戻すと GitHub Pages のプレビューは止まる）
+- [ ] **公開 3 日後（2026-10-16）に ami_HP を private に戻す**（10-07 決定。GitHub Pages のプレビューはそこで止まる）
 - [x] 10-05 の変更を `main` に取り込む（10-07）
 - [ ] （任意）CMS の自動デプロイ（ami-cms の GitHub に Cloudflare のトークン・`DEPLOY_ENABLED`）
 - [x] 公開サイトのファビコンを ami のロゴマークに（10-07。管理画面と同じ画像を `public/` に置いた）
 
 ### 納品（ami-cms の docs/09）
-- [ ] 両リポジトリを先方の GitHub の Organization へ移す
+- [ ] 両リポジトリを先方の GitHub へ移す（info@ami.tokyo.jp のアカウントで Organization を作ってもらう。手順と注意は 10-07 の会話の記録。GITHUB_REPO・GITHUB_DISPATCH_TOKEN の差し替えとプレビュー用 Worker の出し直しが要る）
 - [ ] `GITHUB_DISPATCH_TOKEN` を先方の担当者のトークンに差し替える
 - [ ] 権限の整理（自社の担当者の Cloudflare 権限・このPCの `wrangler logout`・CMS の制作側管理者の扱い）
 - [ ] 基盤ソースの権利（譲渡か利用許諾か / docs/09 §12）
