@@ -34,8 +34,8 @@
   非表示は 404・フッター・サイトマップから除外。静的書き出しでは目印ファイルを `scripts/lib/remove-hidden-pages.mjs` が取り除く
 
 ### CMS（ami-cms）
-- 本番を先方の Cloudflare に構築済み: D1・Workers KV（画像の一時保存先）・Queues・Turnstile（ウィジェット「ami お問い合わせ」）
-- **画像は R2 ではなく Workers KV に一時保存**（ADR-032）。R2 の有効化（支払い方法の登録）を先方確認の後に打診するため
+- 本番を先方の Cloudflare に構築済み: D1・R2（画像。10-07 に KV から移行）・Queues・Turnstile（ウィジェット「ami お問い合わせ」）
+- 画像は 10-07 に Workers KV から R2 へ移した（`provision media-to-r2` → `deploy`。50 件、URL は変わらない / ADR-032）。KV の名前空間 `ami-cms-media` は残してある（表示に問題が無ければダッシュボードで消してよい）
 - 仮データ投入済み（`pnpm seed:cms --allow-remote`）。先方はこの内容を見ながら差し替える
 - メール（Resend）: 送信ドメイン **notify.ami.tokyo.jp**（`mail.` は Google Workspace が使用中のため回避）、送信元 noreply@notify.ami.tokyo.jp。
   ログインメール・お問い合わせ通知の到着を確認（SPF/DKIM/DMARC すべて PASS）
@@ -49,8 +49,7 @@
 
 ### 先方の確認・判断
 - [x] 先方に管理画面と確認用サイトを共有した（10-07 までに案内文を送信済み）。操作感・デザインの確認の返事待ち
-- [ ] **R2 の有効化**（Cloudflare で支払い方法を登録。無料枠 10GB の範囲なら請求なし）
-  → こちらで `pnpm -F @ss/backend provision media-to-r2 --yes` → `provision deploy --yes`（画像の URL・内容は変わらない）
+- [x] R2 の有効化（10-07。先方が支払い方法を登録 → こちらで移行・デプロイ済み）
 - [ ] **Workers Paid（月 $5〜）にするか**: 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
   今はエラーは出ていないが、1102 エラーの恐れ。CMS 側は問題なし。公開サイト（Xserver）は無関係
 - [ ] 原稿の差し替え（仮データのまま）: ABOUT・CONTACT の会社概要、MEMBER の名前、TOPICS の記事、PRIVACY POLICY の本文
@@ -60,9 +59,11 @@
 - [ ] 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
 - [ ] （任意）ami.tokyo.jp 本体の SPF（`v=spf1 include:_spf.google.com ~all`）と DMARC
 - [ ] Cloudflare・Resend の 2 段階認証（先方が最後に設定すると決めた。納品前に必ず確認）
-- [ ] 公開ドメインは `www.ami.tokyo.jp` と推測して設定した（CMS の許可オリジン・Turnstile）。違えば直す
+- [x] 公開ドメインは `www.ami.tokyo.jp` で確定（10-07 に先方が了承。CMS の許可オリジン・Turnstile の設定はこのまま）
 
 ### 公開サイトの本番公開（`docs/deploy.md` §4.2〜§4.7）
+- **公開日時: 2026-10-13（火）9:00**（10-07 に先方が決定）。前日までに Actions の Deploy を rehearsal で実行して確かめる（deploy.md §4.6）。
+  当日 9:00 に `DEPLOY_ENABLED=true` を入れて Deploy を手動実行 → 数分で表示 → §4.7 の確認 → Xserver の `default_page.png` を消す
 - [x] Xserverビジネス: SSH 有効・デプロイ用の公開鍵（ami-hp-deploy）を登録済み・接続を確認（10-07）。置き場所は `/home/xb209239/ami.tokyo.jp/public_html`（今は Xserver の初期ファイルだけ。消してよいと先方の了承済み）
 - [ ] こちら（**原稿の差し替えを待ってから 6 を行う**と 10-07 に決めた。1〜5 は済み）:
   1. ~~デプロイ用の SSH 鍵を作る（§4.3）~~ 済（10-07。ホスト鍵の指紋はサーバーパネルの表示と一致を確認）
