@@ -5,7 +5,8 @@
  * 失敗は reportCmsError に送る（ページ全体は壊さない / CMS docs/04 §13）。
  */
 
-import { PreviewTokenError, type CmsClient } from "./client";
+import { CmsError, PreviewTokenError, type CmsClient } from "./client";
+import { DEFAULT_PAGE_VISIBILITY, type OptionalPageKey, type PageVisibility } from "../../config/pages";
 import type { DeliveryEntry } from "./contracts";
 import {
   mapAbout,
@@ -13,6 +14,7 @@ import {
   mapFaq,
   mapHome,
   mapJobPosition,
+  mapPageVisibility,
   mapMember,
   mapRecruit,
   mapService,
@@ -144,9 +146,37 @@ async function loadSingleton<T>(
   );
 }
 
-/** 会社名・SEO の既定値。取得できなければ null（ページ側でタイトルだけにする）。 */
-export function getSiteInfo(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<SiteInfo | null> {
-  return loadSingleton(client, "site_info", mapSiteInfo, report);
+/**
+ * 会社名・SEO の既定値と、ページの表示設定。site_info を取得できなければ null（ページ側でタイトルだけにする）。
+ * ページの表示設定はどのページでもフッターに要るため、ここでまとめて読む。
+ */
+export async function getSiteInfo(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<SiteInfo | null> {
+  const [info, pageVisibility] = await Promise.all([
+    loadSingleton(client, "site_info", mapSiteInfo, report),
+    getPageVisibility(client, report),
+  ]);
+  return info ? { ...info, pageVisibility } : null;
+}
+
+/**
+ * ページの表示設定（ami_page_visibility / ADR-035）。まだ作られていない（404）・読めないときは既定（すべて非表示）。
+ * 作られていないのは運用上ふつうのことなので報告しない。
+ */
+export async function getPageVisibility(client: CmsClient, report: CmsErrorReporter = reportCmsError): Promise<PageVisibility> {
+  try {
+    const r = mapPageVisibility(await client.getSingleton("ami_page_visibility"));
+    if (r.ok) return r.value;
+    report("entry failed validation", r.error);
+  } catch (err) {
+    if (err instanceof PreviewTokenError) throw err;
+    if (!(err instanceof CmsError && err.status === 404)) report("failed to load ami_page_visibility", err);
+  }
+  return DEFAULT_PAGE_VISIBILITY;
+}
+
+/** そのページを表示しているか。site_info が取れないときも、表示設定が無いときも非表示として扱う。 */
+export function isPageVisible(siteInfo: Pick<SiteInfo, "pageVisibility"> | null, page: OptionalPageKey): boolean {
+  return (siteInfo?.pageVisibility ?? DEFAULT_PAGE_VISIBILITY)[page];
 }
 
 export interface AboutPageData {

@@ -6,6 +6,7 @@
 import "../styles/global.css";
 import fontUrl from "../assets/fonts/MadouFutoMaruGothic.woff2?url";
 import pixelFontUrl from "../assets/fonts/PixelifySans-Regular-latin.woff2?url";
+import { withBase } from "../lib/url";
 import PreviewBanner from "../components/layout/PreviewBanner.astro";
 
 interface Props {
@@ -32,6 +33,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
+    <!-- ami のロゴマーク（管理画面のファビコンと同じ画像）。import すると小さい画像はデータ URI で全ページに
+         埋め込まれ、iOS のホーム画面アイコンにも使われないため、public/ に置いて URL で参照する -->
+    <link rel="icon" type="image/png" sizes="32x32" href={withBase("/favicon-32.png")} />
+    <link rel="apple-touch-icon" href={withBase("/apple-touch-icon.png")} />
     {noindex && <meta name="robots" content="noindex" />}
 
     <meta property="og:type" content="website" />

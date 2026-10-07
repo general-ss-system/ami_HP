@@ -3,12 +3,14 @@
 import type { GetStaticPaths } from "astro";
 import WorksArchive from "../../../components/works/WorksArchive.astro";
 import { getCmsClient } from "../../../lib/cms/env";
-import { getWorksArchive } from "../../../lib/cms/queries";
+import { getWorksArchive, getPageVisibility, isPageVisible } from "../../../lib/cms/queries";
+import { respondHiddenPage } from "../../../lib/hidden-page";
 import { laterPages, parsePageParam } from "../../../lib/paging";
 import { worksListHref } from "../../../lib/works";
 
 // GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
 export const getStaticPaths = (async () => {
+  if (!(await getPageVisibility(getCmsClient())).works) return [];
   const first = await getWorksArchive(getCmsClient(), { tag: null, page: 1 });
   return laterPages(first?.totalPages ?? 1).map((page) => ({ params: { page: String(page) } }));
 }) satisfies GetStaticPaths;
@@ -17,6 +19,8 @@ if (Astro.params.page === "1") return Astro.redirect(worksListHref(null), 301);
 const page = parsePageParam(Astro.params.page);
 const data = page ? await getWorksArchive(getCmsClient(Astro.locals), { tag: null, page }) : null;
 if (!data) return Astro.rewrite("/404");
+// 管理画面のページの表示設定で非表示なら出さない（下書きのプレビューでは確認できる）
+if (!isPageVisible(data.siteInfo, "works") && !Astro.locals.previewToken) return respondHiddenPage((p) => Astro.rewrite(p));
 ---
 
 <WorksArchive data={data} />

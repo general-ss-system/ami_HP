@@ -5,6 +5,8 @@
  * 並び順はヘッダーのデザインに合わせる（フッターも同じ順番）。
  */
 
+import { OPTIONAL_PAGES, type PageVisibility } from "./pages";
+
 export interface NavItem {
   label: string;
   href: string;
@@ -25,12 +27,14 @@ export const PRIVACY_HREF = "/privacy";
 
 /**
  * フッターのナビ。ヘッダー（デザインの 4 項目）に、デザインに無い下層ページを足したもの。
+ * WORKS・RECRUIT・FAQ は、管理画面のページの表示設定で表示にしているときだけ載せる（config/pages.ts）。
+ * ヘッダーのページ・CONTACT・PRIVACY POLICY は常に載せる。
  */
-export const FOOTER_ITEMS: readonly NavItem[] = [
-  ...NAV_ITEMS,
-  { label: "WORKS", href: "/works" },
-  { label: "RECRUIT", href: "/recruit" },
-  { label: "FAQ", href: "/faq" },
-  { label: "CONTACT", href: CONTACT_HREF },
-  { label: "PRIVACY POLICY", href: PRIVACY_HREF },
-];
+export function footerItems(visibility: PageVisibility): NavItem[] {
+  return [
+    ...NAV_ITEMS,
+    ...OPTIONAL_PAGES.filter((p) => visibility[p.key]).map((p) => ({ label: p.label, href: p.href })),
+    { label: "CONTACT", href: CONTACT_HREF },
+    { label: "PRIVACY POLICY", href: PRIVACY_HREF },
+  ];
+}

@@ -6,7 +6,8 @@
  */
 import type { SiteInfo } from "../../lib/cms/types";
 import LocalImage from "../ui/LocalImage.astro";
-import { FOOTER_ITEMS } from "../../config/site";
+import { footerItems } from "../../config/site";
+import { DEFAULT_PAGE_VISIBILITY } from "../../config/pages";
 import { withBase } from "../../lib/url";
 import earth from "../../assets/illustrations/earth.webp";
 import Logo from "./Logo.astro";
@@ -33,7 +34,7 @@ const sns = [
     <nav aria-label="フッターメニュー">
       <ul class="site-footer__list">
         {
-          FOOTER_ITEMS.map((item) => (
+          footerItems(siteInfo?.pageVisibility ?? DEFAULT_PAGE_VISIBILITY).map((item) => (
             <li>
               <a class="site-footer__link" href={withBase(item.href)}>
                 <NavMark />

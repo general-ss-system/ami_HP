@@ -3,13 +3,15 @@
 import type { GetStaticPaths } from "astro";
 import WorksArchive from "../../../../../components/works/WorksArchive.astro";
 import { getCmsClient } from "../../../../../lib/cms/env";
-import { getWorksArchive, isWorkTag } from "../../../../../lib/cms/queries";
+import { getWorksArchive, isWorkTag, getPageVisibility, isPageVisible } from "../../../../../lib/cms/queries";
+import { respondHiddenPage } from "../../../../../lib/hidden-page";
 import { WORK_TAGS } from "../../../../../lib/cms/schemas";
 import { laterPages, parsePageParam } from "../../../../../lib/paging";
 import { worksListHref } from "../../../../../lib/works";
 
 // GitHub Pages のプレビュー（静的書き出し）で使う。本番（SSR）ではリクエストごとに解決する
 export const getStaticPaths = (async () => {
+  if (!(await getPageVisibility(getCmsClient())).works) return [];
   const client = getCmsClient();
   const paths = [];
   for (const tag of WORK_TAGS) {
@@ -24,6 +26,8 @@ if (isWorkTag(tag) && Astro.params.page === "1") return Astro.redirect(worksList
 const page = parsePageParam(Astro.params.page);
 const data = isWorkTag(tag) && page ? await getWorksArchive(getCmsClient(Astro.locals), { tag, page }) : null;
 if (!data) return Astro.rewrite("/404");
+// 管理画面のページの表示設定で非表示なら出さない（下書きのプレビューでは確認できる）
+if (!isPageVisible(data.siteInfo, "works") && !Astro.locals.previewToken) return respondHiddenPage((p) => Astro.rewrite(p));
 ---
 
 <WorksArchive data={data} />

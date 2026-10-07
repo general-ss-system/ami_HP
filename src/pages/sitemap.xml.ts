@@ -4,10 +4,13 @@
  */
 import type { APIRoute } from "astro";
 import { getCmsClient } from "../lib/cms/env";
+import { getPageVisibility } from "../lib/cms/queries";
 import { getSitemapEntries, renderSitemap } from "../lib/sitemap";
 
 export const GET: APIRoute = async ({ site }) => {
-  const entries = await getSitemapEntries(getCmsClient());
+  const client = getCmsClient();
+  // 表示にしていない WORKS・RECRUIT・FAQ は載せない（管理画面のページの表示設定）
+  const entries = await getSitemapEntries(client, await getPageVisibility(client));
   return new Response(renderSitemap(entries, site!, { trailingSlash: __STATIC_BUILD__ }), {
     headers: { "Content-Type": "application/xml; charset=utf-8" },
   });

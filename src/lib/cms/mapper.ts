@@ -10,6 +10,7 @@ import type { DeliveryEntry, DeliveryMedia } from "./contracts";
 import {
   AboutContentSchema,
   AmiHomeContentSchema,
+  AmiPageVisibilityContentSchema,
   AmiServiceCaseContentSchema,
   AmiServiceContentSchema,
   AmiServicePageContentSchema,
@@ -48,6 +49,7 @@ import type {
   WorkTag,
 } from "./types";
 import { withBase } from "../url";
+import type { PageVisibility } from "../../config/pages";
 
 export const DEFAULT_TOPICS_LIMIT = 4;
 
@@ -59,6 +61,13 @@ export interface MapError {
 }
 
 export type MapResult<T> = { ok: true; value: T } | { ok: false; error: MapError };
+
+/** ページの表示設定。true のページだけ表示する（未入力は非表示）。 */
+export function mapPageVisibility(entry: DeliveryEntry): MapResult<PageVisibility> {
+  const r = parseContent("ami_page_visibility", entry, AmiPageVisibilityContentSchema);
+  if (!r.ok) return r;
+  return { ok: true, value: { works: r.value.show_works === true, recruit: r.value.show_recruit === true, faq: r.value.show_faq === true } };
+}
 
 function parseContent<S extends z.ZodType>(model: string, entry: DeliveryEntry, schema: S): MapResult<z.infer<S>> {
   const parsed = schema.safeParse(entry.content);
@@ -153,14 +162,24 @@ function toSns(links: Partial<Record<"instagram_url" | "x_url" | "tiktok_url", z
   });
 }
 
-/** 料金の表: 1 行に「項目|値|注記」。項目か値が空の行は読み飛ばす。 */
+/**
+ * 料金の表: 1 行に「項目|値|注記」。
+ * 区切り（|）の無い行や項目が空の行は、その文を表の幅いっぱいの 1 行にする（「ご相談ください」だけを書いた場合など）。
+ * 書いた内容が黙って消えると、入力した人が原因に気付けないため。値が空の行（「項目|」）と空行だけを読み飛ばす。
+ */
 export function parsePricing(text: string | null | undefined): PriceRow[] {
   return (text ?? "")
     .replace(/\r\n?/g, "\n")
     .split("\n")
-    .map((line) => line.split(/[|｜]/).map((s) => s.trim()))
-    .filter(([label, value]) => Boolean(label && value))
-    .map(([label, value, note]) => ({ label: label!, value: value!, note: note || null }));
+    .map((line) => line.trim())
+    .filter((line) => line !== "")
+    .flatMap((line): PriceRow[] => {
+      const parts = line.split(/[|｜]/).map((s) => s.trim());
+      if (parts.length === 1) return [{ label: null, value: parts[0]!, note: null }];
+      const [label, value, note] = parts;
+      if (!value) return [];
+      return [{ label: label || null, value, note: note || null }];
+    });
 }
 
 export function mapServicePage(entry: DeliveryEntry): MapResult<{ lead: string | null }> {

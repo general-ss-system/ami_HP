@@ -138,15 +138,22 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
                           <table class="case__pricing">
                             <caption class="visually-hidden">{c.title}の料金</caption>
                             <tbody>
-                              {c.pricing.map((row) => (
-                                <tr>
-                                  <th scope="row">{row.label}</th>
-                                  <td>
-                                    {row.value}
-                                    {row.note && <small>{row.note}</small>}
-                                  </td>
-                                </tr>
-                              ))}
+                              {c.pricing.map((row) =>
+                                row.label ? (
+                                  <tr>
+                                    <th scope="row">{row.label}</th>
+                                    <td>
+                                      {row.value}
+                                      {row.note && <small>{row.note}</small>}
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  // 区切りの無い行（「ご相談ください」など）は表の幅いっぱいに出す
+                                  <tr>
+                                    <td colspan="2" class="case__pricing-wide">{row.value}</td>
+                                  </tr>
+                                ),
+                              )}
                             </tbody>
                           </table>
                         )}
@@ -489,6 +496,10 @@ const kindOf = (c: ServiceCase) => (c.mainImage ? "product" : "media");
   .case__pricing small {
     display: block;
     font-size: 10.5px;
+  }
+
+  .case__pricing .case__pricing-wide {
+    text-align: center;
   }
 
   /* メディア: 縦長の写真 150.7×198.5 を 2×2（間 19.6 / 23.2）、1 枚なら 263×346 */

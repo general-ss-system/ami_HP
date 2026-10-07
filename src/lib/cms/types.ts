@@ -5,6 +5,7 @@
  */
 
 import type { RtBlock } from "./richtext";
+import type { PageVisibility } from "../../config/pages";
 
 export type { RtBlock };
 
@@ -59,7 +60,8 @@ export interface Service {
 }
 
 export interface PriceRow {
-  label: string;
+  /** 項目。null は区切り（|）の無い行で、value を表の幅いっぱいに出す（例:「ご相談ください」）。 */
+  label: string | null;
   value: string;
   note: string | null;
 }
@@ -154,6 +156,11 @@ export interface SiteInfo {
   titleTemplate: string | null;
   defaultDescription: string | null;
   defaultOgImage: Media | null;
+  /**
+   * 管理画面のページの表示設定（ami_page_visibility）。フッターのナビ・サイトマップ・WORKS などのページの出し分けに使う。
+   * getSiteInfo が別の singleton から読んで足す（無ければ config/pages.ts の既定 = すべて非表示）。
+   */
+  pageVisibility?: PageVisibility;
 }
 
 export interface AboutContent {

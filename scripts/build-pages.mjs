@@ -6,6 +6,8 @@
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { removeHiddenPages } from "./lib/remove-hidden-pages.mjs";
 
 // package.json の bin（exports に無いパスは resolve できないため、package.json の場所から組み立てる）
 const require = createRequire(import.meta.url);
@@ -16,4 +18,9 @@ const result = spawnSync(process.execPath, [astroBin, "build"], {
   stdio: "inherit",
   env: { ...process.env, PREVIEW_TARGET: "github-pages", CMS_MODE: "fixture" },
 });
+if (result.status === 0) {
+  // 管理画面のページの表示設定（仮データ）で非表示のページは置かない
+  const hidden = removeHiddenPages(join(dirname(fileURLToPath(import.meta.url)), "..", "dist"));
+  if (hidden.length > 0) console.log(`非表示のページを除きました: ${hidden.join(", ")}`);
+}
 process.exit(result.status ?? 1);

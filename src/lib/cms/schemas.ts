@@ -81,6 +81,13 @@ export const AmiServiceContentSchema = z.object({
 // ami_service_page（singleton）: SERVICE ページの案内文
 // ---------------------------------------------------------------------------
 
+/** ページの表示設定（CMS: ami_page_visibility / ADR-035）。未入力（null）は非表示。 */
+export const AmiPageVisibilityContentSchema = z.object({
+  show_works: z.boolean().nullable().optional(),
+  show_recruit: z.boolean().nullable().optional(),
+  show_faq: z.boolean().nullable().optional(),
+});
+
 export const AmiServicePageContentSchema = z.object({
   /** 地球の下の案内文（改行で行を分ける） */
   lead: optionalText,
