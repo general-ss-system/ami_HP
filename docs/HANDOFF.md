@@ -62,10 +62,10 @@
 - [ ] Cloudflare・Resend の 2 段階認証（先方が最後に設定すると決めた。納品前に必ず確認）
 - [ ] 公開ドメインは `www.ami.tokyo.jp` と推測して設定した（CMS の許可オリジン・Turnstile）。違えば直す
 
-### 公開サイトの本番公開（`docs/deploy.md` §4.2〜§4.7）
+- [x] Xserverビジネス: SSH 有効・デプロイ用の公開鍵（ami-hp-deploy）を登録済み・接続を確認（10-07）。置き場所は `/home/xb209239/ami.tokyo.jp/public_html`（今は Xserver の初期ファイルだけ。消してよいと先方の了承済み）
 - [ ] 先方（Xserverビジネスの管理パネル）: SSH を有効化・デプロイ用の公開鍵を登録・国外IPアクセス制限の確認・公開ディレクトリの確認
-- [ ] こちら:
-  1. デプロイ用の SSH 鍵を作る（§4.3）
+  1. ~~デプロイ用の SSH 鍵を作る（§4.3）~~ 済（10-07。ホスト鍵の指紋はサーバーパネルの表示と一致を確認）
+  2. ~~`deploy/production.json` に `xserver` を足す~~ 済（10-07。ビルドの `.htaccess` に Xserver 初期の https 転送・サーバーキャッシュの行を引き継いだ）
   2. `deploy/production.json` に `xserver`（host・port・user・path）を足す → `pnpm release check`
   3. 管理画面で、ビルド用の公開キーを新しく発行する（前のキーはプレビュー用 Worker にだけ登録してあり、手元に無い）
   4. GitHub（ami_HP）の Secret（`CMS_DELIVERY_KEY`・`XSERVER_SSH_KEY`・`XSERVER_KNOWN_HOSTS`・`CLOUDFLARE_DEPLOY_TOKEN`・`CLOUDFLARE_ACCOUNT_ID`）、
