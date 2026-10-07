@@ -10,7 +10,7 @@
 | `general-ss-system/ami_HP`（このリポジトリ・今は public） | `develop`（作業）/ `main` | 公開サイト。`main` への push で GitHub Pages のプレビューが更新される |
 | `general-ss-system/ami-cms`（非公開） | `develop`（作業）/ `main` | ami 専用の管理画面・API。`main` への push で CI（テスト）が動く |
 
-- 2026-10-07 時点: ami_HP は `develop` と `main` が同じ内容。ami-cms は `develop` に ADR-036 の修正（本番にはデプロイ済み）があり、`main` は未反映。
+- 2026-10-07 時点: 両リポジトリとも `develop` が最新。ami_HP の Xserver の設定・`.htaccess` の https 転送と、ami-cms の ADR-036 は `main` に未反映（**公開の前に main へ取り込む**。Actions は main の `deploy/production.json` を使う）。
 - 本番の構成（ami-cms ADR-031）: **DNS（Xserverビジネス・Google Workspace）には触れない**。
   - 公開サイト … Xserver（先方と共同利用）に静的な HTML（未公開。`www.ami.tokyo.jp` は今は Xserver の初期ページ）
   - CMS（管理画面 + API）… 先方の Cloudflare の workers.dev: **https://ami-cms.ami-cms.workers.dev**
