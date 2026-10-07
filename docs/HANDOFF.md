@@ -10,13 +10,13 @@
 | `general-ss-system/ami_HP`（このリポジトリ・今は public） | `develop`（作業）/ `main` | 公開サイト。`main` への push で GitHub Pages のプレビューが更新される |
 | `general-ss-system/ami-cms`（非公開） | `develop`（作業）/ `main` | ami 専用の管理画面・API。`main` への push で CI（テスト）が動く |
 
-- 2026-10-07 時点: 両リポジトリとも `develop` が最新。ami_HP の Xserver の設定・`.htaccess` の https 転送と、ami-cms の ADR-036 は `main` に未反映（**公開の前に main へ取り込む**。Actions は main の `deploy/production.json` を使う）。
+- 2026-10-07 時点: 両リポジトリとも `develop` と `main` が同じ内容で push 済み（Xserver の設定・https 転送・リハーサル・ADR-036・R2 まで）。
 - 本番の構成（ami-cms ADR-031）: **DNS（Xserverビジネス・Google Workspace）には触れない**。
   - 公開サイト … Xserver（先方と共同利用）に静的な HTML（未公開。`www.ami.tokyo.jp` は今は Xserver の初期ページ）
   - CMS（管理画面 + API）… 先方の Cloudflare の workers.dev: **https://ami-cms.ami-cms.workers.dev**
   - 下書きプレビュー・先方確認用のサイト … **https://ami-hp-preview.ami-cms.workers.dev**（noindex。SSR）
   - 公開の反映 … CMS の Webhook → `/api/cms-webhook` → GitHub Actions で再ビルド → Xserver（10-07 に Webhook から Actions までの通知を確認。`DEPLOY_ENABLED` が無いので今はスキップされる）
-- Cloudflare: 先方アカウント（info@ami.tokyo.jp）。workers.dev のサブドメイン `ami-cms`。**Workers Free**（一般公開の前に Paid を先方と決める）。
+- Cloudflare: 先方アカウント（info@ami.tokyo.jp）。workers.dev のサブドメイン `ami-cms`。**Workers Free**（公開から 3 か月は無料のまま監視して Paid を決める / 10-07 決定）。
   このPCの wrangler は先方アカウントでログイン中（作業が終わったら `wrangler logout`）。
 - 納品時は ami_HP と ami-cms を先方の GitHub の Organization へ移す（ami-cms の docs/09 の形C）。
 
@@ -32,6 +32,25 @@
 - 10/05: 料金の表で「|」の無い行（「ご相談ください」など）も表示する
 - 10/05: **WORKS・RECRUIT・FAQ の表示・非表示を CMS の管理画面で切り替える**（`src/config/pages.ts`・ami-cms ADR-035）。
   非表示は 404・フッター・サイトマップから除外。静的書き出しでは目印ファイルを `scripts/lib/remove-hidden-pages.mjs` が取り除く
+
+### 10/07 にしたこと
+- 10-05 の変更を main に取り込み。公開サイトのファビコンを ami のロゴに（`public/`）
+- Xserver: デプロイ用の SSH 鍵を作って登録・接続を確認、`deploy/production.json` に接続先、`.htaccess` に https 転送を引き継ぎ
+- GitHub の production 環境と Secret 5 つ、プレビュー用 Worker の Secret 3 つ、CMS の Webhook を登録（公開キーは再発行）
+- CMS → Webhook → Actions の通知を確認（同じアカウントの workers.dev どうしの 404 / 1042 を ADR-036 で回避）
+- Deploy に rehearsal（ファイルを置かない）を追加し、本番と同じ道筋で成功（117 ファイル・画像 36 件・Xserver に接続）
+- R2 を有効化 → 画像 50 件を KV から移行・CMS をデプロイ
+- 管理画面の古い文言（通知メールは準備中）を直してデプロイ。確認用サイトを出し直し
+- プライバシーポリシーの仮の文章に「外部のメール送信サービス（米国）を通る」旨を追加（**本番の CMS の文章は先方が管理画面で書き換える**）
+- 先方向けの操作ガイド（スクリーンショット付き）: https://claude.ai/code/artifact/9117194d-fa4a-482a-b103-a9fddf778c80 （先方も編集している）
+- 先方の決定: 公開 2026-10-13（火）9:00、ドメイン www.ami.tokyo.jp、通知先・権限は今のまま、10-16 に private、リポジトリは info@ami.tokyo.jp の Organization へ移す
+
+### 次にやること（順番）
+1. 10-12 まで: 先方が原稿を差し替えて CMS で公開 → こちらで Actions の Deploy を rehearsal で再実行
+2. **10-13 9:00**: `DEPLOY_ENABLED=true` → Deploy を手動実行 → deploy.md §4.7 の確認 → Xserver の `default_page.png` を消す
+3. 10-16: ami_HP を private に戻す。あわせて先方の Organization へ移管（`githubRepo` の変更・確認用サイトの出し直し・`GITHUB_DISPATCH_TOKEN` を先方のトークンに）
+4. 移管の前に ami-cms の基盤ソースの権利（譲渡か利用許諾か）を契約で決める
+5. 2027-01 ごろ: Workers の CPU 時間を見て Paid にするか決める
 
 ### CMS（ami-cms）
 - 本番を先方の Cloudflare に構築済み: D1・R2（画像。10-07 に KV から移行）・Queues・Turnstile（ウィジェット「ami お問い合わせ」）
@@ -50,13 +69,13 @@
 ### 先方の確認・判断
 - [x] 先方に管理画面と確認用サイトを共有した（10-07 までに案内文を送信済み）。操作感・デザインの確認の返事待ち
 - [x] R2 の有効化（10-07。先方が支払い方法を登録 → こちらで移行・デプロイ済み）
-- [ ] **Workers Paid（月 $5〜）にするか**: 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
+- [ ] **Workers Paid（月 $5〜）にするか** → 10-07 決定: 公開から 3 か月は無料プランのまま CPU 時間・エラーを監視して決める（2027-01 ごろ）。 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
   今はエラーは出ていないが、1102 エラーの恐れ。CMS 側は問題なし。公開サイト（Xserver）は無関係
 - [ ] 原稿の差し替え（仮データのまま）: ABOUT・CONTACT の会社概要、MEMBER の名前、TOPICS の記事、PRIVACY POLICY の本文
   （WORKS・RECRUIT・FAQ は非表示なので後回しでよい）
 - [ ] プライバシーポリシーに「お問い合わせ内容は外部のメール送信サービス（米国）を通る」旨を書く（ADR-033）
 - [ ] お問い合わせの通知先（管理画面で設定。共有の窓口アドレス推奨）
-- [ ] 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
+- [ ] （10-07 に先方が管理者へ依頼済み・完了の連絡待ち） 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
 - [ ] （任意）ami.tokyo.jp 本体の SPF（`v=spf1 include:_spf.google.com ~all`）と DMARC
 - [ ] Cloudflare・Resend の 2 段階認証（先方が最後に設定すると決めた。納品前に必ず確認）
 - [x] 公開ドメインは `www.ami.tokyo.jp` で確定（10-07 に先方が了承。CMS の許可オリジン・Turnstile の設定はこのまま）
@@ -73,13 +92,13 @@
      （入れると main への push・CMS での公開のたびに Xserver へ反映される）
   5. ~~Worker の Secret と Webhook~~ 済（10-07）。同じアカウントの workers.dev どうしは fetch が 404（エラー 1042）になるため、CMS に `global_fetch_strictly_public` を足した（ami-cms ADR-036）
   6. `DEPLOY_ENABLED=true` を入れて Actions の Deploy を手動で実行 → §4.7 のチェックリストで確認 → Xserver の `default_page.png` を消す
-- [ ] 公開前に ami_HP を private に戻すか決める（戻すと GitHub Pages のプレビューは止まる）
+- [ ] **公開 3 日後（2026-10-16）に ami_HP を private に戻す**（10-07 決定。GitHub Pages のプレビューはそこで止まる）
 - [x] 10-05 の変更を `main` に取り込む（10-07）
 - [ ] （任意）CMS の自動デプロイ（ami-cms の GitHub に Cloudflare のトークン・`DEPLOY_ENABLED`）
 - [x] 公開サイトのファビコンを ami のロゴマークに（10-07。管理画面と同じ画像を `public/` に置いた）
 
 ### 納品（ami-cms の docs/09）
-- [ ] 両リポジトリを先方の GitHub の Organization へ移す
+- [ ] 両リポジトリを先方の GitHub へ移す（info@ami.tokyo.jp のアカウントで Organization を作ってもらう。手順と注意は 10-07 の会話の記録。GITHUB_REPO・GITHUB_DISPATCH_TOKEN の差し替えとプレビュー用 Worker の出し直しが要る）
 - [ ] `GITHUB_DISPATCH_TOKEN` を先方の担当者のトークンに差し替える
 - [ ] 権限の整理（自社の担当者の Cloudflare 権限・このPCの `wrangler logout`・CMS の制作側管理者の扱い）
 - [ ] 基盤ソースの権利（譲渡か利用許諾か / docs/09 §12）
