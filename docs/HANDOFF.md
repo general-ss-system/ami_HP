@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-05 時点）
+# 引き継ぎメモ（2026-10-07 時点）
 
 別のデバイスで作業を続けるための、現状のまとめ。手順の決まりごとは `CLAUDE.md`、CMS の項目は `docs/content-model.md`、
 本番の構築とデプロイは `docs/deploy.md` が正本。
@@ -10,7 +10,7 @@
 | `general-ss-system/ami_HP`（このリポジトリ・今は public） | `develop`（作業）/ `main` | 公開サイト。`main` への push で GitHub Pages のプレビューが更新される |
 | `general-ss-system/ami-cms`（非公開） | `develop`（作業）/ `main` | ami 専用の管理画面・API。`main` への push で CI（テスト）が動く |
 
-- 2026-10-05 時点: `develop` は両方とも push 済み。`main` には 10-04 までを取り込み済みで、10-05 の変更（下記 2 の 10-05 分）は未反映。
+- 2026-10-07 時点: `develop` と `main` は両方とも同じ内容で push 済み（10-05 の変更・公開サイトのファビコンまで）。
 - 本番の構成（ami-cms ADR-031）: **DNS（Xserverビジネス・Google Workspace）には触れない**。
   - 公開サイト … Xserver（先方と共同利用）に静的な HTML（未公開。`www.ami.tokyo.jp` は今は Xserver の初期ページ）
   - CMS（管理画面 + API）… 先方の Cloudflare の workers.dev: **https://ami-cms.ami-cms.workers.dev**
@@ -48,7 +48,7 @@
 ## 3. 残っていること
 
 ### 先方の確認・判断
-- [ ] 先方に管理画面と確認用サイトを共有し、操作感・デザインを確認してもらう（案内文の例は会話の記録を参照。URL は上記 1）
+- [x] 先方に管理画面と確認用サイトを共有した（10-07 までに案内文を送信済み）。操作感・デザインの確認の返事待ち
 - [ ] **R2 の有効化**（Cloudflare で支払い方法を登録。無料枠 10GB の範囲なら請求なし）
   → こちらで `pnpm -F @ss/backend provision media-to-r2 --yes` → `provision deploy --yes`（画像の URL・内容は変わらない）
 - [ ] **Workers Paid（月 $5〜）にするか**: 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
@@ -73,9 +73,9 @@
   5. プレビュー用 Worker に `CMS_WEBHOOK_SECRET`・`GITHUB_DISPATCH_TOKEN` を登録し、管理画面で Webhook を登録（`/api/cms-webhook`）
   6. Actions の Deploy を手動で実行 → §4.7 のチェックリストで確認
 - [ ] 公開前に ami_HP を private に戻すか決める（戻すと GitHub Pages のプレビューは止まる）
-- [ ] 10-05 の変更を `main` に取り込む
+- [x] 10-05 の変更を `main` に取り込む（10-07）
 - [ ] （任意）CMS の自動デプロイ（ami-cms の GitHub に Cloudflare のトークン・`DEPLOY_ENABLED`）
-- [ ] （任意）公開サイトのファビコン（今は無い）
+- [x] 公開サイトのファビコンを ami のロゴマークに（10-07。管理画面と同じ画像を `public/` に置いた）
 
 ### 納品（ami-cms の docs/09）
 - [ ] 両リポジトリを先方の GitHub の Organization へ移す
