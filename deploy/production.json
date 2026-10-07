@@ -1,5 +1,5 @@
 {
-  "$comment": "合同会社ami の公開サイトの本番設定（docs/deploy.md・CMS ADR-031）。先方の Cloudflare（info@ami.tokyo.jp・workers.dev のサブドメイン ami-cms）。xserver は Xserver の SSH が決まったら足す（それまでは下書きプレビュー用 Worker だけ出す）。Secret は書かない。",
+  "$comment": "合同会社ami の公開サイトの本番設定（docs/deploy.md・CMS ADR-031）。先方の Cloudflare（info@ami.tokyo.jp・workers.dev のサブドメイン ami-cms）。xserver は Xserverビジネスの SSH（ホスト名はアカウント固有の xb209239.xbiz.jp。実体は sv880.xbiz.ne.jp）。Secret は書かない。",
   "siteHost": "www.ami.tokyo.jp",
   "cmsBaseUrl": "https://ami-cms.ami-cms.workers.dev",
   "cmsSiteKey": "ami",
@@ -9,5 +9,11 @@
     "accountId": "83fe67691c11f590b078951310ffd103",
     "host": "ami-hp-preview.ami-cms.workers.dev",
     "githubRepo": "general-ss-system/ami_HP"
+  },
+  "xserver": {
+    "host": "xb209239.xbiz.jp",
+    "port": 10022,
+    "user": "xb209239",
+    "path": "/home/xb209239/ami.tokyo.jp/public_html"
   }
 }

@@ -50,4 +50,10 @@ describe("apacheConfig", () => {
     expect(conf).toContain("ErrorDocument 404 /404.html");
     expect(conf).toMatch(/\(media\|_astro\)/);
   });
+
+  it("上書きしても https への転送が消えない", () => {
+    const conf = apacheConfig();
+    expect(conf).toContain("RewriteCond %{HTTPS} !on");
+    expect(conf).toContain("RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]");
+  });
 });

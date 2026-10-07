@@ -46,10 +46,21 @@ export function rewriteMediaUrls(text: string, cmsMediaBase: string, siteOrigin:
   return absolute.replace(pattern, (u, key: string) => (MEDIA_KEY.test(key) ? `${LOCAL_MEDIA_PREFIX}${key}` : u));
 }
 
-/** Xserver（Apache）向けの .htaccess。404 ページと、取り込んだ画像の長めのキャッシュ。 */
+/**
+ * Xserver（Apache）向けの .htaccess。https への転送、404 ページと、取り込んだ画像の長めのキャッシュ。
+ * アップロードのたびに上書きするため、Xserver が最初に置いていた設定（サーバーキャッシュ・https への転送）もここに含める。
+ */
 export function apacheConfig(): string {
   return [
     "# scripts/deploy.mjs が書き出す（手で編集しない）",
+    "# Xserver のサーバーキャッシュの設定（サーバーパネルが書き込む行。初期の .htaccess から引き継ぐ）",
+    'SetEnvIf Request_URI ".*" Ngx_Cache_NoCacheMode=off',
+    'SetEnvIf Request_URI ".*" Ngx_Cache_StaticMode',
+    "",
+    "RewriteEngine on",
+    "RewriteCond %{HTTPS} !on",
+    "RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]",
+    "",
     "ErrorDocument 404 /404.html",
     "",
     "<IfModule mod_headers.c>",
