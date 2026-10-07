@@ -10,12 +10,12 @@
 | `general-ss-system/ami_HP`（このリポジトリ・今は public） | `develop`（作業）/ `main` | 公開サイト。`main` への push で GitHub Pages のプレビューが更新される |
 | `general-ss-system/ami-cms`（非公開） | `develop`（作業）/ `main` | ami 専用の管理画面・API。`main` への push で CI（テスト）が動く |
 
-- 2026-10-07 時点: `develop` と `main` は両方とも同じ内容で push 済み（10-05 の変更・公開サイトのファビコンまで）。
+- 2026-10-07 時点: ami_HP は `develop` と `main` が同じ内容。ami-cms は `develop` に ADR-036 の修正（本番にはデプロイ済み）があり、`main` は未反映。
 - 本番の構成（ami-cms ADR-031）: **DNS（Xserverビジネス・Google Workspace）には触れない**。
   - 公開サイト … Xserver（先方と共同利用）に静的な HTML（未公開。`www.ami.tokyo.jp` は今は Xserver の初期ページ）
   - CMS（管理画面 + API）… 先方の Cloudflare の workers.dev: **https://ami-cms.ami-cms.workers.dev**
   - 下書きプレビュー・先方確認用のサイト … **https://ami-hp-preview.ami-cms.workers.dev**（noindex。SSR）
-  - 公開の反映 … CMS の Webhook → `/api/cms-webhook` → GitHub Actions で再ビルド → Xserver（Webhook は未登録）
+  - 公開の反映 … CMS の Webhook → `/api/cms-webhook` → GitHub Actions で再ビルド → Xserver（10-07 に Webhook から Actions までの通知を確認。`DEPLOY_ENABLED` が無いので今はスキップされる）
 - Cloudflare: 先方アカウント（info@ami.tokyo.jp）。workers.dev のサブドメイン `ami-cms`。**Workers Free**（一般公開の前に Paid を先方と決める）。
   このPCの wrangler は先方アカウントでログイン中（作業が終わったら `wrangler logout`）。
 - 納品時は ami_HP と ami-cms を先方の GitHub の Organization へ移す（ami-cms の docs/09 の形C）。
@@ -64,14 +64,14 @@
 
 ### 公開サイトの本番公開（`docs/deploy.md` §4.2〜§4.7）
 - [x] Xserverビジネス: SSH 有効・デプロイ用の公開鍵（ami-hp-deploy）を登録済み・接続を確認（10-07）。置き場所は `/home/xb209239/ami.tokyo.jp/public_html`（今は Xserver の初期ファイルだけ。消してよいと先方の了承済み）
-- [ ] こちら:
+- [ ] こちら（**原稿の差し替えを待ってから 6 を行う**と 10-07 に決めた。1〜5 は済み）:
   1. ~~デプロイ用の SSH 鍵を作る（§4.3）~~ 済（10-07。ホスト鍵の指紋はサーバーパネルの表示と一致を確認）
   2. ~~`deploy/production.json` に `xserver` を足す~~ 済（10-07。ビルドの `.htaccess` に Xserver 初期の https 転送・サーバーキャッシュの行を引き継いだ）
-  3. 管理画面で、ビルド用の公開キーを新しく発行する（前のキーはプレビュー用 Worker にだけ登録してあり、手元に無い）
-  4. GitHub（ami_HP）の Secret（`CMS_DELIVERY_KEY`・`XSERVER_SSH_KEY`・`XSERVER_KNOWN_HOSTS`・`CLOUDFLARE_DEPLOY_TOKEN`・`CLOUDFLARE_ACCOUNT_ID`）、
-     `production` 環境（承認者なし）、変数 `DEPLOY_ENABLED=true`
-  5. プレビュー用 Worker に `CMS_WEBHOOK_SECRET`・`GITHUB_DISPATCH_TOKEN` を登録し、管理画面で Webhook を登録（`/api/cms-webhook`）
-  6. Actions の Deploy を手動で実行 → §4.7 のチェックリストで確認
+  3. ~~ビルド用の公開キーを新しく発行する~~ 済（10-07 に再発行。プレビュー用 Worker と GitHub の両方に登録）
+  4. ~~GitHub の Secret と `production` 環境~~ 済（10-07。Secret 5 つ・承認者なし）。**変数 `DEPLOY_ENABLED=true` は公開のときに入れる**
+     （入れると main への push・CMS での公開のたびに Xserver へ反映される）
+  5. ~~Worker の Secret と Webhook~~ 済（10-07）。同じアカウントの workers.dev どうしは fetch が 404（エラー 1042）になるため、CMS に `global_fetch_strictly_public` を足した（ami-cms ADR-036）
+  6. `DEPLOY_ENABLED=true` を入れて Actions の Deploy を手動で実行 → §4.7 のチェックリストで確認 → Xserver の `default_page.png` を消す
 - [ ] 公開前に ami_HP を private に戻すか決める（戻すと GitHub Pages のプレビューは止まる）
 - [x] 10-05 の変更を `main` に取り込む（10-07）
 - [ ] （任意）CMS の自動デプロイ（ami-cms の GitHub に Cloudflare のトークン・`DEPLOY_ENABLED`）
@@ -133,3 +133,5 @@ pnpm check && pnpm test && pnpm build && pnpm build:pages   # 完了の前に必
 - CMS の `dev:bootstrap` は実行のたびに公開キーを発行し直す。ログインの token は 1 回しか使えない
 - ヘッドレスの Chrome の `--window-size` には最小の幅がある。スマホ幅の確認は DevTools Protocol の `Emulation.setDeviceMetricsOverride`
 - Figma MCP は View 席だと呼び出し回数の上限がある
+- 同じ Cloudflare アカウントの workers.dev の Worker どうしは、既定の fetch だと相手に届かず 404（エラー 1042）。CMS の本番設定に `global_fetch_strictly_public`（ami-cms ADR-036）
+- Claude Code の `!` は bash で動く（PowerShell の `$env:…` は使えない）。Secret の値を扱うコマンドは、会話に残さないよう自分の Git Bash で `read -rs` を使う
