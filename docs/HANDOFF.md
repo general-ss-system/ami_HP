@@ -60,7 +60,7 @@
 - [ ] 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
 - [ ] （任意）ami.tokyo.jp 本体の SPF（`v=spf1 include:_spf.google.com ~all`）と DMARC
 - [ ] Cloudflare・Resend の 2 段階認証（先方が最後に設定すると決めた。納品前に必ず確認）
-- [ ] 公開ドメインは `www.ami.tokyo.jp` と推測して設定した（CMS の許可オリジン・Turnstile）。違えば直す
+- [x] 公開ドメインは `www.ami.tokyo.jp` で確定（10-07 に先方が了承。CMS の許可オリジン・Turnstile の設定はこのまま）
 
 ### 公開サイトの本番公開（`docs/deploy.md` §4.2〜§4.7）
 - [x] Xserverビジネス: SSH 有効・デプロイ用の公開鍵（ami-hp-deploy）を登録済み・接続を確認（10-07）。置き場所は `/home/xb209239/ami.tokyo.jp/public_html`（今は Xserver の初期ファイルだけ。消してよいと先方の了承済み）
