@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-07 時点）
+# 引き継ぎメモ（2026-10-13 0:40 時点）
 
 別のデバイスで作業を続けるための、現状のまとめ。手順の決まりごとは `CLAUDE.md`、CMS の項目は `docs/content-model.md`、
 本番の構築とデプロイは `docs/deploy.md` が正本。
@@ -45,9 +45,19 @@
 - 先方向けの操作ガイド（スクリーンショット付き）: https://claude.ai/code/artifact/9117194d-fa4a-482a-b103-a9fddf778c80 （先方も編集している）
 - 先方の決定: 公開 2026-10-13（火）9:00、ドメイン www.ami.tokyo.jp、通知先・権限は今のまま、10-16 に private、リポジトリは info@ami.tokyo.jp の Organization へ移す
 
+### 10/13（公開当日）の 0:40 までにしたこと
+- 先方が原稿を差し替えて CMS で公開（10-11 に 33 回・10-12 に 31 回。Webhook → Actions は毎回届き、`DEPLOY_ENABLED` が無いのでスキップ）
+- 確認用サイトにダミー文が無いことを確認。プライバシーポリシーは先方の文章のままで問題ないと 10-13 に決定（ADR-033 の追記は求めない）。
+  通知先などの管理画面の設定も先方共有済み・ほぼ公開状態
+- Actions の Deploy を rehearsal で実行 → 成功（run 38271346520。差し替え後の内容でビルド・Xserver に接続・置くファイル 107 件・消すファイル 0 件）
+- 両リポジトリとも develop の内容は main に入っている
+
 ### 次にやること（順番）
-1. 10-12 まで: 先方が原稿を差し替えて CMS で公開 → こちらで Actions の Deploy を rehearsal で再実行
-2. **10-13 9:00**: `DEPLOY_ENABLED=true` → Deploy を手動実行 → deploy.md §4.7 の確認 → Xserver の `default_page.png` を消す
+1. ~~10-12 まで: 原稿の差し替え → rehearsal の再実行~~ 済（10-13 0:40）
+2. **10-13 9:00**: ユーザーが `! GH_TOKEN=$(gh auth token -u general-ss-system) gh variable set DEPLOY_ENABLED --body true -R general-ss-system/ami_HP`
+   （**リポジトリの変数**。job の `if` は環境に入る前に評価されるので production 環境の変数では効かない）
+   → こちらで `gh workflow run deploy.yml --ref main`（rehearsal なし）→ deploy.md §4.7 の確認 → Xserver の `default_page.png` を消す。
+   変数を入れた時点から CMS の公開のたびに Xserver へ反映される
 3. 10-16: ami_HP を private に戻す。あわせて先方の Organization へ移管（`githubRepo` の変更・確認用サイトの出し直し・`GITHUB_DISPATCH_TOKEN` を先方のトークンに）
 4. 移管の前に ami-cms の基盤ソースの権利（譲渡か利用許諾か）を契約で決める
 5. 2027-01 ごろ: Workers の CPU 時間を見て Paid にするか決める
@@ -71,9 +81,9 @@
 - [x] R2 の有効化（10-07。先方が支払い方法を登録 → こちらで移行・デプロイ済み）
 - [ ] **Workers Paid（月 $5〜）にするか** → 10-07 決定: 公開から 3 か月は無料プランのまま CPU 時間・エラーを監視して決める（2027-01 ごろ）。 確認用サイト（プレビュー用 Worker）は CPU が無料プランの上限 10ms を超えがち（中央値 13ms・最大 62ms）。
   今はエラーは出ていないが、1102 エラーの恐れ。CMS 側は問題なし。公開サイト（Xserver）は無関係
-- [ ] 原稿の差し替え（仮データのまま）: ABOUT・CONTACT の会社概要、MEMBER の名前、TOPICS の記事、PRIVACY POLICY の本文
+- [x] 原稿の差し替え（10-11〜12 に先方が実施）: ABOUT・CONTACT の会社概要、MEMBER の名前、TOPICS の記事、PRIVACY POLICY の本文
   （WORKS・RECRUIT・FAQ は非表示なので後回しでよい）
-- [ ] プライバシーポリシーに「お問い合わせ内容は外部のメール送信サービス（米国）を通る」旨を書く（ADR-033）
+- [x] プライバシーポリシー: 先方の文章のままで問題ないと 10-13 に決定（ADR-033 の「米国のメール送信サービス」の追記はしない）
 - [ ] お問い合わせの通知先（管理画面で設定。共有の窓口アドレス推奨）
 - [ ] （10-07 に先方が管理者へ依頼済み・完了の連絡待ち） 通知メールが迷惑メールに入る対策: Google Workspace の管理者が「承認済み送信者」に `notify.ami.tokyo.jp` を登録
 - [ ] （任意）ami.tokyo.jp 本体の SPF（`v=spf1 include:_spf.google.com ~all`）と DMARC
