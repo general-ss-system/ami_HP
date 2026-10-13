@@ -58,6 +58,9 @@
    （**リポジトリの変数**。job の `if` は環境に入る前に評価されるので production 環境の変数では効かない）
    → こちらで `gh workflow run deploy.yml --ref main`（rehearsal なし）→ deploy.md §4.7 の確認 → Xserver の `default_page.png` を消す。
    変数を入れた時点から CMS の公開のたびに Xserver へ反映される
+   → **10-13 12:39 公開済み**（Deploy run 38342732937 成功）。https://www.ami.tokyo.jp の全ページ 200・画像は `/media/` から配信・
+   存在しない URL と非表示ページは 404 を確認。残り: `default_page.png` の削除（Xserver のファイルマネージャで）、
+   §4.7 の CMS 側の確認（公開→反映・配送状況・プレビュー・お問い合わせ）
 3. 10-16: ami_HP を private に戻す。あわせて先方の Organization へ移管（`githubRepo` の変更・確認用サイトの出し直し・`GITHUB_DISPATCH_TOKEN` を先方のトークンに）
 4. 移管の前に ami-cms の基盤ソースの権利（譲渡か利用許諾か）を契約で決める
 5. 2027-01 ごろ: Workers の CPU 時間を見て Paid にするか決める
