@@ -409,15 +409,18 @@ const facts = (m: Member) =>
     margin: 0;
   }
 
+  /*
+   * 項目は縮めず、項目名・値の途中では改行しない（縮むと overflow-wrap で「165c|m」のように折れる）。
+   * 1 行に収まらない幅では、項目ごと次の行へ回す
+   */
   .member-detail__facts > div {
+    flex: none;
     min-width: var(--col-w);
   }
 
-  /* PC はデザインどおり 1 行（値が少し長くても折り返さない） */
-  @media (min-width: 768px) {
-    .member-detail__facts {
-      flex-wrap: nowrap;
-    }
+  .member-detail__facts dt,
+  .member-detail__facts dd {
+    white-space: nowrap;
   }
 
   .member-detail__facts dd {
@@ -515,8 +518,15 @@ const facts = (m: Member) =>
       margin: 0 auto;
     }
 
+    /* スマホは列をそろえて折り返す（幅に応じて 2〜3 列） */
     .member-detail__facts {
-      gap: 16px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 20px 16px;
+    }
+
+    .member-detail__facts > div {
+      min-width: 0;
     }
 
     .member-detail__facts dd,
